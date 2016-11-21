@@ -1,0 +1,342 @@
+<!DOCTYPE HTML>
+<html>
+
+    <head>
+        <title> Customer Complaint Trend Portfolio </title>
+        <!-- HTML5 and mobile devices -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- styling formats in order of ascending importance (i.e. custom css trumps bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" type="text/css" href="slick/slick.css"/>
+        <link rel="stylesheet" type="text/css" href="slick/slick-theme.css"/>
+        <link type="text/css" rel="stylesheet" href="main.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type="text/javascript" src="script.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+        <!-- [if IE]> -->
+        <script src="https://cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/respond/1.4.2/respond.min.js"></script>    
+    </head>
+    
+    <body>
+        <div id="header">
+            <div class="container" id="logo-area">
+                <img src="images/BFDx_Logo.jpg" usemap="#logoMap">
+                <map name="logoMap" id="logoMap">
+                    <area id="HP" alt="Biofire Home Page" title="BiofireDx Home Page" href="http://biofiredx.com/" shape="rect" coords="0,0,150,199" style="outline:none;"/>
+                    <area id="WH" alt="WebHub" title="Analytics Web Hub" href="http://biofirestation/WebHub/WebHub.html" shape="rect" coords="151,0,1297,199" style="outline:none;"/>
+                </map>
+            </div>
+            <div class="container" id="navigator">
+                <ul class="pull-left">
+                    <li class="brighten"> <a href="http://biofirestation/WebHub/WebHub.html">ANALYTICS WEB HUB</a></li>
+                    <li class="brighten"> <a href="http://biofirestation/wordpress/">BIOFIRE STATION</a></li>
+                    <li class="brighten"> <a href="http://qw.biofiredx.net/authentication/login">QUALITY WEB</a></li>
+                    <li class="brighten"> <a href="http://pw.biofiredx.net/">PRODUCTION WEB</a></li>
+                    <li class="brighten" id="dropdown"> <a href="#"> CONTACT US </a> 
+                        <div class="panel">
+                        <ul id="editpanel">
+                            <li> <a href="mailto:aimie.faucett@biofiredx.com?subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> <img src="images/employee_pics/aimie1_50.jpg"/>&nbsp;&nbsp;Aimie Faucett </a> </li>
+                            <li> <a href="mailto:amber.kiser@biofiredx.com?cc=aimie.faucett@biofiredx.com&subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> <img src="images/employee_pics/amber1_50.jpg"/>&nbsp;&nbsp;Amber Kiser </a> </li>
+                            <li> <a href="mailto:Graham.Knussmann@biofiredx.com?subject=Analytics Web Hub Query"> <img src="images/employee_pics/graham_50.jpg"/>&nbsp;&nbsp;Graham Knussmann</a> </li>
+                        </ul>
+                    </div>
+                    </li>
+                </ul>        
+            </div>
+            
+            <div class="container" id="navigator2">
+                <ul class="pull-left">
+                    <li class="brighten"><a href="pdfs/CustomerComplaints.pdf"> DOWNLOAD PDF REPORT</a></li>
+                </ul>
+            </div>
+        </div>
+        
+    <h2 id="menuHeader">
+        <button type="button" class="plus" id="menuButton">+</button>
+        Main Menu
+    </h2> 
+    
+    <div id="sideBar" style="display:none">
+        <div id="reliability">
+            <h2>Reliability Metrics</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rbio" data-toggle="collapse" data-target="#SRBio">+</button>
+                    BioReagent
+                </h4>
+                    <div id="SRBio" class="collapse out">
+                        <ul>
+                            <li><a href="dashPNCR.html">NCR</a></li>
+                            <li><a href="dashQPM.html">Inline QC</a></li>
+                            <li><a href="dashPQC.html">Final QC</a></li> 
+                            <li><a href="dashCON.html">Contamination</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rcomp" data-toggle="collapse" data-target="#SRcomp">+</button>
+                    Complaints
+                </h4>
+                    <div id="SRcomp" class="collapse out">
+                        <ul>
+                            <li><a href="dashCC.html">Customer Complaints</a></li>
+                            <li><a href="dashCI.html">Investigations</a></li>
+                            <li><a href="dashPRE.html">PRE and Closures</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rinst" data-toggle="collapse" data-target="#SRinst">+</button>
+                    Instrument
+                </h4>
+                    <div id="SRinst" class="collapse out">
+                        <ul>
+                            <li><a href="dashINCR.html">NCR</a></li>
+                            <li><a href="dashRMA.html">RMA</a></li>
+                            <li><a href="dashIVOE.html">VOE</a></li>
+                            <li><a href="dashPICS.html">Inline Calibration</a></li>
+                            <li><a href="dashIQC.html">Final QC</a></li>
+                            <li><a href="dashIRM.html">Internal Reliabiity</a></li>
+                        </ul>    
+                    </div>
+        </div>
+        <div id="operations">
+            <h2>Operations Metrics</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Oprod" data-toggle="collapse" data-target="#SOprod">+</button>
+                    Product Overview
+                </h4>
+                    <div id="SOprod" class="collapse out">
+                        <ul>
+                            <li id="SUPP"><a href="dashSUPP.html">Supplier Reliability</a></li>
+                            <li id="IMAN"><a href="dashIMAN.html">Instrument Manufacturing</a></li>
+                            <li id="ISERV"><a href="dashISERV.html">Instrument Servicing</a></li>
+                            <li id="PMG"><a href="dashPMG.html">Program Management</a></li>
+                            <li><a href="../WebHub.html">Pouch Manufacturing</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Osales" data-toggle="collapse" data-target="#SOsales">+</button>
+                    Sales
+                </h4>
+                    <div id="SOsales" class="collapse out">
+                        <ul>
+                            <li id="LIVE"><a href="dashLIVE.html">Go Live To Thrive</a></li>
+                            <li><a href="../WebHub.html">Instruments</a></li>
+                            <li><a href="../WebHub.html">Disposables</a></li>
+                        </ul>    
+                    </div>
+        </div>
+        <div id="field">
+            <h2>FilmArray Trend Project</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Cbio" data-toggle="collapse" data-target="#SCbio">+</button>
+                    Trend FilmArray
+                </h4>
+                    <div id="SCbio" class="collapse out">
+                        <ul>                            
+                            <li><a href="dashTrend.html">Trend</a></li>
+                        </ul>
+                    </div>            
+        </div>
+        <div id='space'></div>
+        <h2 class="expandOut">
+            Business Analysis <sup>[New]</sup>
+            <!--<button type='button' class='plus' id='busButton' data-toggle='collapse' data-target='#busMenu'>+</button>-->
+        </h2>
+        <!--<div id='busMenu' class="collapse out">-->
+        <div id='busMenu'>
+            <h3><a href='https://biofiredx.domo.com/link/5c46aAhzGrHpFdv9' target='_blank'> Materials EOM</a></h3>
+        </div>
+        </div>
+        
+        <h2 id="pageTitle">Customer Complaints</h2>
+        
+        <div class="background">
+            <div class="chart-area">
+                <div class="row">
+                    <div class="image-slider">
+                        <div> 
+                            <p> 1 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/complaints.all.pareto.png" download = "CCdash_complaints.all.pareto.png" title = "complaints.all.pareto"> 
+                            <img class='chart' src="images/Dashboard_CustomerComplaints/complaints.all.pareto.png" alt = "complaints.all.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 2 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/complaints.all.png" download = "CCdash_complaints.all.png" title = "complaints.all"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/complaints.all.png' alt = "complaints.all"/> </a>
+                        </div>
+                        <div> 
+                            <p> 3 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/chemistry.all.pareto.png" download = "CCdash_chemistry.all.pareto.png" title = "chemistry.all.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/chemistry.all.pareto.png' alt = "chemistry.all.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 4 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/chemistry.all.png" download = "CCdash_chemistry.all.png" title = "chemistry.all"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/chemistry.all.png' alt = "chemistry.all"/> </a>
+                        </div>
+                        <div> 
+                            <p> 5 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/chemistry.version.high.png" download = "CCdash_chemistry.version.high.png" title = "chemistry.version.high"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/chemistry.version.high.png' alt = "chemistry.version.high"/> </a>
+                        </div>
+                        <div> 
+                            <p> 6 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/chemistry.version.low.png" download = "CCdash_chemistry.version.low.png" title = "chemistry.version.low"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/chemistry.version.low.png' alt = "chemistry.version.low"/> </a>
+                        </div>
+                        <div> 
+                            <p> 7 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/chemistry.panel.pareto.png" download = "CCdash_chemistry.panel.pareto.png" title = "chemistry.panel.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/chemistry.panel.pareto.png' alt = "chemistry.panel.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 8 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/chemistry.panel.png" download = "CCdash_chemistry.panel.png" title = "chemistry.panel"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/chemistry.panel.png' alt = "chemistry.panel"/> </a>
+                        </div>
+                        <div> 
+                            <p> 9 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/pouch.all.pareto.png" download = "CCdash_pouch.all.pareto.png" title = "pouch.all.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/pouch.all.pareto.png' alt = "pouch.all.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 10 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/pouch.all.png" download = "CCdash_pouch.all.png" title = "pouch.all"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/pouch.all.png' alt = "pouch.all"/> </a>
+                        </div>
+                        <div> 
+                            <p> 11 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/pouch.version.high.png" download = "CCdash_pouch.version.high.png" title = "pouch.version.high"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/pouch.version.high.png' alt = "pouch.version.high"/> </a>
+                        </div>
+                        <div> 
+                            <p> 12 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/pouch.version.low.png" download = "CCdash_pouch.version.low.png" title = "pouch.version.low"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/pouch.version.low.png' alt = "pouch.version.low"/> </a>
+                        </div>
+                        <div> 
+                            <p> 13 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/pouch.location.pareto.png" download = "CCdash_pouch.location.pareto.png" title = "pouch.location.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/pouch.location.pareto.png' alt = "pouch.location.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 14 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/pouch.location.png" download = "CCdash_pouch.location.png" title = "pouch.location"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/pouch.location.png' alt = "pouch.location"/> </a>
+                        </div>
+                        <div> 
+                            <p> 15 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/instrument.all.pareto.png" download = "CCdash_instrument.all.pareto.png" title = "instrument.all.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/instrument.all.pareto.png' alt = "instrument.all.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 16 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/instrument.all.png" download = "CCdash_instrument.all.png" title = "instrument.all"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/instrument.all.png' alt = "instrument.all"/> </a>
+                        </div>
+                        <!--
+                        <div> 
+                            <p> 17 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/instrument.all.installed.png" download = "CCdash_instrument.all.installed.png" title = "instrument.all.installed"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/instrument.all.installed.png' alt = "instrument.all.installed"/> </a>
+                        </div>
+                        -->
+                        <div> 
+                            <p> 17 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/instrument.version.png" download = "CCdash_instrument.version.png" title = "instrument.version"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/instrument.version.png' alt = "instrument.version"/> </a>
+                        </div>
+                        <!--
+                        <div> 
+                            <p> 19 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/instrument.version.installed.png" download = "CCdash_instrument.version.installed.png" title = "instrument.version.installed"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/instrument.version.installed.png' alt = "instrument.version.installed"/> </a>
+                        </div>
+                        -->
+                        <div> 
+                            <p> 18 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/instrument.build.pareto.png" download = "CCdash_instrument.build.pareto.png" title = "instrument.build.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/instrument.build.pareto.png' alt = "instrument.build.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 19 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/instrument.build.png" download = "CCdash_instrument.build.png" title = "instrument.build"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/instrument.build.png' alt = "instrument.build"/> </a>
+                        </div>
+                        <div> 
+                            <p> 20 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/software.all.pareto.png" download = "CCdash_software.all.pareto.png" title = "software.all.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/software.all.pareto.png' alt = "software.all.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 21 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/software.all.png" download = "CCdash_software.all.png" title = "software.all"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/software.all.png' alt = "software.all"/> </a>
+                        </div>
+                        <div> 
+                            <p> 22 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/software.version.high.png" download = "CCdash_software.version.high.png" title = "software.version.high"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/software.version.high.png' alt = "software.version.high"/> </a>
+                        </div>
+                        <div> 
+                            <p> 23 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/software.version.low.png" download = "CCdash_software.version.low.png" title = "software.version.low"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/software.version.low.png' alt = "software.version.low"/> </a>
+                        </div>
+                        <div> 
+                            <p> 24 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/software.build.pareto.png" download = "CCdash_software.build.pareto.png" title = "software.build.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/software.build.pareto.png' alt = "software.build.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 25 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/software.build.png" download = "CCdash_software.build.png" title = "software.build"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/software.build.png' alt = "software.build"/> </a>
+                        </div>
+                        <div> 
+                            <p> 26 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/acckit.all.pareto.png" download = "CCdash_acckit.all.pareto.png" title = "acckit.all.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/acckit.all.pareto.png' alt = "acckit.all.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 27 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/acckit.all.png" download = "CCdash_acckit.all.png" title = "acckit.all"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/acckit.all.png' alt = "acckit.all"/> </a>
+                        </div>
+                        <div> 
+                            <p> 28 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/acckit.version.png" download = "CCdash_acckit.version.png" title = "acckit.version"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/acckit.version.png' alt = "acckit.version"/> </a>
+                        </div>
+                         <div> 
+                            <p> 29 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/BioThreat.pareto.png" download = "CCdash_BioThreat.pareto.png" title = "BioThreat.pareto"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/BioThreat.pareto.png' alt = "BioThreat.pareto"/> </a>
+                        </div>
+                        <div> 
+                            <p> 30 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/denom.pouches.png" download = "CCdash_denom.pouches.png" title = "denom.pouches"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/denom.pouches.png' alt = "denom.pouches"/> </a>
+                        </div>
+                        <div> 
+                            <p> 31 </p>
+                            <a href = "images/Dashboard_CustomerComplaints/denom.installed.png" download = "CCdash_denom.installed.png" title = "denom.installed"> 
+                            <img class='chart' src='images/Dashboard_CustomerComplaints/denom.installed.png' alt = "denom.installed"/> </a>
+                        </div>
+                    </div>
+                    <p> Charts are updated hourly. Click chart to download a copy. </p>
+                </div> 
+            </div>
+        </div>
+        
+        <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+        <script type="text/javascript" src="slick/slick.min.js"></script>    
+
+    </body>
+    
+</html>

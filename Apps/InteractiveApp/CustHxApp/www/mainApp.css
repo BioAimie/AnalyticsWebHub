@@ -1,0 +1,34 @@
+/*Stylesheet for Shiny app- Customer Support*/
+
+.DataSets {
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: solid black 1px;
+}
+.dataSetpic {
+    box-shadow: 5px 5px 1px #888888;
+    border: inset grey 1px;
+    display: inline;
+}
+#dropData1 {
+    border: solid grey 1px;
+    float: left;
+    margin-right: 30px;
+} 
+#CustomerSelect {
+    float: left;
+    margin-top: -40px;  
+}
+#dateR {
+    float: left;
+    margin-left: 30px;
+    margin-top: -40px;
+}
+#dateRange {
+    padding-top: 20px;
+}
+.aL{
+    color: navy;
+    padding-right: 10px;
+    padding-bottom: 10px;
+}

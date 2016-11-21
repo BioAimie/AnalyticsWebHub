@@ -1,0 +1,18 @@
+SELECT
+	[RunDataId],
+	C.[CustomerSiteId],
+	CASE C.[CustomerSiteId] 
+		WHEN 2 THEN 'SouthBend'
+		WHEN 5 THEN 'Winthrop'
+		WHEN 7 THEN 'MUSC'
+		WHEN 13 THEN 'NationWide'
+		WHEN 9 THEN 'StonyBrook'
+		ELSE 'Other'
+	END AS [SiteName],
+	CAST([StartTime] AS DATE) AS [Date],
+	[PositiveAssays],
+	1 AS [Runs]
+FROM [FADataWarehouse].[dbo].[RunData] R WITH(NOLOCK) INNER JOIN [FADataWarehouse].[dbo].[ConnectorLaptops] C WITH(NOLOCK)
+	ON R.[ConnectorLaptopId] = C.[ConnectorLaptopId] INNER JOIN [FADataWarehouse].[dbo].[CustomerSites] S WITH(NOLOCK)
+		ON C.[CustomerSiteId] = S.[CustomerSiteId]
+WHERE [RunStatus] LIKE 'Completed' AND [SuppressState] LIKE 'Trendable' AND [PouchTitle] LIKE 'Resp%' AND YEAR([StartTime]) > 2012 AND C.[CustomerSiteId] NOT IN (12, 25)

@@ -1,0 +1,175 @@
+workDir <- '~/WebHub/AnalyticsWebHub/'
+imgDir <- '~/WebHub/images/Dashboard_ComplaintInvestigation/'
+pdfDir <- '~/WebHub/pdfs/'
+
+setwd(workDir)
+
+# Load needed libraries
+library(ggplot2)
+library(scales)
+library(zoo)
+library(devtools)
+library(lubridate)
+install_github('BioAimie/dateManip')
+library(dateManip)
+
+# load the data from SQL
+source('Portfolios/R_CI_load.R')
+source('Rfunctions/createPaletteOfVariableLength.R')
+source('Rfunctions/makeTimeStamp.R')
+
+# establish some properties used throughout the code- these are kept up top to facilitate changes
+periods <- 4
+weeks <- 53
+lagPeriods <- 4
+validateDate <- '2016-04'
+
+# make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
+startYear <- year(Sys.Date()) - 2
+calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+# set theme for line charts ------------------------------------------------------------------------------------------------------------------
+seqBreak <- 12
+dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(periods,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
+fontSize <- 20
+fontFace <- 'bold'
+# set theme for line charts ------------------------------------------------------------------------------------------------------------------
+
+# Rate of Escalated Complaints per All Complaints 
+complaints.all <- data.frame(Year = complaints.df[,'Year'], Week = complaints.df[,'Week'], Key = 'complaints', Record = complaints.df[,'Record'])
+complaints.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', complaints.all, c('Key'), startDate, 'Record', 'sum', 1)
+escalated.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(complaints.df, Key == 1), c('Key'), startDate, 'Record', 'sum', 0)
+escalated.rate <- mergeCalSparseFrames(escalated.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+escalated.lims <- addStatsToSparseHandledData(escalated.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0)
+x.val <- which(as.character(unique(escalated.lims[,'DateGroup']))==validateDate)
+p.escalated <- ggplot(escalated.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Rate of Escalated Complaints per All Complaints', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + geom_vline(aes(xintercept=x.val), color='mediumseagreen')
+
+# Rate of Qty Affected in Erroeneous Result Complaints per All Complaints
+erroneous.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(Year = erroneous.df[,'Year'], Week = erroneous.df[,'Week'], Key = 'erroneous', Record = erroneous.df[,'Record']), c('Key'), startDate, 'Record', 'sum', 0)
+erroneous.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', erroneous.df, c('Version'), startDate, 'Record', 'sum', 0)
+erroneous.version.type <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', erroneous.df, c('Version','RecordedValue'), startDate, 'Record', 'sum', 0)
+erroneous.all.rate <- mergeCalSparseFrames(erroneous.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+erroneous.all.lims <- addStatsToSparseHandledData(erroneous.all.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0)
+erroneous.version.rate <- mergeCalSparseFrames(erroneous.version, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+erroneous.version.lims <- addStatsToSparseHandledData(erroneous.version.rate, c('Version'), lagPeriods, TRUE, 3, 'upper', 0.05)
+erroneous.version.type.rate <- mergeCalSparseFrames(erroneous.version.type, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+erroneous.version.type.lims <- addStatsToSparseHandledData(erroneous.version.type.rate, c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.05)
+p.erroneous.all <- ggplot(erroneous.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Quantity Affected in Erroneous Result Complaints per All Complaints', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + geom_vline(aes(xintercept=x.val), color='mediumseagreen')
+p.erroneous.version <- ggplot(erroneous.version.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + facet_wrap(~Version, scale='free_y') + geom_hline(aes(yintercept=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Quantity Affected in Erroneous Result Complaints per All Complaints\nLimit = 3 standard deviations or 5%', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + geom_vline(aes(xintercept=x.val), color='mediumseagreen')
+p.erroneous.version.chemistry <- ggplot(subset(erroneous.version.type.lims,Version == 'Chemistry'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + facet_wrap(~RecordedValue, scale='free_y') + geom_hline(aes(yintercept=UL), color='blue', lty=2, data=subset(erroneous.version.type.lims,Version == 'Chemistry')) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Quantity Affected in Erroneous Result Chemistry Complaints per All Complaints\nFYI Limit = 3 standard deviations or 5%', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + geom_vline(aes(xintercept=x.val), color='mediumseagreen')
+p.erroneous.version.instrument <- ggplot(subset(erroneous.version.type.lims,Version == 'Instrument'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + facet_wrap(~RecordedValue, scale='free_y') + geom_hline(aes(yintercept=UL), color='blue', lty=2, data=subset(erroneous.version.type.lims,Version == 'Instrument')) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Quantity Affected in Erroneous Result Instrument Complaints per All Complaints\nFYI Limit = 3 standard deviations or 5%', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + geom_vline(aes(xintercept=x.val), color='mediumseagreen')
+p.erroneous.version.software <- ggplot(subset(erroneous.version.type.lims,Version == 'Software'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + facet_wrap(~RecordedValue, scale='free_y') + geom_hline(aes(yintercept=UL), color='blue', lty=2, data=subset(erroneous.version.type.lims,Version == 'Software')) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Quantity Affected in Erroneous Result Software Complaints per All Complaints\nFYI Limit = 3 standard deviations or 5%', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + geom_vline(aes(xintercept=x.val), color='mediumseagreen')
+
+# Rate of BFDx Products by Type in Escalated Complaints per All Complaints
+bfdxProd.df <- unique(overview.df[,c('bug_id','Year','Week','Version','Record')])[,c('Year','Week','Version','Record')]
+bfdxProd.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', bfdxProd.df, c('Version'), startDate, 'Record', 'sum', 0)
+bfdxProd.rate <- mergeCalSparseFrames(bfdxProd.fill, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+bfdxProd.df[,'statParam'] <- 'bfdx'
+bfdxProd.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', bfdxProd.df, c('statParam'), startDate, 'Record', 'sum', 0)
+bfdxProd.all <- mergeCalSparseFrames(bfdxProd.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+bfdxProd.all <- addStatsToSparseHandledData(bfdxProd.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0)
+bfdxProd.lims <- merge(bfdxProd.rate, bfdxProd.all[,c('DateGroup','UL')], by=c('DateGroup'))
+pal.prod <- createPaletteOfVariableLength(bfdxProd.lims, 'Version')
+p.product <- ggplot(bfdxProd.lims, aes(x=DateGroup, y=Rate, fill=Version)) + geom_bar(stat='identity') + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_fill_manual(values=pal.prod) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='BFDx Product in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate')
+
+# Rate of Complaint Cause by Summary in Escalated Complaints per All Complaints
+ccSummary.df <- unique(overview.df[,c('bug_id','Year','Week','RecordedValue','Record')])[,c('Year','Week','RecordedValue','Record')]
+ccSummary.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ccSummary.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
+ccSummary.rate <- mergeCalSparseFrames(ccSummary.fill, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+ccSummary.df[,'statParam'] <- 'bfdx'
+ccSummary.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ccSummary.df, c('statParam'), startDate, 'Record', 'sum', 0)
+ccSummary.all <- mergeCalSparseFrames(ccSummary.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+ccSummary.all <- addStatsToSparseHandledData(ccSummary.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0)
+ccSummary.lims <- merge(ccSummary.rate, ccSummary.all[,c('DateGroup','UL')], by=c('DateGroup'))
+pal.summary <- createPaletteOfVariableLength(ccSummary.lims, 'RecordedValue')
+p.summary <- ggplot(ccSummary.lims, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_fill_manual(values=pal.summary) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + guides(fill=guide_legend(ncol=3, bycol=TRUE)) + labs(title='Cause of Complaint in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate')
+
+# Rate of Affected Assay in Escalated Complaints per All Complaints - requires that assays be partitioned into the proper panel
+caAssay.df <- unique(overview.df[,c('bug_id','Year','Week','Key','Record')])[,c('Year','Week','Key','Record')]
+caAssay.df[,'Key'] <- as.character(caAssay.df[,'Key'])
+caAssay.df[,'nChars'] <- nchar(caAssay.df[,'Key'])
+caAssay.df[grep('ME-',caAssay.df[,'Key']),'Version'] <- 'ME'; caAssay.df[grep('ME-',caAssay.df[,'Key']),'Key'] <- substr(caAssay.df[grep('ME-',caAssay.df[,'Key']),'Key'], 4, caAssay.df[grep('ME-',caAssay.df[,'Key']),'nChars'])
+caAssay.df[grep('BCID-',caAssay.df[,'Key']),'Version'] <- 'BCID'; caAssay.df[grep('BCID-',caAssay.df[,'Key']),'Key'] <- substr(caAssay.df[grep('BCID-',caAssay.df[,'Key']),'Key'], 6, caAssay.df[grep('BCID-',caAssay.df[,'Key']),'nChars'])
+caAssay.df[grep('RP-',caAssay.df[,'Key']),'Version'] <- 'RP'; caAssay.df[grep('RP-',caAssay.df[,'Key']),'Key'] <- substr(caAssay.df[grep('RP-',caAssay.df[,'Key']),'Key'], 4, caAssay.df[grep('RP-',caAssay.df[,'Key']),'nChars'])
+caAssay.df[grep('GI-',caAssay.df[,'Key']),'Version'] <- 'GI'; caAssay.df[grep('GI-',caAssay.df[,'Key']),'Key'] <- substr(caAssay.df[grep('GI-',caAssay.df[,'Key']),'Key'], 4, caAssay.df[grep('GI-',caAssay.df[,'Key']),'nChars'])
+caAssay.df <- caAssay.df[,c('Year', 'Week', 'Version','Key','Record')]
+caAssay.df <- caAssay.df[!(is.na(caAssay.df[,'Version'])), ]
+caAssay.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', caAssay.df, c('Version','Key'), startDate, 'Record', 'sum', 0)
+caAssay.rate <- mergeCalSparseFrames(caAssay.fill, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+caAssay.allPanel <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', caAssay.df, c('Version'), startDate, 'Record', 'sum', 0)
+caAssay.all <- mergeCalSparseFrames(caAssay.allPanel, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+caAssay.all <- addStatsToSparseHandledData(caAssay.all, c('Version'), lagPeriods, TRUE, 3, 'upper', 0)
+caAssay.lims <- merge(caAssay.rate, caAssay.all[,c('DateGroup','Version','UL')], by=c('DateGroup','Version'))
+pal.bcid <- createPaletteOfVariableLength(subset(caAssay.lims, Version=='BCID'), 'Key')
+p.assay.bcid <- ggplot(subset(caAssay.lims, Version=='BCID'), aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_hline(aes(yintercept=UL), color='blue', lty=2, data=subset(caAssay.lims, Version=='BCID')) + scale_fill_manual(values=pal.bcid) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='BCID - Affected Assay in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + guides(fill=guide_legend(ncol=7, byrow=TRUE))
+pal.gi <- createPaletteOfVariableLength(subset(caAssay.lims, Version=='GI'), 'Key')
+p.assay.gi <- ggplot(subset(caAssay.lims, Version=='GI'), aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_hline(aes(yintercept=UL), color='blue', lty=2, data=subset(caAssay.lims, Version=='GI')) + scale_fill_manual(values=pal.gi) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='GI - Affected Assay in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + guides(fill=guide_legend(ncol=7, byrow=TRUE))
+pal.me <- createPaletteOfVariableLength(subset(caAssay.lims, Version=='ME'), 'Key')
+p.assay.me <- ggplot(subset(caAssay.lims, Version=='ME'), aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_hline(aes(yintercept=UL), color='blue', lty=2, data=subset(caAssay.lims, Version=='ME')) + scale_fill_manual(values=pal.me) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='ME - Affected Assay in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + guides(fill=guide_legend(ncol=7, byrow=TRUE))
+pal.rp <- createPaletteOfVariableLength(subset(caAssay.lims, Version=='RP'), 'Key')
+p.assay.rp <- ggplot(subset(caAssay.lims, Version=='RP'), aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_hline(aes(yintercept=UL), color='blue', lty=2, data=subset(caAssay.lims, Version=='RP')) + scale_fill_manual(values=pal.rp) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='RP - Affected Assay in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + guides(fill=guide_legend(ncol=7, byrow=TRUE))
+
+# Rate of Specimen Types per All Complaints
+specimens.df <- unique(observations.df[,c('bug_id','SerialNo','Year','Week','Version')])[,c('Year','Week','Version')]
+specimens.df[,'Record'] <- 1
+specimens.df <- specimens.df[specimens.df[,'Version']!='N/A', ]
+specimens.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', specimens.df, c('Version'), startDate, 'Record', 'sum', 0)
+specimens.rate <- mergeCalSparseFrames(specimens.fill, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+specimens.df[,'statParam'] <- 'bfdx'
+specimens.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', specimens.df, c('statParam'), startDate, 'Record', 'sum', 0)
+specimens.all <- mergeCalSparseFrames(specimens.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+specimens.all <- addStatsToSparseHandledData(specimens.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0)
+specimens.lims <- merge(specimens.rate, specimens.all[,c('DateGroup','UL')], by=c('DateGroup'))
+pal.specimens <- createPaletteOfVariableLength(specimens.lims, 'Version')
+p.specimens <- ggplot(specimens.lims, aes(x=DateGroup, y=Rate, fill=Version)) + geom_bar(stat='identity') + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_fill_manual(values=pal.specimens) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + guides(fill=guide_legend(ncol=4, byrow=TRUE)) + labs(title='Specimen Types in Escalated Complaints/All Complaints:\nFYI Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate')
+
+# establish some properties to make a monthly bar chart
+bigGroup <- 'Year'
+smallGroup <- 'Month'
+periods <- 7
+weeks <- 53
+months <- 13
+lagPeriods <- 0
+validateDate <- '2016-04'
+
+# make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
+startYear <- year(Sys.Date()) - 1
+calendar.df <- createCalendarLikeMicrosoft(startYear, 'Month')
+startDate <- findStartDate(calendar.df, 'Month', months, periods)
+# set theme for line charts ------------------------------------------------------------------------------------------------------------------
+seqBreak <- 1
+dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(periods,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
+fontSize <- 20
+fontFace <- 'bold'
+# set theme for line charts ------------------------------------------------------------------------------------------------------------------
+
+# Bar Chart for CI/All Complaints from Complaint Tracker
+countCI.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Month', countCI.df, c('Key'), startDate, 'Record', 'sum', 1)
+countComplaint.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Month', countComplaint.df, c('Key'), startDate, 'Record', 'sum', 0)
+complaintCI.count <- rbind(countComplaint.all, countCI.all)
+myPalCount <- createPaletteOfVariableLength(complaintCI.count, 'Key')
+p.complaintCI <- ggplot(complaintCI.count, aes(x=DateGroup, y=Record, group=1, fill=Key)) + geom_bar(stat="identity") + scale_fill_manual(values=myPalCount, name='') + geom_text(aes(label=Record), vjust=1.5, color="white",position="stack", fontface="bold") + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Total Count of Complaints and CIs by Month', x='Date(Year-Month)', y='Count of Complaints and CIs')
+
+# export images for web hub
+setwd(imgDir)
+plots <- ls()[grep('^p\\.', ls())]
+for(i in 1:length(plots)) {
+  
+  imgName <- paste(substring(plots[i],3),'.png',sep='')
+
+  png(file=imgName, width=1200, height=800, units='px')
+  print(eval(parse(text = plots[i])))
+  makeTimeStamp(author='Post Market Surveillance')
+  dev.off()
+}
+
+# Make pdf report for the web hub
+setwd(pdfDir)
+pdf("ComplaintInvestigation.pdf", width = 11, height = 8)
+for(i in 1:length(plots)) {
+  
+  print(eval(parse(text = plots[i])))
+}
+dev.off()
+
+rm(list = ls())

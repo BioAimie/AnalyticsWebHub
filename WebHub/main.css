@@ -1,0 +1,237 @@
+#header {
+    background-color: white;
+    margin: 20px;
+}
+.jumbotron{
+    background-image: url(images/Desertlong.jpg);
+    background-size: cover;
+    background-repeat: repeat-x;
+    height: 200px;
+    width: 100%;
+    margin: 0 auto;
+}
+#logo-area {
+    width: 30em;
+    height: 7em;
+    margin-left: 0%;
+    background-color: white;
+}
+#logo-area img {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 1em;
+}
+#navigator {
+    position: absolute;
+    top: 3.5em;
+    left: 30em;
+    width: 80em;
+    float: right;
+    margin-top: 0;
+    margin-left: 0;
+    padding-left: 0;
+}
+#navigator li {
+    display: inline;
+    float: left;
+}
+#navigator a {
+    color: navy;
+    text-align: center;
+    padding: 0.5em 1.5em;
+    text-decoration: none;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 110%;
+}
+#editpanel li {
+    display: block;
+    width: 75%;
+    height: 40%;
+    padding-bottom: 5px;
+    background-color: white;
+}
+.panel {
+    display: none;
+    position: absolute;
+    background: none;
+    left: 700px;
+    z-index: 10;
+}
+#editpanel a:hover {
+    color: red;
+}
+#menuHeader {
+    margin: 20px;
+    margin-bottom: 0px;
+}
+#sideBar{
+    float:left;
+    margin: 20px;
+    margin-top: 0px;
+    padding: 20px;
+    padding-top: 0px;
+    background-color: rgb(204,204,204);
+}
+#sideBar ul{
+    list-style-type: none;
+    font-weight: bold;
+    text-decoration: none;
+}
+#sideBar a{
+    color: grey;
+}
+#sideBar a:hover {
+    color: red;
+    text-decoration: none;
+}
+#reliability a, #IMAN a, #EXEC a, #ISERV a, #SUPP a, #PMG a, #busMenu a, #field a, #LIVE a{
+    color: navy;
+}
+button {
+    background-color: rgb(204,204,204);
+    border: none;
+    height: 20px;
+    width: 20px;
+}
+#menuButton{
+    background-color: white;
+    height: 40px;
+    width: 40px;
+}
+#body{
+    float: left;
+    padding-left: 20px;
+}
+#body h2{
+    font-weight: bold;
+    padding-bottom: 10px;
+    padding-top: 0px;
+    font-size: 2.5em;
+}
+#quest, #new{
+    font-size: 1.25em;
+}
+#new{
+    padding-left: 20px;
+    padding-top: 0px;
+    list-style-image: url(images/redstar1.jpg);
+    color: red;
+}
+#new li a{
+    color: red;
+}
+#footer {
+    clear: both; 
+    text-align: center;
+    padding: 20px;
+}
+#body h3{
+    font-size: 2em;
+    padding-left: 30px;
+}
+.pics{
+    padding-top: 40px;
+    padding-bottom: 10px;
+    margin-bottom: 0px;
+}
+#body a{
+    font-size: 1em;
+    color: black;
+    text-decoration: none;
+    margin-left: 20px;
+}
+#body a:hover{
+    color: red;
+    text-decoration: none;
+}
+#body img {
+    float: left;
+    clear: both;
+    padding: 5px;
+}
+.jobDesc{
+    font-size: 1em;
+    font-style: italic;
+    margin-left: 150px;
+}
+.info {
+    margin-left: 75px;
+}
+.brighten {
+    opacity: 0.5;
+}
+#busMenu {
+    padding-left: 35px;
+}
+#space {
+    padding: 10px;
+}
+sup {
+    color: red;
+}
+
+/* CSS specific to charts*/
+
+#pageTitle{
+    text-align: center; 
+    margin-top: -40px;
+}
+#navigator2 {
+    position: absolute;
+    top: 5.5em;
+    left: 30em;
+    width: 80em;
+    float: right;
+    margin-top: 0;
+    margin-left: 0;
+    padding-left: 0;
+}
+#navigator2 li {
+    display: inline;
+    float: left;
+}
+#navigator2 a {
+    color: navy;
+    text-align: center;
+    padding: 0.5em 1.5em;
+    text-decoration: none;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 110%;
+}
+.background {
+    margin-top: 0.2%;
+    background-color: grey;
+}
+
+.chart-area {
+    width: 80%;
+    padding-top: 0.1%;
+    margin-left: 10%;
+}
+
+.chart-area p {
+    color: black;
+    font-weight: bold;
+    align-content: center;
+    text-align: center;
+    font-size: 125%;
+}
+
+.chart {
+    margin-left: 10%; 
+    width: 80%;
+}
+
+.slick-prev{
+    left: 0px;
+}
+#bq1 {
+    border-top: solid grey 2px;
+    padding-top: 20px;
+}
+#betaLink {
+    padding: 20px;
+    text-align: center;
+}

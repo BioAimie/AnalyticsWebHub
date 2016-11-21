@@ -1,0 +1,48 @@
+/*Stylesheet for Shiny app*/
+
+.DataSets {
+    padding-bottom: 10px;
+    border-bottom: solid black 1px;
+}
+.dataSetpic {
+    box-shadow: 5px 5px 1px #888888;
+    border: inset grey 1px;
+    display: inline;
+}
+#dropData1, #dateRange, #chartType, #dateType, #cTitle {
+    float: left;
+    margin: 10px;
+}
+#dropData1 {
+    border: solid grey 1px;
+}
+#options {
+    width: 1500px;
+    clear: both;
+}
+#chartType, #dateType{
+    width: 120px;
+}
+#plotlyChart {
+    min-width: 1000px;
+    min-height: 1000px;
+}
+#ncrType {
+    float: left;
+    clear: both;
+    border-top: 1px solid black;
+    padding-top: 10px;
+}
+#currWhere {
+    padding-left: 350px;
+    width: 1000px;
+    margin-top: -55px;
+}
+#selectAll {
+    float: left;
+    clear: both;    
+}
+.mainFilters{
+    padding-top: 250px;
+}
+

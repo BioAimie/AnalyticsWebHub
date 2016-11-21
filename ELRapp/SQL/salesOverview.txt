@@ -1,0 +1,73 @@
+SELECT 
+	ISNULL([SalesOrder], 'NoSO') AS [SalesOrder],
+	[ItemID],
+	CASE
+		WHEN [ItemID] IN ('RFIT-ASY-0001','RFIT-ASY-0100','RFIT-ASY-0105','RFIT-ASY-0107','RFIT-ASY-0120','RFIT-ASY-0124','RFIT-ASY-0125') THEN 'RP'
+		WHEN [ItemID] IN ('RFIT-ASY-0118','RFIT-ASY-0119') THEN 'ME' 
+		WHEN [ItemID] IN ('RFIT-ASY-0122', 'RFIT-ASY-0094') THEN 'BT'
+		WHEN [ItemID] IN ('RFIT-ASY-0104','RFIT-ASY-0116') THEN 'GI'
+		WHEN [ItemID] IN ('RFIT-ASY-0109','RFIT-ASY-0114','RFIT-ASY-0126','RFIT-ASY-0127') THEN 'BCID'
+		WHEN [ItemID] LIKE 'FLM1-ASY-0001' THEN 'FA1.5'
+		WHEN [ItemID] LIKE 'FLM1-ASY-0001R' THEN 'FA1.5R'
+		WHEN [ItemID] LIKE 'FLM2-ASY-0001' THEN 'FA2.0'
+		WHEN [ItemID] LIKE 'FLM2-ASY-0001R' THEN 'FA2.0R'
+		WHEN [ItemID] LIKE 'HTFA-%' THEN 'Torch'
+		WHEN [ItemID] IN ('FLM1-PRT-0018', 'FLM1-SRV-0007', 'FLM1-SRV-0008', 'FLM1-SRV-0009') THEN 'Service'
+		WHEN [ItemID] IN ('FLM1-ASY-0121', 'FLM1-ASY-0122', 'FLM1-ASY-0123', 'FLM1-ASY-0124', 'FLM1-ASY-0129', 'FLM1-ASY-0130') THEN 'Verification'
+		ELSE 'Other'
+	END AS [Product],
+	[CustID],
+	[CustName],
+	[CurrentCustClassID] AS [CustClass],
+	ISNULL([ShipToAddrStateID], 'Intl') AS [State],
+	[ShipToCountryID] AS [Country],
+	[SalesTerritoryID],
+	[SalesSource],
+	[SalesOrderUnitPrice] AS [SOUnitPrice],
+	[TradeDiscAmt],
+	[SalesOrderExtAmt],
+	[ShipDate],
+	YEAR([ShipDate]) AS [Year],
+	MONTH([ShipDate]) AS [Month],
+	[QtyShipped] AS [ItemsShipped],						
+	IIF([ItemID] IN ('RFIT-ASY-0118','RFIT-ASY-0105','RFIT-ASY-0114','RFIT-ASY-0116','RFIT-ASY-0120','RFIT-ASY-0124','RFIT-ASY-0126',
+		'NI-RFIT-ASY-0105','NI-RFIT-ASY-0114','NI-RFIT-ASY-0116','NI-RFIT-ASY-0118'), [QtyShipped]*30, 
+		IIF([ItemID] IN ('RFIT-ASY-0127','RFIT-ASY-0125','RFIT-ASY-0122','RFIT-ASY-0094','RFIT-ASY-0119','RFIT-ASY-0109','RFIT-ASY-0107','RFIT-ASY-0104',
+			'NI-RFIT-ASY-0104','NI-RFIT-ASY-0107','NI-RFIT-ASY-0109','NI-RFIT-ASY-0119'), [QtyShipped]*6, [QtyShipped])) AS [QtyShipped]
+FROM [SQL1-RO].[mas500_app].[dbo].[vdvShipmentLine] WITH(NOLOCK)
+WHERE [ItemID] IN
+	(
+		'FLM1-ASY-0001', 
+		'FLM2-ASY-0001', 
+		'FLM1-ASY-0001R',
+		'FLM2-ASY-0001R', 
+		'HTFA-ASY-0003',
+		'RFIT-ASY-0127',
+		'RFIT-ASY-0126',
+		'RFIT-ASY-0125',
+		'RFIT-ASY-0124',
+		'RFIT-ASY-0122',
+		'RFIT-ASY-0120',
+		'RFIT-ASY-0119',
+		'RFIT-ASY-0118',
+		'RFIT-ASY-0116',
+		'RFIT-ASY-0114',
+		'RFIT-ASY-0109',
+		'RFIT-ASY-0107',
+		'RFIT-ASY-0105',
+		'RFIT-ASY-0104',
+		'RFIT-ASY-0094',
+		'FLM1-PRT-0018',
+		'FLM1-SRV-0007',
+		'FLM1-SRV-0008',
+		'FLM1-SRV-0009',
+		'FLM1-ASY-0121',
+		'FLM1-ASY-0122',
+		'FLM1-ASY-0123',
+		'FLM1-ASY-0124',
+		'FLM1-ASY-0129',
+		'FLM1-ASY-0130'
+	) 
+	AND [SalesTerritoryID] NOT IN ('House', 'Defense', 'International')
+	AND [CurrentCustClassID] NOT LIKE 'Related' 
+	AND [SalesSource] IN ('REG Trade ADDON', 'RRA Cap Lease', 'FP OpLease', 'FP CapLeas', 'OPLease/Flex', 'Inst OpLease', 'RRA Op Lease','Sale', 'Inst CapLease', 'RRA')

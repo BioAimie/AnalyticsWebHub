@@ -1,0 +1,362 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title> Pouch Inline QC Trend Portfolio </title>
+        <!-- HTML5 and mobile devices -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- styling formats in order of ascending importance (i.e. custom css trumps bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" type="text/css" href="slick/slick.css"/>
+        <link rel="stylesheet" type="text/css" href="slick/slick-theme.css"/>
+        <link type="text/css" rel="stylesheet" href="main.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type="text/javascript" src="script.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+        <!-- [if IE]> -->
+        <script src="https://cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/respond/1.4.2/respond.min.js"></script>    
+    </head>
+    
+    <body>
+        <div id="header">
+            <div class="container" id="logo-area">
+                <img src="images/BFDx_Logo.jpg" usemap="#logoMap">
+                <map name="logoMap" id="logoMap">
+                    <area id="HP" alt="Biofire Home Page" title="BiofireDx Home Page" href="http://biofiredx.com/" shape="rect" coords="0,0,150,199" style="outline:none;"/>
+                    <area id="WH" alt="WebHub" title="Analytics Web Hub" href="http://biofirestation/WebHub/WebHub.html" shape="rect" coords="151,0,1297,199" style="outline:none;"/>
+                </map>
+            </div>
+            <div class="container" id="navigator">
+                <ul class="pull-left">
+                    <li class="brighten"> <a href="http://biofirestation/WebHub/WebHub.html">ANALYTICS WEB HUB</a></li>
+                    <li class="brighten"> <a href="http://biofirestation/wordpress/">BIOFIRE STATION</a></li>
+                    <li class="brighten"> <a href="http://qw.biofiredx.net/authentication/login">QUALITY WEB</a></li>
+                    <li class="brighten"> <a href="http://pw.biofiredx.net/">PRODUCTION WEB</a></li>
+                    <li class="brighten" id="dropdown"> <a href="#"> CONTACT US </a> 
+                        <div class="panel">
+                        <ul id="editpanel">
+                            <li> <a href="mailto:aimie.faucett@biofiredx.com?subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> <img src="images/employee_pics/aimie1_50.jpg"/>&nbsp;&nbsp;Aimie Faucett </a> </li>
+                            <li> <a href="mailto:amber.kiser@biofiredx.com?cc=aimie.faucett@biofiredx.com&subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> <img src="images/employee_pics/amber1_50.jpg"/>&nbsp;&nbsp;Amber Kiser </a> </li>
+                            <li> <a href="mailto:Graham.Knussmann@biofiredx.com?subject=Analytics Web Hub Query"> <img src="images/employee_pics/graham_50.jpg"/>&nbsp;&nbsp;Graham Knussmann</a> </li>
+                        </ul>
+                    </div>
+                    </li>
+                </ul>        
+            </div>
+            
+            <div class="container" id="navigator2">
+                <ul class="pull-left">
+                    <li class="brighten"><a href="pdfs/PouchManufacturingInlineQC.pdf"> DOWNLOAD PDF REPORT</a></li>
+                </ul>
+            </div>
+        </div>
+        
+    <h2 id="menuHeader">
+        <button type="button" class="plus" id="menuButton">+</button>
+        Main Menu
+    </h2> 
+    
+    <div id="sideBar" style="display:none">
+        <div id="reliability">
+            <h2>Reliability Metrics</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rbio" data-toggle="collapse" data-target="#SRBio">+</button>
+                    BioReagent
+                </h4>
+                    <div id="SRBio" class="collapse out">
+                        <ul>
+                            <li><a href="dashPNCR.html">NCR</a></li>
+                            <li><a href="dashQPM.html">Inline QC</a></li>
+                            <li><a href="dashPQC.html">Final QC</a></li> 
+                            <li><a href="dashCON.html">Contamination</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rcomp" data-toggle="collapse" data-target="#SRcomp">+</button>
+                    Complaints
+                </h4>
+                    <div id="SRcomp" class="collapse out">
+                        <ul>
+                            <li><a href="dashCC.html">Customer Complaints</a></li>
+                            <li><a href="dashCI.html">Investigations</a></li>
+                            <li><a href="dashPRE.html">PRE and Closures</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rinst" data-toggle="collapse" data-target="#SRinst">+</button>
+                    Instrument
+                </h4>
+                    <div id="SRinst" class="collapse out">
+                        <ul>
+                            <li><a href="dashINCR.html">NCR</a></li>
+                            <li><a href="dashRMA.html">RMA</a></li>
+                            <li><a href="dashIVOE.html">VOE</a></li>
+                            <li><a href="dashPICS.html">Inline Calibration</a></li>
+                            <li><a href="dashIQC.html">Final QC</a></li>
+                            <li><a href="dashIRM.html">Internal Reliabiity</a></li>
+                        </ul>    
+                    </div>
+        </div>
+        <div id="operations">
+            <h2>Operations Metrics</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Oprod" data-toggle="collapse" data-target="#SOprod">+</button>
+                    Product Overview
+                </h4>
+                    <div id="SOprod" class="collapse out">
+                        <ul>
+                            <li id="SUPP"><a href="dashSUPP.html">Supplier Reliability</a></li>
+                            <li id="IMAN"><a href="dashIMAN.html">Instrument Manufacturing</a></li>
+                            <li id="ISERV"><a href="dashISERV.html">Instrument Servicing</a></li>
+                            <li id="PMG"><a href="dashPMG.html">Program Management</a></li>
+                            <li><a href="../WebHub.html">Pouch Manufacturing</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Osales" data-toggle="collapse" data-target="#SOsales">+</button>
+                    Sales
+                </h4>
+                    <div id="SOsales" class="collapse out">
+                        <ul>
+                            <li id="LIVE"><a href="dashLIVE.html">Go Live To Thrive</a></li>
+                            <li><a href="../WebHub.html">Instruments</a></li>
+                            <li><a href="../WebHub.html">Disposables</a></li>
+                        </ul>    
+                    </div>
+        </div>
+        <div id="field">
+            <h2>FilmArray Trend Project</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Cbio" data-toggle="collapse" data-target="#SCbio">+</button>
+                    Trend FilmArray
+                </h4>
+                    <div id="SCbio" class="collapse out">
+                        <ul>                            
+                            <li><a href="dashTrend.html">Trend</a></li>
+                        </ul>
+                    </div>            
+        </div>
+        <div id='space'></div>
+        <h2 class="expandOut">
+            Business Analysis <sup>[New]</sup>
+            <!--<button type='button' class='plus' id='busButton' data-toggle='collapse' data-target='#busMenu'>+</button>-->
+        </h2>
+        <!--<div id='busMenu' class="collapse out">-->
+        <div id='busMenu'>
+            <h3><a href='https://biofiredx.domo.com/link/5c46aAhzGrHpFdv9' target='_blank'> Materials EOM</a></h3>
+        </div>
+        </div>
+        
+        <h2 id="pageTitle">Pouch Inline QC</h2>
+        
+        <div class="background">
+            <div class="chart-area">
+                <div class="row">
+                    <div class="image-slider">
+                        <div> 
+                            <p> 1 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/burst.png" download = "InlinePQCdash_burst.png" title = "burst"> 
+                            <img class='chart' src="images/Dashboard_PouchManufacturingQuality/burst.png" alt = "burst"/> </a>
+                        </div>
+                        <div> 
+                            <p> 2 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/burst.lsd.one.png" download = "InlinePQCdash_burst.lsd.one.png" title = "burst.lsd.one"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/burst.lsd.one.png' alt = "burst.lsd.one"/> </a>
+                        </div>
+                        <div> 
+                            <p> 3 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/burst.lsd.two.png" download = "InlinePQCdash_burst.lsd.two.png" title = "burst.lsd.two"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/burst.lsd.two.png' alt = "burst.lsd.two"/> </a>
+                        </div>
+                        <div> 
+                            <p> 4 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/burst.lsd.three.png" download = "InlinePQCdash_burst.lsd.three.png" title = "burst.lsd.three"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/burst.lsd.three.png' alt = "burst.lsd.three"/> </a>
+                        </div>
+                        <div> 
+                            <p> 5 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/burst.ltd.png" download = "InlinePQCdash_burst.ltd.png" title = "burst.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/burst.ltd.png' alt = "burst.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 6 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/burst.fail.ltd.png" download = "InlinePQCdash_burst.fail.ltd.png" title = "burst.fail.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/burst.fail.ltd.png' alt = "burst.fail.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 7 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/polarized.fail.png" download = "InlinePQCdash_polarized.fail.png" title = "polarized.fail"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/polarized.fail.png' alt = "polarized.fail"/> </a>
+                        </div>
+                        <div> 
+                            <p> 8 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.wsw.png" download = "InlinePQCdash_hydra.wsw.png" title = "hydra.wsw"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.wsw.png' alt = "hydra.wsw"/> </a>
+                        </div>
+                        <div> 
+                            <p> 9 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.wsw.lsd.one.png" download = "InlinePQCdash_hydra.wsw.lsd.one.png" title = "hydra.wsw.lsd.one"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.wsw.lsd.one.png' alt = "hydra.wsw.lsd.one"/> </a>
+                        </div>
+                        <div> 
+                            <p> 10 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.wsw.lsd.two.png" download = "InlinePQCdash_hydra.wsw.lsd.two.png" title = "hydra.wsw.lsd.two"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.wsw.lsd.two.png' alt = "hydra.wsw.lsd.two"/> </a>
+                        </div>
+                        <div> 
+                            <p> 11 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.wsw.lsd.three.png" download = "InlinePQCdash_hydra.wsw.lsd.three.png" title = "hydra.wsw.lsd.three"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.wsw.lsd.three.png' alt = "hydra.wsw.lsd.three"/> </a>
+                        </div>
+                        <div> 
+                            <p> 12 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.wsw.lsd.four.png" download = "InlinePQCdash_hydra.wsw.lsd.four.png" title = "hydra.wsw.lsd.four"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.wsw.lsd.four.png' alt = "hydra.wsw.lsd.four"/> </a>
+                        </div>
+                        <div> 
+                            <p> 13 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.wsw.ltd.png" download = "InlinePQCdash_hydra.wsw.ltd.png" title = "hydra.wsw.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.wsw.ltd.png' alt = "hydra.wsw.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 14 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.wsw.fail.ltd.png" download = "InlinePQCdash_hydra.wsw.fail.ltd.png" title = "hydra.wsw.fail.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.wsw.fail.ltd.png' alt = "hydra.wsw.fail.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 15 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.ssw.png" download = "InlinePQCdash_hydra.ssw.png" title = "hydra.ssw"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.ssw.png' alt = "hydra.ssw"/> </a>
+                        </div>
+                        <div> 
+                            <p> 16 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.ssw.lsd.one.png" download = "InlinePQCdash_hydra.ssw.lsd.one.png" title = "hydra.ssw.lsd.one"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.ssw.lsd.one.png' alt = "hydra.lsd.one.ssw"/> </a>
+                        </div>
+                        <div> 
+                            <p> 17 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.ssw.lsd.two.png" download = "InlinePQCdash_hydra.ssw.lsd.two.png" title = "hydra.ssw.lsd.two"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.ssw.lsd.two.png' alt = "hydra.lsd.two.ssw"/> </a>
+                        </div>
+                        <div> 
+                            <p> 18 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.ssw.lsd.three.png" download = "InlinePQCdash_hydra.ssw.lsd.three.png" title = "hydra.ssw.lsd.three"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.ssw.lsd.three.png' alt = "hydra.lsd.three.ssw"/> </a>
+                        </div>
+                        <div> 
+                            <p> 19 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.ssw.lsd.four.png" download = "InlinePQCdash_hydra.ssw.lsd.four.png" title = "hydra.ssw.lsd.four"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.ssw.lsd.four.png' alt = "hydra.lsd.four.ssw"/> </a>
+                        </div>
+                        <div> 
+                            <p> 20 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.ssw.ltd.png" download = "InlinePQCdash_hydra.ssw.ltd.png" title = "hydra.ssw.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.ssw.ltd.png' alt = "hydra.ssw.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 21 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.ssw.fail.ltd.png" download = "InlinePQCdash_hydra.ssw.fail.ltd.png" title = "hydra.ssw.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.ssw.fail.ltd.png' alt = "hydra.ssw.fail.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 22 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.tw.png" download = "InlinePQCdash_hydra.tw.png" title = "hydra.tw"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.tw.png' alt = "hydra.tw"/> </a>
+                        </div>
+                        <div> 
+                            <p> 23 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.tht.png" download = "InlinePQCdash_hydra.tht.png" title = "hydra.tht"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.tht.png' alt = "hydra.tht"/> </a>
+                        </div>
+                        <div> 
+                            <p> 24 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLine.png" download = "InlinePQCdash_faivCannula.png" title = "faivCannula"> 
+                            <img class='chart' src="images/Dashboard_PouchManufacturingQuality/faivLine.png" alt = "faivCannula"/> </a>
+                        </div>
+                        <div> 
+                            <p> 25 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLine.lsd.png" download = "InlinePQCdash_faivCannula.lsd.png" title = "faivCannula.lsd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/faivLine.lsd.png' alt = "faivCannula.lsd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 26 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLine.ltd.png" download = "InlinePQCdash_faivCannula.ltd.png" title = "faivCannula.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/faivLine.ltd.png' alt = "faivCannula.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 27 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLine.fail.ltd.png" download = "InlinePQCdash_faivCannula.fail.ltd.png" title = "faivCannula.fail.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/faivLine.fail.ltd.png' alt = "faivCannula.fail.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 28 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLineWater.png" download = "InlinePQCdash_faivWater.png" title = "faivWater"> 
+                            <img class='chart' src="images/Dashboard_PouchManufacturingQuality/faivLineWater.png" alt = "faivWater"/> </a>
+                        </div>
+                        <div> 
+                            <p> 29 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLineWater.lsd.png" download = "InlinePQCdash_faivWater.lsd.png" title = "faivWater.lsd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/faivLineWater.lsd.png' alt = "faivWater.lsd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 30 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLineWater.ltd.png" download = "InlinePQCdash_faivWater.ltd.png" title = "faivWater.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/faivLineWater.ltd.png' alt = "faivWater.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 31 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLineWater.fail.ltd.png" download = "InlinePQCdash_faivWater.fail.ltd.png" title = "faivWater.fail.ltd"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/faivLineWater.fail.ltd.png' alt = "faivWater.fail.ltd"/> </a>
+                        </div>
+                        <div> 
+                            <p> 32 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/burst.trend.png" download = "InlinePQCdash_burst.trend.png" title = "burst.trend"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/burst.trend.png' alt = "burst.trend"/> </a>
+                        </div>
+                        <div> 
+                            <p> 33 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.wsw.trend.png" download = "InlinePQCdash_hydra.wsw.trend.png" title = "hydra.wsw.trend"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.wsw.trend.png' alt = "hydra.wsw.trend"/> </a>
+                        </div>
+                        <div> 
+                            <p> 34 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.ssw.trend.png" download = "InlinePQCdash_hydra.ssw.trend.png" title = "hydra.ssw.trend"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.ssw.trend.png' alt = "hydra.ssw.trend"/> </a>
+                        </div>
+                        <div> 
+                            <p> 35 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.tw.trend.png" download = "InlinePQCdash_hydra.tw.trend.png" title = "hydra.tw.trend"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.tw.trend.png' alt = "hydra.tw.trend"/> </a>
+                        </div>                                         
+                        <div> 
+                            <p> 36 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/hydra.tht.trend.png" download = "InlinePQCdash_hydra.tht.trend.png" title = "hydra.tht.trend"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/hydra.tht.trend.png' alt = "hydra.tht.trend"/> </a>
+                        </div>
+                        <div> 
+                            <p> 37 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLine.trend.png" download = "InlinePQCdash_faivCannula.trend.png" title = "faivCannula.trend"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/faivLine.trend.png' alt = "faivCannula.trend"/> </a>
+                        </div>
+                        <div> 
+                            <p> 38 </p>
+                            <a href = "images/Dashboard_PouchManufacturingQuality/faivLineWater.trend.png" download = "InlinePQCdash_faivWater.trend.png" title = "faivWater.trend"> 
+                            <img class='chart' src='images/Dashboard_PouchManufacturingQuality/faivLineWater.trend.png' alt = "faivWater.trend"/> </a>
+                        </div>
+                    </div>
+                    <p> Charts are updated hourly. Click chart to download a copy. </p>
+                </div> 
+            </div>
+        </div>
+        
+        <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+        <script type="text/javascript" src="slick/slick.min.js"></script>    
+
+    </body>
+    
+</html> 

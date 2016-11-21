@@ -1,0 +1,5 @@
+SELECT DISTINCT
+	[Region],
+	[lon],
+	[lat]
+FROM [PMS1].[dbo].[tGeoCustomers] WITH(NOLOCK)

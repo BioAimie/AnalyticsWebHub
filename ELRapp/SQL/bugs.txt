@@ -1,0 +1,20 @@
+SET NOCOUNT ON
+
+SELECT
+	[RunDataId],
+	[CustomerSiteId]
+INTO #rpRuns
+FROM [FADataWarehouse].[dbo].[RunData] R WITH(NOLOCK) INNER JOIN [FADataWarehouse].[dbo].[ConnectorLaptops] C WITH(NOLOCK)
+	ON R.[ConnectorLaptopId] = C.[ConnectorLaptopId]
+WHERE [RunStatus] LIKE 'Completed' AND [SuppressState] LIKE 'Trendable' AND [PouchTitle] LIKE 'Resp%' AND YEAR([StartTime]) > 2012 AND C.[CustomerSiteId] <> 12
+
+SELECT 
+	R.[RunDataId],
+	R.[CustomerSiteId],
+	B.[Interpretation] AS [Bug],
+	1 AS [BugCount]
+FROM #rpRuns R INNER JOIN [FADataWarehouse].[dbo].[SummarizedPositiveAssayResults] B WITH(NOLOCK)
+	ON R.[RunDataId] = B.[RunDataId]
+WHERE B.[ResultType] LIKE 'Organism' 
+
+DROP TABLE #rpRuns

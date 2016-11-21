@@ -1,0 +1,363 @@
+<!DOCTYPE HTML>
+<html>
+
+    <head>
+        <title> Go Live To Thrive Trend Portfolio </title>
+        <!-- HTML5 and mobile devices -->
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- styling formats in order of ascending importance (i.e. custom css trumps bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" type="text/css" href="slick/slick.css"/>
+        <link rel="stylesheet" type="text/css" href="slick/slick-theme.css"/>
+        <link type="text/css" rel="stylesheet" href="main.css">
+        <!-- jQuery library -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type="text/javascript" src="script.js"></script>
+        <!-- Latest compiled JavaScript -->
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+        <!-- [if IE]> -->
+        <script src="https://cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/respond/1.4.2/respond.min.js"></script>    
+    </head>
+    
+    <body>
+         <div id="header">
+            <div class="container" id="logo-area">
+                <img src="images/BFDx_Logo.jpg" usemap="#logoMap">
+                <map name="logoMap" id="logoMap">
+                    <area id="HP" alt="Biofire Home Page" title="BiofireDx Home Page" href="http://biofiredx.com/" shape="rect" coords="0,0,150,199" style="outline:none;"/>
+                    <area id="WH" alt="WebHub" title="Analytics Web Hub" href="http://biofirestation/WebHub/WebHub.html" shape="rect" coords="151,0,1297,199" style="outline:none;"/>
+                </map>
+            </div>
+            <div class="container" id="navigator">
+                <ul class="pull-left">
+                    <li class="brighten"> <a href="http://biofirestation/WebHub/WebHub.html">ANALYTICS WEB HUB</a></li>
+                    <li class="brighten"> <a href="http://itweb.com/">BIOFIRE STATION</a></li>
+                    <li class="brighten"> <a href="http://qw.biofiredx.net/authentication/login">QUALITY WEB</a></li>
+                    <li class="brighten"> <a href="http://pw.biofiredx.net/">PRODUCTION WEB</a></li>
+                    <li class="brighten" id="dropdown"> <a href="#"> CONTACT US </a> 
+                        <div class="panel">
+                        <ul id="editpanel">
+                            <li> <a href="mailto:aimie.faucett@biofiredx.com?subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> <img src="images/employee_pics/aimie1_50.jpg"/>&nbsp;&nbsp;Aimie Faucett </a> </li>
+                            <li> <a href="mailto:amber.kiser@biofiredx.com?cc=aimie.faucett@biofiredx.com&subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> <img src="images/employee_pics/amber1_50.jpg"/>&nbsp;&nbsp;Amber Kiser </a> </li>
+                            <li> <a href="mailto:Graham.Knussmann@biofiredx.com?subject=Analytics Web Hub Query"> <img src="images/employee_pics/graham_50.jpg"/>&nbsp;&nbsp;Graham Knussmann</a> </li>
+                        </ul>
+                    </div>
+                    </li>
+                </ul>        
+            </div>
+            
+            <div class="container" id="navigator2">
+                <ul class="pull-left">
+                    <li class="brighten"><a href="pdfs/GoLiveToThrive.pdf"> DOWNLOAD PDF REPORT</a></li>
+                </ul>
+            </div>
+        </div>
+        
+    <h2 id="menuHeader">
+        <button type="button" class="plus" id="menuButton">+</button>
+        Main Menu
+    </h2> 
+    
+    <div id="sideBar" style="display:none">
+        <div id="reliability">
+            <h2>Reliability Metrics</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rbio" data-toggle="collapse" data-target="#SRBio">+</button>
+                    BioReagent
+                </h4>
+                    <div id="SRBio" class="collapse out">
+                        <ul>
+                            <li><a href="dashPNCR.html">NCR</a></li>
+                            <li><a href="dashQPM.html">Inline QC</a></li>
+                            <li><a href="dashPQC.html">Final QC</a></li> 
+                            <li><a href="dashCON.html">Contamination</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rcomp" data-toggle="collapse" data-target="#SRcomp">+</button>
+                    Complaints
+                </h4>
+                    <div id="SRcomp" class="collapse out">
+                        <ul>
+                            <li><a href="dashCC.html">Customer Complaints</a></li>
+                            <li><a href="dashCI.html">Investigations</a></li>
+                            <li><a href="dashPRE.html">PRE and Closures</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Rinst" data-toggle="collapse" data-target="#SRinst">+</button>
+                    Instrument
+                </h4>
+                    <div id="SRinst" class="collapse out">
+                        <ul>
+                            <li><a href="dashINCR.html">NCR</a></li>
+                            <li><a href="dashRMA.html">RMA</a></li>
+                            <li><a href="dashIVOE.html">VOE</a></li>
+                            <li><a href="dashPICS.html">Inline Calibration</a></li>
+                            <li><a href="dashIQC.html">Final QC</a></li>
+                            <li><a href="dashIRM.html">Internal Reliabiity</a></li>
+                        </ul>    
+                    </div>
+        </div>
+        <div id="operations">
+            <h2>Operations Metrics</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Oprod" data-toggle="collapse" data-target="#SOprod">+</button>
+                    Product Overview
+                </h4>
+                    <div id="SOprod" class="collapse out">
+                        <ul>
+                            <li id="SUPP"><a href="dashSUPP.html">Supplier Reliability</a></li>
+                            <li id="IMAN"><a href="dashIMAN.html">Instrument Manufacturing</a></li>
+                            <li id="ISERV"><a href="dashISERV.html">Instrument Servicing</a></li>
+                            <li id="PMG"><a href="dashPMG.html">Program Management</a></li>
+                            <li><a href="../WebHub.html">Pouch Manufacturing</a></li>
+                        </ul>
+                    </div>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Osales" data-toggle="collapse" data-target="#SOsales">+</button>
+                    Sales
+                </h4>
+                    <div id="SOsales" class="collapse out">
+                        <ul>
+                            <li id="LIVE"><a href="dashLIVE.html">Go Live To Thrive</a></li>
+                            <li><a href="../WebHub.html">Instruments</a></li>
+                            <li><a href="../WebHub.html">Disposables</a></li>
+                        </ul>    
+                    </div>
+        </div>
+        <div id="field">
+            <h2>FilmArray Trend Project</h2>
+                <h4 class="expandOut">
+                    <button type="button" class="plus" id="Cbio" data-toggle="collapse" data-target="#SCbio">+</button>
+                    Trend FilmArray
+                </h4>
+                    <div id="SCbio" class="collapse out">
+                        <ul>                            
+                            <li><a href="dashTrend.html">Trend</a></li>
+                        </ul>
+                    </div>            
+        </div>
+        <div id='space'></div>
+        <h2 class="expandOut">
+            Business Analysis <sup>[New]</sup>
+            <!--<button type='button' class='plus' id='busButton' data-toggle='collapse' data-target='#busMenu'>+</button>-->
+        </h2>
+        <!--<div id='busMenu' class="collapse out">-->
+        <div id='busMenu'>
+            <h3><a href='https://biofiredx.domo.com/link/5c46aAhzGrHpFdv9' target='_blank'> Materials EOM</a></h3>
+        </div>
+        </div>
+        
+        <h2 id="pageTitle">Go Live To Thrive</h2>
+        
+        <div class="background">
+            <div class="chart-area">
+                <div class="row">
+                    <div class="image-slider">
+                        <div> 
+                            <p> 1 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToShip.png" download = "LIVEdash_AvgSaleToShip.png" title = "AvgSaleToShip"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToShip.png' alt = "AvgSaleToShip"/> </a>
+                        </div>
+                        <div> 
+                            <p> 2 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToShip.Region.png" download = "LIVEdash_AvgSaleToShip.Region.png" title = "AvgSaleToShip.Region"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToShip.Region.png' alt = "AvgSaleToShip.Region"/> </a>
+                        </div>
+                        <div> 
+                            <p> 3 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.png" download = "LIVEdash_AvgSaleToPouch.png" title = "AvgSaleToPouch"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.png' alt = "AvgSaleToPouch"/> </a>
+                        </div>
+                        <div> 
+                            <p> 4 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Reg.1.png" download = "LIVEdash_AvgSaleToPouch.Reg.1.png" title = "AvgSaleToPouch.Reg.1"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Reg.1.png' alt = "AvgSaleToPouch.Reg.1"/> </a>
+                        </div>
+                        <div> 
+                            <p> 5 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Reg.2.png" download = "LIVEdash_AvgSaleToPouch.Reg.2.png" title = "AvgSaleToPouch.Reg.2"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Reg.2.png' alt = "AvgSaleToPouch.Reg.2"/> </a>
+                        </div>
+                        <div> 
+                            <p> 6 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Terr.png" download = "LIVEdash_AvgSaleToPouch.Terr.png" title = "AvgSaleToPouch.Terr"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Terr.png' alt = "AvgSaleToPouch.Terr"/> </a>
+                        </div>
+                        <div> 
+                            <p> 7 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Central.png" download = "LIVEdash_AvgSaleToPouch.Central.png" title = "AvgSaleToPouch.Central"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Central.png' alt = "AvgSaleToPouch.Central"/> </a>
+                        </div>
+                        <div> 
+                            <p> 8 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.GreatLakes.png" download = "LIVEdash_AvgSaleToPouch.GreatLakes.png" title = "AvgSaleToPouch.GreatLakes"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.GreatLakes.png' alt = "AvgSaleToPouch.GreatLakes"/> </a>
+                        </div>
+                        <div> 
+                            <p> 9 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.NorthEast.png" download = "LIVEdash_AvgSaleToPouch.NorthEast.png" title = "AvgSaleToPouch.NorthEast"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.NorthEast.png' alt = "AvgSaleToPouch.NorthEast"/> </a>
+                        </div>
+                        <div> 
+                            <p> 10 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.SouthEast.png" download = "LIVEdash_AvgSaleToPouch.SouthEast.png" title = "AvgSaleToPouch.SouthEast"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.SouthEast.png' alt = "AvgSaleToPouch.SouthEast"/> </a>
+                        </div>
+                        <div> 
+                            <p> 11 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.West.png" download = "LIVEdash_AvgSaleToPouch.West.png" title = "AvgSaleToPouch.West"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.West.png' alt = "AvgSaleToPouch.West"/> </a>
+                        </div>
+                        <div> 
+                            <p> 12 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Year.png" download = "LIVEdash_AvgSaleToPouch.Year.png" title = "AvgSaleToPouch.Year"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Year.png' alt = "AvgSaleToPouch.Year"/> </a>
+                        </div>
+                        <div> 
+                            <p> 13 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Type.1.png" download = "LIVEdash_AvgSaleToPouch.Type.1.png" title = "AvgSaleToPouch.Type.1"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Type.1.png' alt = "AvgSaleToPouch.Type.1"/> </a>
+                        </div>
+                        <div> 
+                            <p> 14 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Type.2.png" download = "LIVEdash_AvgSaleToPouch.Type.2.png" title = "AvgSaleToPouch.Type.2"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleToPouch.Type.2.png' alt = "AvgSaleToPouch.Type.2"/> </a>
+                        </div>
+                        <div> 
+                            <p> 15 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.png" download = "LIVEdash_AvgSaleTo3rdPouch.png" title = "AvgSaleTo3rdPouch"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.png' alt = "AvgSaleTo3rdPouch"/> </a>
+                        </div>
+                        <div> 
+                            <p> 16 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Reg.1.png" download = "LIVEdash_AvgSaleTo3rdPouch.Reg.1.png" title = "AvgSaleTo3rdPouch.Reg.1"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Reg.1.png' alt = "AvgSaleTo3rdPouch.Reg.1"/> </a>
+                        </div>
+                        <div> 
+                            <p> 17 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Reg.2.png" download = "LIVEdash_AvgSaleTo3rdPouch.Reg.2.png" title = "AvgSaleTo3rdPouch.Reg.2"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Reg.2.png' alt = "AvgSaleTo3rdPouch.Reg.2"/> </a>
+                        </div>
+                        <div> 
+                            <p> 18 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Terr.png" download = "LIVEdash_AvgSaleTo3rdPouch.Terr.png" title = "AvgSaleTo3rdPouch.Terr"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Terr.png' alt = "AvgSaleTo3rdPouch.Terr"/> </a>
+                        </div>
+                        <div> 
+                            <p> 19 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Central.png" download = "LIVEdash_AvgSaleTo3rdPouch.Central.png" title = "AvgSaleTo3rdPouch.Central"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Central.png' alt = "AvgSaleTo3rdPouch.Central"/> </a>
+                        </div>
+                        <div> 
+                            <p> 20 </p> 
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.GreatLakes.png" download = "LIVEdash_AvgSaleTo3rdPouch.GreatLakes.png" title = "AvgSaleTo3rdPouch.GreatLakes"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.GreatLakes.png' alt = "AvgSaleTo3rdPouch.GreatLakes"/> </a>
+                        </div>
+                        <div> 
+                            <p> 21 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.NorthEast.png" download = "LIVEdash_AvgSaleTo3rdPouch.NorthEast.png" title = "AvgSaleTo3rdPouch.NorthEast"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.NorthEast.png' alt = "AvgSaleTo3rdPouch.NorthEast"/> </a>
+                        </div>
+                        <div> 
+                            <p> 22 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.SouthEast.png" download = "LIVEdash_AvgSaleTo3rdPouch.SouthEast.png" title = "AvgSaleTo3rdPouch.SouthEast"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.SouthEast.png' alt = "AvgSaleTo3rdPouch.SouthEast"/> </a>
+                        </div>
+                        <div> 
+                            <p> 23 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.West.png" download = "LIVEdash_AvgSaleTo3rdPouch.West.png" title = "AvgSaleTo3rdPouch.West"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.West.png' alt = "AvgSaleTo3rdPouch.West"/> </a>
+                        </div>
+                        <div> 
+                            <p> 24 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Year.png" download = "LIVEdash_AvgSaleTo3rdPouch.Year.png" title = "AvgSaleTo3rdPouch.Year"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Year.png' alt = "AvgSaleTo3rdPouch.Year"/> </a>
+                        </div>
+                        <div> 
+                            <p> 25 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Type.1.png" download = "LIVEdash_AvgSaleTo3rdPouch.Type.1.png" title = "AvgSaleTo3rdPouch.Type.1"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Type.1.png' alt = "AvgSaleTo3rdPouch.Type.1"/> </a>
+                        </div>
+                        <div> 
+                            <p> 26 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Type.2.png" download = "LIVEdash_AvgSaleTo3rdPouch.Type.2.png" title = "AvgSaleTo3rdPouch.Type.2"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgSaleTo3rdPouch.Type.2.png' alt = "AvgSaleTo3rdPouch.Type.2"/> </a>
+                        </div>
+                        <div> 
+                            <p> 27 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerificationToPouch.png" download = "LIVEdash_AvgVerificationToPouch.png" title = "AvgVerificationToPouch"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerificationToPouch.png' alt = "AvgVerificationToPouch"/> </a>
+                        </div>
+                        <div> 
+                            <p> 28 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.Reg.1.png" download = "LIVEdash_AvgVerToPouch.Reg.1.png" title = "AvgVerToPouch.Reg.1"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.Reg.1.png' alt = "AvgVerToPouch.Reg.1"/> </a>
+                        </div>
+                        <div> 
+                            <p> 29 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.Reg.2.png" download = "LIVEdash_AvgVerToPouch.Reg.2.png" title = "AvgVerToPouch.Reg.2"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.Reg.2.png' alt = "AvgVerToPouch.Reg.2"/> </a>
+                        </div>
+                        <div> 
+                            <p> 30 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.Terr.png" download = "LIVEdash_AvgVerToPouch.Terr.png" title = "AvgVerToPouch.Terr"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.Terr.png' alt = "AvgVerToPouch.Terr"/> </a>
+                        </div>
+                        <div> 
+                            <p> 31 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.Central.png" download = "LIVEdash_AvgVerToPouch.Central.png" title = "AvgVerToPouch.Central"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.Central.png' alt = "AvgVerToPouch.Central"/> </a>
+                        </div>
+                        <div> 
+                            <p> 32 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.GreatLakes.png" download = "LIVEdash_AvgVerToPouch.GreatLakes.png" title = "AvgVerToPouch.GreatLakes"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.GreatLakes.png' alt = "AvgVerToPouch.GreatLakes"/> </a>
+                        </div>
+                        <div> 
+                            <p> 33 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.NorthEast.png" download = "LIVEdash_AvgVerToPouch.NorthEast.png" title = "AvgVerToPouch.NorthEast"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.NorthEast.png' alt = "AvgVerToPouch.NorthEast"/> </a>
+                        </div>
+                        <div> 
+                            <p> 34 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.SouthEast.png" download = "LIVEdash_AvgVerToPouch.SouthEast.png" title = "AvgVerToPouch.SouthEast"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.SouthEast.png' alt = "AvgVerToPouch.SouthEast"/> </a>
+                        </div>
+                        <div> 
+                            <p> 35 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.West.png" download = "LIVEdash_AvgVerToPouch.West.png" title = "AvgVerToPouch.West"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.West.png' alt = "AvgVerToPouch.West"/> </a>
+                        </div>
+                        <div> 
+                            <p> 36 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.Year.png" download = "LIVEdash_AvgVerToPouch.Year.png" title = "AvgVerToPouch.Year"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.Year.png' alt = "AvgVerToPouch.Year"/> </a>
+                        </div>
+                        <div> 
+                            <p> 37 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.Type.1.png" download = "LIVEdash_AvgVerToPouch.Type.1.png" title = "AvgVerToPouch.Type.1"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.Type.1.png' alt = "AvgVerToPouch.Type.1"/> </a>
+                        </div>
+                        <div> 
+                            <p> 38 </p>
+                            <a href = "images/Dashboard_GoLiveToThrive/AvgVerToPouch.Type.2.png" download = "LIVEdash_AvgVerToPouch.Type.2.png" title = "AvgVerToPouch.Type.2"> 
+                            <img class='chart' src='images/Dashboard_GoLiveToThrive/AvgVerToPouch.Type.2.png' alt = "AvgVerToPouch.Type.2"/> </a>
+                        </div>
+                    </div>
+                    <p> Charts are updated hourly. Click chart to download a copy.</p>
+                </div> 
+            </div>
+        </div>
+        
+        <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+        <script type="text/javascript" src="slick/slick.min.js"></script>    
+
+    </body>
+    
+</html>

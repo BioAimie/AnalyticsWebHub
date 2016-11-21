@@ -1,0 +1,21 @@
+setwd('~/WebHub/AnalyticsWebHub/ELRapp')
+# setwd('G:/Departments/PostMarket/DataScienceGroup/Data Science Products/InProcess/Amber/20160321_ExectuiveLevelReportingPlatform/ELRapp')
+
+library(shinydashboard)
+library(RODBC)
+library(ggmap)
+library(maps)
+library(sp)
+library(leaflet)
+library(colorRamps)
+library(rgeos)
+library(ggplot2)
+library(rgdal)
+library(maptools)
+library(zoo)
+library(scales)
+library(lubridate)
+library(RColorBrewer)
+
+# load the data and necessary functions
+source('Rfunctions/main.R')

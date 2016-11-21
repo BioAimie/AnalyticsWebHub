@@ -1,0 +1,117 @@
+Code,Category,Description
+0,General Codes,Unable to reproduce
+1,Legacy (not in use),Unknown
+2,General Codes,Customer abuse
+3,General Codes,Loaner return
+4,General Codes,Loose screw
+5,General Codes,Communication error 
+6,Legacy (not in use),Seal Bar Rework(CO6194)
+7,Legacy (not in use),Excessive silicone lubrication
+8,Legacy (not in use),Defective/misaligned wire harness
+9,General Codes,Pinched hose
+10,General Codes,Shipping damage
+11,General Codes,Wire harness disconnect
+12,General Codes,Fan inoperable
+13,General Codes,PM performed
+14,General Codes,Defect wire harness
+17,General Codes,Noisy fan
+18,General Codes,Wire harness in wrong location
+20,Reworks,Rework to v2.0
+50,Legacy (not in use),Window bladder LEAK at fitting
+51,Window Bladder,Delamination - no leak 
+52,Window Bladder,Window bladder affecting optics
+53,Window Bladder,Leak
+54,Legacy (not in use),Window bladder leak in film
+55,Legacy (not in use),Window bladder delaminating
+56,Legacy (not in use),Window bladder torn at screw hole
+100,Manifold,Gasket leak
+101,Legacy (not in use),Hard seal not sealing
+103,Manifold,Mold bladder leak
+105,Legacy (not in use),Clear sheet/gasket loose
+106,Legacy (not in use),Window dirty/scratched
+107,Legacy (not in use),Black gasket related leak
+108,Legacy (not in use),Blister/bladder valve faulty
+109,Optics,Dirty/damaged component
+110,Manifold,WIRE-HAR-0554 valve fault
+111,Legacy (not in use),Olympic ring rework - Matte material found
+112,Legacy (not in use),Replaced black gasket with hazy
+113,Legacy (not in use),Replaced molded bladder with new material
+114,Legacy (not in use),Hard seals in wrong position
+115,Manifold,Manifold failure
+150,Reworks,Rework to v1.5
+200,Legacy (not in use),Failure to plunge
+201,Legacy (not in use),Plunger not retract
+203,Plunger block,Plunger block leak
+204,Plunger block,Gasket creep
+205,Plunger block,Plunger corrosion
+206,Plunger block,Excess grease
+207,Plunger block,Plunger block fail
+250,Legacy (not in use),Seal bar not sealing
+251,Legacy (not in use),Seal bar carrier not sticking
+252,Legacy (not in use),Misaligned seal
+254,Seal bar,Thermistor failure
+255,Legacy (not in use),Seal bar thermistor out of position
+256,Seal bar,Out of calibration
+257,Seal bar,Physical damage
+258,Seal bar,Seal bar failure
+300,Lid latch,Piston leak
+301,Lid latch,Lid sensing defect
+302,Lid latch,Lid not staying closed
+303,Reworks,Lid latch rework
+304,Lid latch,Lid lock valve faulty
+350,Legacy (not in use),Pressure out of calibration
+351,Reservoir and tubing,Reservoir air leak
+352,Legacy (not in use),Regulator leak
+355,Reservoir and tubing,System air leak
+356,Reworks,Reservoir front plate rework
+357,Legacy (not in use),Reservoir blurr blockage
+358,Reservoir and tubing,High/low valve faulty
+359,Reservoir and tubing,Vent valve faulty
+400,Compressor,Compressor failure
+402,Compressor,Compressor leaking
+403,Compressor,Comp fuse blown
+404,Legacy (not in use),Boost board fuse blown
+450,Mag bead,Mag bead housing/piston leak
+451,Mag bead,Mag bead fault
+452,Mag bead,Spring broken
+502,Legacy (not in use),Thermocycler error
+503,Peltier,PCR1 calibration
+504,Peltier,PCR2 calibration
+505,Legacy (not in use),Rear fan screw contacts thermo board
+506,Legacy (not in use),Peltier screw loose
+507,Peltier,Peltier delamination
+508,Legacy (not in use),Solder connection
+509,Peltier,Peltier failure
+510,Legacy (not in use),Thermo R5/R6 fail
+511,Boards and power supply,Thermoboard communication
+512,Boards and power supply,Thermoboard temp control
+513,Boards and power supply,Thermo cam control
+600,Optics,Optics LED failure
+601,Boards and power supply,Photodiode board fail
+602,Optics,Optics alignment
+603,Legacy (not in use),Unstable optics LED
+604,Optics,Optics calibration
+605,Optics,Defective v1.5 cam
+606,Optics,Optic change from 1.5 to 2.0
+607,Optics,Defective v2.0 cam
+650,Chassis and general mechanical,Cracked housing
+651,Boards and power supply,Status LED faulty
+653,Legacy (not in use),No power
+654,Legacy (not in use),Ball plunger not adjusted 
+655,Chassis and general mechanical,Ball plunger missing
+657,Chassis and general mechanical,Pouch sense switch readjust
+658,Reworks,Fan screw rework
+659,Reworks,Instrument rebranding
+700,Firmware,Wrong firmware
+701,Legacy (not in use),Thermoboard relay faulty
+702,Firmware,Firmware error
+745,Reworks,Seal bar pouch sensor switch removal
+750,Boards and power supply,Master board fail
+807,Boards and power supply,Valve board failure
+808,Legacy (not in use),Valve board fuse open
+809,Reworks,Valve board rework
+810,Boards and power supply,Board failure
+900,Bead beater,Bead beater stall
+901,Bead beater,Beater sensor fault
+902,Bead beater,Beater alignment
+950,Laptop,Laptop failure

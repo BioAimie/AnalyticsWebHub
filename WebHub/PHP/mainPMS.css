@@ -1,0 +1,98 @@
+/* Style Sheet for PMS Website */
+/* top nav bar */
+.nav {
+    margin-top: 0.75em
+}
+
+.nav li {
+    display: inline;
+}
+
+.nav a {
+    color: #333333;
+    text-decoration: none;
+    font-family: sans-serif;
+    font-weight: bold;
+    font-size: 1.1em;
+    padding-right: 2em;
+    padding-left: 2em;
+    text-transform: uppercase;
+}
+
+.nav a:hover {
+    color: #FF0000;
+}
+
+.jumbotron {
+    margin-top: auto;
+    margin-bottom: 1em;
+    background-image: url('http://www.cam.ac.uk/sites/www.cam.ac.uk/files/styles/content-580x288/public/news/research/news/dna-3.gif?itok=q64otxnv');
+    //background-repeat: no-repeat;
+    background-size: cover;
+    height: 30em;
+}
+
+.jumbotron .container {
+    margin-top: 0.5em;
+}
+
+.jumbotron h1 {
+    color: #FFFFFF;
+    font-size: 4.5em;
+    font-weight: bold;
+    font-family: sans-serif;
+}
+
+.jumbotron p {
+    color: #FFFFFF;
+    font-size: 1.3em;
+    font-family: sans-serif;
+    margin-top: -0.5em;
+}
+
+.mainlinks {
+    margin-top: -1.5em;
+    color: #333333;
+}
+
+.mainlinks p {
+    margin-top: -0.5em; 
+    color: #333333;
+}
+
+.thumbnail {
+    text-align: center;
+    margin-top: -1em;
+    border: none;
+}
+
+.thumbnail a {
+    color: #333333;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.thumbnail a:hover {
+    color: #FF0000;
+}
+
+.thumb {
+    height: 6em;
+    width: 12em;
+    border: 0.1em solid #333333;
+}
+
+.footer {
+    margin-top:-1em;
+    height: 0.1em;
+}
+
+.footer li {
+    display: inline;
+    padding-right: 2em;
+}
+
+.logo {
+    width: 10em;
+    margin-top: 1em;
+}

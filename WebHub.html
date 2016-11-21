@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title> Analytics Web Hub </title>
+    <!-- HTML5 and mobile devices -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- styling formats in order of ascending importance (i.e. custom css trumps bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+	<link type="text/css" rel="stylesheet" href="WebHub/main.css">
+    
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="WebHub/script.js"></script>
+    
+    <!-- Latest compiled JavaScript -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script> 
+    <!-- [if IE]> -->
+    <script src="https://cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/respond/1.4.2/respond.min.js"></script>
+    
+</head>
+  
+<body>
+    <div id="header">
+        <div class="container" id="logo-area">
+            <img src="WebHub/images/BFDx_Logo.jpg" usemap="#logoMap">
+            <map name="logoMap" id="logoMap">
+                <area id="HP" alt="Biofire Home Page" title="BiofireDx Home Page" href="http://biofiredx.com/" shape="rect" coords="0,0,150,199" style="outline:none;"/>
+                <area id="WH" alt="WebHub" title="Analytics Web Hub" href="http://biofirestation/WebHub/WebHub.html" shape="rect" coords="151,0,1297,199" style="outline:none;"/>
+                </map>
+            </div>
+            <div class="container" id="navigator">
+                <ul class="pull-left">
+                    <li class="brighten"> <a href="http://biofirestation/WebHub/WebHub.html">ANALYTICS WEB HUB</a></li>
+                <li class="brighten"> <a href="http://biofirestation/wordpress/">BIOFIRE STATION</a></li>
+                <li class="brighten"> <a href="http://qw.biofiredx.net/authentication/login">QUALITY WEB</a></li>
+                <li class="brighten"> <a href="http://pw.biofiredx.net/">PRODUCTION WEB</a></li>
+                <li class="brighten" id="dropdown"> <a href="#"> CONTACT US </a> 
+                    <div class="panel">
+                        <ul id="editpanel">
+                            <li> <a href="mailto:aimie.faucett@biofiredx.com?subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> <img src="WebHub/images/employee_pics/aimie1_50.jpg"/>&nbsp;&nbsp;Aimie Faucett </a> </li>
+                            <li> <a href="mailto:amber.kiser@biofiredx.com?cc=aimie.faucett@biofiredx.com&subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> <img src="WebHub/images/employee_pics/amber1_50.jpg"/>&nbsp;&nbsp;Amber Kiser </a> </li>
+                            <li> <a href="mailto:Graham.Knussmann@biofiredx.com?subject=Analytics Web Hub Query"> <img src="WebHub/images/employee_pics/graham_50.jpg"/>&nbsp;&nbsp;Graham Knussmann</a> </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>        
+        </div>
+    </div>
+    
+    <div class="jumbotron"></div>
+    
+    <h2 id="menuHeader">
+        <button type="button" class="plus" id="menuButton">-</button>
+        Main Menu
+    </h2> 
+    
+    <div id="sideBar">
+            <div id="reliability">
+                <h3>Reliability Metrics</h3>
+                    <h4 class="expandOut">
+                        <button type="button" class="plus" id="Rbio" data-toggle="collapse" data-target="#SRBio">+</button>
+                        BioReagent
+                    </h4>
+                        <div id="SRBio" class="collapse out">
+                            <ul>
+                                <li><a href="WebHub/dashPNCR.html">NCR</a></li>
+                                <li><a href="WebHub/dashQPM.html">Inline QC</a></li>
+                                <li><a href="WebHub/dashPQC.html">Final QC</a></li> 
+                                <li><a href="WebHub/dashCON.html">Contamination</a></li>
+                            </ul>
+                        </div>
+                    <h4 class="expandOut">
+                        <button type="button" class="plus" id="Rcomp" data-toggle="collapse" data-target="#SRcomp">+</button>
+                        Complaints
+                    </h4>
+                        <div id="SRcomp" class="collapse out">
+                            <ul>
+                                <li><a href="WebHub/dashCC.html">Customer Complaints</a></li>
+                                <li><a href="WebHub/dashCI.html">Investigations</a></li>
+                                <li><a href="WebHub/dashPRE.html">PRE and Closures</a></li>
+                            </ul>
+                        </div>
+                    <h4 class="expandOut">
+                        <button type="button" class="plus" id="Rinst" data-toggle="collapse" data-target="#SRinst">+</button>
+                        Instrument
+                    </h4>
+                        <div id="SRinst" class="collapse out">
+                            <ul>
+                                <li><a href="WebHub/dashINCR.html">NCR</a></li>
+                                <li><a href="WebHub/dashRMA.html">RMA</a></li>
+                                <li><a href="WebHub/dashIVOE.html">VOE</a></li>
+                                <li><a href="WebHub/dashPICS.html">Inline Calibration</a></li>
+                                <li><a href="WebHub/dashIQC.html">Final QC</a></li>
+                                <li><a href="WebHub/dashIRM.html">Internal Reliabiity</a></li>
+                            </ul>    
+                        </div>
+            </div>
+            <div id="operations">
+                <h3>Operations Metrics</h3>
+                    <h4 class="expandOut">
+                        <button type="button" class="plus" id="Oexec" data-toggle="collapse" data-target="#SOexec">+</button>
+                        Executive Level Reporting                                        
+                    </h4>
+                        <div id="SOexec" class="collapse out">
+                            <ul>
+                                <li id="EXEC"><a href="http://10.1.23.96:4028">Interactive App</a></li>                        
+                            </ul>
+                        </div>
+                    <h4 class="expandOut">
+                        <button type="button" class="plus" id="Oprod" data-toggle="collapse" data-target="#SOprod">+</button>
+                        Product Overview
+                    </h4>
+                        <div id="SOprod" class="collapse out">
+                            <ul>
+                                <li id="SUPP"><a href="WebHub/dashSUPP.html">Supplier Reliability</a></li>
+                                <li id="IMAN"><a href="WebHub/dashIMAN.html">Instrument Manufacturing</a></li>
+                                <li id="ISERV"><a href="WebHub/dashISERV.html">Instrument Servicing</a></li>
+                                <li id="PMG"><a href="WebHub/dashPMG.html">Program Management</a></li>
+                                <li><a href="WebHub.html">Pouch Manufacturing</a></li>
+                            </ul>
+                        </div>
+                    <h4 class="expandOut">
+                        <button type="button" class="plus" id="Osales" data-toggle="collapse" data-target="#SOsales">+</button>
+                        Sales
+                    </h4>
+                        <div id="SOsales" class="collapse out">
+                            <ul>
+                                <li id="LIVE"><a href="WebHub/dashLIVE.html">Go Live To Thrive</a></li>
+                                <li><a href="WebHub.html">Instruments</a></li>
+                                <li><a href="WebHub.html">Disposables</a></li>
+                            </ul>    
+                        </div>
+            </div>
+            <div id="field">
+                <h3>FilmArray Trend Project</h3>
+                    <h4 class="expandOut">
+                        <button type="button" class="plus" id="Cbio" data-toggle="collapse" data-target="#SCbio">+</button>
+                        Trend FilmArray
+                    </h4>
+                        <div id="SCbio" class="collapse out">
+                            <ul>                            
+                                <li><a href="WebHub/dashTrend.html">Trend</a></li>
+                            </ul>
+                        </div>
+            </div>
+        <div id='space'></div>
+        <h2 class="expandOut">
+            Business Analysis <sup>[New]</sup>
+            <!--<button type='button' class='plus' id='busButton' data-toggle='collapse' data-target='#busMenu'>+</button>-->
+        </h2>
+        <!--<div id='busMenu' class="collapse out">-->
+        <div id='busMenu'>
+            <h3><a href='https://biofiredx.domo.com/link/5c46aAhzGrHpFdv9' target='_blank'> Materials EOM</a></h3>
+        </div>
+    </div>
+    
+    <div id="body">
+        <h2>What's New?</h2>
+        <ul id='new'>
+            <li><a href='WebHub/dashInteractiveApp.html'>Beta Version Interactive App</a></li>
+            <li><a href='https://biofiredx.domo.com/link/5c46aAhzGrHpFdv9' target='_blank'>Additional analytics from Business Analysis</a></li>
+        </ul>
+        <h3>Contributors</h3>
+            <div class="info">
+                <img src="WebHub/images/employee_pics/aimie1_100.jpg" alt="Aimie Faucett"/>
+                <div class="pics">
+                    <h4>
+                        <a href="mailto:aimie.faucett@biofiredx.com?subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> Aimie Faucett </a> 
+                    </h4>
+                    <p class="jobDesc">Associate Data Scientist, Post Market Surveillance</p>
+                </div>
+                <img src="WebHub/images/employee_pics/amber1_100.jpg" alt="Amber Kiser"/>
+                <div class="pics">
+                    <h4>
+                        <a href="mailto:amber.kiser@biofiredx.com?cc=aimie.faucett@biofiredx.com&subject=PostMarket Web Hub Query&body=Requested%20By:%0D%0ARequested%20Date:%0D%0ADate%20Wanted:%0D%0ADate%20Needed:%0D%0AProduct%20Objective:%0D%0AWeb%20Hub%20Product?:"> Amber Kiser</a>
+                    </h4>
+                    <p class="jobDesc">Jr Data Scientist, Post Market Surveillance</p>
+                </div>
+                <img src="WebHub/images/employee_pics/graham_100.jpg" alt="Graham Knussmann"/>
+                <div class="pics">
+                    <h4>
+                        <a href="mailto:Graham.Knussmann@biofiredx.com?subject=Analytics Web Hub Query">Graham Knussmann</a>
+                    </h4>
+                    <p class="jobDesc">Business Intelligence Analyst, Business Analysis</p>
+                </div>
+            </div>
+        <h3>Directors</h3>
+            <div class="info">
+                <img src="WebHub/images/employee_pics/jason_100.jpg" alt="Jason Dunoskovic"/>
+                <div class="pics">
+                    <h4>
+                       Jason Dunoskovic 
+                    </h4>
+                    <p class="jobDesc">Director, Business Analysis</p>
+                </div>
+                <img src="WebHub/images/employee_pics/jay_100.jpg" alt="Jay Jones"/>
+                <div class="pics">
+                    <h4>
+                        Jay Jones
+                    </h4>
+                    <p class="jobDesc">Associate Director of Software Development</p>
+                </div>
+                <img src="WebHub/images/employee_pics/lindsay_100.jpg" alt="Lindsay Meyers"/>
+                <div class="pics">
+                    <h4>
+                        Lindsay Meyers
+                    </h4>
+                    <p class="jobDesc">Program Director Data Science, Post Market Surveillance</p>
+                </div>
+            </div>
+    </div>
+    <div id='footer'>
+        <p id="quest">Please contact us with questions or requests.</p>
+    </div>
+</body>
+</html>
