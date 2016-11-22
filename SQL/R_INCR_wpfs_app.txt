@@ -1,35 +1,37 @@
 SET NOCOUNT ON
 
-SELECT 
+SELECT
 	[TicketId],
-	[RecordedValue]
-INTO #A
+	IIF([RecordedValue] IN ('HTFA Instrument WIP','Torch Instrument WIP'),'Torch',
+		IIF([RecordedValue] = 'FA2.0 Instrument WIP', 'FA2.0', 
+		IIF([RecordedValue] = 'FA1.5 Instrument WIP', 'FA1.5', 'General'))) AS [Version]
+INTO #ncrType
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'NCR Type' AND [RecordedValue] LIKE 'Instrument Production WIP'
+WHERE [PropertyName] LIKE 'NCR Type' AND [RecordedValue] LIKE '%Instrument% WIP'
 
 SELECT
 	[TicketId]
-INTO #B
+INTO #instRawMat
 FROM [PMS1].[dbo].[vInstrumentBillOfMaterials] BOM WITH(NOLOCK) INNER JOIN [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] NCR WITH(NOLOCK)
 	ON BOM.[ComponentItemId] = NCR.[RecordedValue]
 WHERE NCR.[PropertyName] LIKE 'Part Affected'
 
 SELECT 
 	[TicketId],
-	[RecordedValue]
-INTO #C
+	'Raw Material' AS [Version]
+INTO #ncrRaw
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'NCR Type' AND [RecordedValue] LIKE 'Raw Material' AND [TicketId] IN (SELECT [TicketId] FROM #B)
+WHERE [PropertyName] LIKE 'NCR Type' AND [RecordedValue] LIKE 'Raw Material' AND [TicketId] IN (SELECT [TicketId] FROM #instRawMat)
 
 SELECT *
-INTO #D
+INTO #instNCR
 FROM
 (
 	SELECT *
-	FROM #A
+	FROM #ncrType
 	UNION ALL
 	SELECT *
-	FROM #C
+	FROM #ncrRaw
 ) D
 
 SELECT 
@@ -39,14 +41,14 @@ SELECT
 	[RecordedValue] AS [WhereFound]
 INTO #w
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] LIKE 'NCR' AND [Stage] LIKE 'Reporting' AND  [PropertyName] LIKE 'Where Found' AND [TicketId] IN (SELECT [TicketId] FROM #D)
+WHERE [Tracker] LIKE 'NCR' AND [Stage] LIKE 'Reporting' AND  [PropertyName] LIKE 'Where Found' AND [TicketId] IN (SELECT [TicketId] FROM #instNCR)
 
 SELECT 
 	[TicketId],
 	[RecordedValue] AS [ProblemArea]
 INTO #p
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] LIKE 'NCR' AND [PropertyName] LIKE 'Problem Area' AND [TicketId] IN (SELECT [TicketId] FROM #D)
+WHERE [Tracker] LIKE 'NCR' AND [PropertyName] LIKE 'Problem Area' AND [TicketId] IN (SELECT [TicketId] FROM #instNCR)
 
 SELECT 
 	[TicketId],
@@ -55,7 +57,7 @@ SELECT
 	[RecordedValue]
 INTO #fs
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Failure Details' AND [TicketId] IN (SELECT [TicketId] FROM #D)
+WHERE [ObjectName] LIKE 'Failure Details' AND [TicketId] IN (SELECT [TicketId] FROM #instNCR)
 
 SELECT 
 	[TicketString],
@@ -92,8 +94,7 @@ FROM #w W INNER JOIN #p P
 		ON W.[TicketId] = FS.[TicketId]
 WHERE [CreatedDate] > CONVERT(datetime, '2014-06-30') AND [FailCat] IS NOT NULL
 
-SELECT 
-	[TicketString],
+SELECT
 	YEAR([CreatedDate]) AS [Year],
 	MONTH([CreatedDate]) AS [Month],
 	IIF(MONTH([CreatedDate]) < 4, 1, 
@@ -107,6 +108,32 @@ SELECT
 	[FailCat],
 	[SubFailCat],
 	[Record]
+INTO #master
 FROM #wpfs
 
-DROP TABLE #A, #B, #C, #D, #fs, #p, #w, #wpfs
+SELECT 
+	[Year],
+	[Month],
+	[Quarter],
+	[last30days],
+	[last90days],
+	[lastYear],
+	[WhereFound],
+	[ProblemArea],
+	[FailCat],
+	[SubFailCat],
+	SUM([Record]) AS [Record]
+FROM #master
+GROUP BY
+	[Year],
+	[Month],
+	[Quarter],
+	[last30days],
+	[last90days],
+	[lastYear],
+	[WhereFound],
+	[ProblemArea],
+	[FailCat],
+	[SubFailCat]
+
+DROP TABLE #ncrType, #instRawMat, #ncrRaw, #instNCR, #w, #p, #fs, #wpfs, #master
