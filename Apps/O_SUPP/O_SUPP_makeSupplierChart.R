@@ -1,5 +1,5 @@
 #make chart for Supplier Performance 
-makeSupplierChart <- function(ncrType, vendName, timeStart = NULL, timeEnd = NULL) {
+makeSupplierChart <- function(ncrType, vendName, supplierAtFault, timeStart = NULL, timeEnd = NULL) {
   #######################################
   # ncrType <- 'Raw Material'
   # vendName <- 'Intertech Medical Inc'
@@ -12,13 +12,20 @@ makeSupplierChart <- function(ncrType, vendName, timeStart = NULL, timeEnd = NUL
   
   #all <- c('Raw Material','Instrument Production WIP','BioReagents', 'HTFA Instrument WIP', 'FA2.0 Instrument WIP','FA1.5 Instrument WIP')
   #iNcrType <- c('Instrument Production WIP','HTFA Instrument WIP', 'FA2.0 Instrument WIP','FA1.5 Instrument WIP')
+  if(supplierAtFault) {
+    
+    ncrParts.sum <- subset(ncrParts.df, SupplierAtFault=='Yes')
+  } else {
+    
+    ncrParts.sum <- ncrParts.df
+  }
   
   if(ncrType=='All NCRs') {
-    filteredData <- subset(ncrParts.df, Type %in% all & VendName == vendName)
+    filteredData <- subset(ncrParts.sum, Type %in% all & VendName == vendName)
   } else if(ncrType == 'Instrument') {
-    filteredData <- subset(ncrParts.df, Type %in% iNcrType & VendName == vendName)
+    filteredData <- subset(ncrParts.sum, Type %in% iNcrType & VendName == vendName)
   } else {
-    filteredData <- subset(ncrParts.df, Type == ncrType & VendName == vendName)
+    filteredData <- subset(ncrParts.sum, Type == ncrType & VendName == vendName)
   }
   
   colnames(filteredData)[colnames(filteredData) == 'Qty'] <- 'Record'

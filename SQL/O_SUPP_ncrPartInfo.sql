@@ -21,8 +21,7 @@ SELECT
 	[RecordedValue]
 INTO #partsAffectedPrePiv
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE --[TicketId] >= 26282 AND 
-[ObjectName] LIKE 'Parts Affected'
+WHERE [ObjectName] LIKE 'Parts Affected'
 
 SELECT 
 	[TicketId],
@@ -64,7 +63,6 @@ SELECT
 INTO #temp
 FROM #type T LEFT JOIN #partsAffected A
 	ON T.[TicketId] = A.[TicketId]
---WHERE T.[CreatedDate] > CONVERT(DATETIME,'2014-06-01')
 
 SELECT 
 	[TicketId],
@@ -73,6 +71,12 @@ INTO #ncrVend
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'Vendor'
 
+SELECT 
+	[TicketId],
+	IIF([RecordedValue] = 'Yes','Yes','No') AS [SupplierAtFault]
+INTO #supAtFault
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
+WHERE [PropertyName] = 'Supplier responsibility identified'
 
 SELECT 
 	CAST([CreatedDate] AS DATE) AS [Date],
@@ -83,9 +87,11 @@ SELECT
 	IIF(UPPER([VendName]) LIKE 'NA','N/A', [VendName]) AS [VendName],
 	UPPER([PartNumber]) AS [PartNumber],
 	CAST([Qty] AS BIGINT) AS [Qty],
-	[Disposition]
+	[Disposition],
+	[SupplierAtFault]
 FROM #temp T LEFT JOIN #ncrVend V
-	ON T.[TicketId] = V.[TicketId]
+	ON T.[TicketId] = V.[TicketId] LEFT JOIN #supAtFault S
+		ON T.[TicketId] = S.[TicketId]
 WHERE [PartNumber] IN (SELECT [ItemID] FROM #vend) AND ISNUMERIC([Qty]) = 1
 
-DROP TABLE #type, #partsAffectedPrePiv, #partsAffected, #temp, #vend, #ncrVend
+DROP TABLE #type, #partsAffectedPrePiv, #partsAffected, #temp, #vend, #ncrVend, #supAtFault

@@ -394,13 +394,13 @@ GROUP BY
 	R.[Root Cause Part Number]
 
 SELECT 
-	REPLACE(T.[Customer Id],' ','') AS [Customer Id],
+	UPPER(REPLACE(T.[Customer Id],' ','')) AS [Customer Id],
 	T.[Customer Name],
 	CAST(T.[CreatedDate] AS DATE) AS [Date Created],
 	T.[Complaint] AS [Related Complaint],
 	T.[RMA],
 	T.[Status],
-	T.[Serial Number],
+	UPPER(T.[Serial Number]) AS [Serial Number],
 	T.[Complaint Failure Mode],
 	T.[RMA Type],
 	T.[Disposition],

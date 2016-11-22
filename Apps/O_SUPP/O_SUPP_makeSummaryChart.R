@@ -1,5 +1,5 @@
 #make chart for Supplier Performance 
-makeSummaryChart <- function(ncrType, vendName) {
+makeSummaryChart <- function(ncrType, vendName, receiptLag, supplierAtFault=FALSE) {
   #######################################
   # ncrType <- 'All NCRs'
   # vendName <- 'McMaster Carr Supply Co.'
@@ -11,17 +11,34 @@ makeSummaryChart <- function(ncrType, vendName) {
   #all <- c('Raw Material','Instrument Production WIP','BioReagents', 'HTFA Instrument WIP', 'FA2.0 Instrument WIP','FA1.5 Instrument WIP')
   #iNcrType <- c('Instrument Production WIP','HTFA Instrument WIP', 'FA2.0 Instrument WIP','FA1.5 Instrument WIP')
   
-  if(ncrType=='All NCRs') {
-    filteredData <- subset(ncrParts.df, Type %in% all & VendName == vendName)
-  } else if(ncrType == 'Instrument') {
-    filteredData <- subset(ncrParts.df, Type %in% iNcrType & VendName == vendName)
+  if(supplierAtFault) {
+    
+    ncrParts.sum <- subset(ncrParts.df, SupplierAtFault=='Yes')
   } else {
-    filteredData <- subset(ncrParts.df, Type == ncrType & VendName == vendName)
+    
+    ncrParts.sum <- ncrParts.df
+  }
+  
+  if(ncrType=='All NCRs') {
+    filteredData <- subset(ncrParts.sum, Type %in% all & VendName == vendName)
+  } else if(ncrType == 'Instrument') {
+    filteredData <- subset(ncrParts.sum, Type %in% iNcrType & VendName == vendName)
+  } else {
+    filteredData <- subset(ncrParts.sum, Type == ncrType & VendName == vendName)
   }
   
   colnames(filteredData)[colnames(filteredData) == 'Qty'] <- 'Record'
   
   suppReceipts <- subset(receipts.df, VendName == vendName)
+  
+  if(receiptLag == '1 Year') {
+    
+    suppReceipts <- suppReceipts[suppReceipts$Date >= Sys.Date()-365, ]
+  } else {
+    
+    suppReceipts <- suppReceipts[suppReceipts$Date >= Sys.Date()-730, ]
+  }
+  
   colnames(suppReceipts)[colnames(suppReceipts) == 'RcvQty'] <- 'Record'
   
   if(nrow(suppReceipts)==0 || nrow(filteredData)==0){
@@ -110,8 +127,10 @@ makeSummaryChart <- function(ncrType, vendName) {
   }
   
   #Aggregate by Quarter
-  suppReceipts <- with(suppReceipts, aggregate(TotalQty~QuarterGroup, FUN=sum))
-  suppReceipts$Totalsum <- with(suppReceipts, cumsum(TotalQty))
+  # suppReceipts <- with(suppReceipts, aggregate(TotalQty~QuarterGroup, FUN=sum))
+  # suppReceipts$Totalsum <- with(suppReceipts, cumsum(TotalQty))
+  suppReceipts <- data.frame(QuarterGroup = suppReceipts$QuarterGroup, Totalsum = sum(suppReceipts$TotalQty))
+  suppReceipts <- unique(suppReceipts[,c('QuarterGroup','Totalsum')])
   
   # supp.part <- merge(num,suppReceipts, by='QuarterGroup', all=TRUE)
   

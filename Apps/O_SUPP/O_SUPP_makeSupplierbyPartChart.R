@@ -1,5 +1,5 @@
 #make chart for Supplier Performance by Part tab
-makeSupplierbyPartChart <- function(ncrType, vendName, timeStart = NULL, timeEnd = NULL, partNumber = NULL) {
+makeSupplierbyPartChart <- function(ncrType, vendName, supplierAtFault=FALSE, timeStart = NULL, timeEnd = NULL, partNumber = NULL) {
   #######################################
   # ncrType <- 'Raw Material'
   # vendName <- 'Intertech Medical Inc'
@@ -13,13 +13,20 @@ makeSupplierbyPartChart <- function(ncrType, vendName, timeStart = NULL, timeEnd
 
   #all <- c('Raw Material','Instrument Production WIP','BioReagents', 'HTFA Instrument WIP', 'FA2.0 Instrument WIP','FA1.5 Instrument WIP')
   #iNcrType <- c('Instrument Production WIP','HTFA Instrument WIP', 'FA2.0 Instrument WIP','FA1.5 Instrument WIP')
+  if(supplierAtFault) {
+    
+    ncrParts.sum <- subset(ncrParts.df, SupplierAtFault=='Yes')
+  } else {
+    
+    ncrParts.sum <- ncrParts.df
+  }
   
   if(ncrType=='All NCRs') {
-    filteredData <- subset(ncrParts.df, Type %in% all & VendName == vendName & PartNumber == partNumber)
+    filteredData <- subset(ncrParts.sum, Type %in% all & VendName == vendName & PartNumber == partNumber)
   } else if(ncrType == 'Instrument') {
-    filteredData <- subset(ncrParts.df, Type %in% iNcrType & VendName == vendName & PartNumber == partNumber)
+    filteredData <- subset(ncrParts.sum, Type %in% iNcrType & VendName == vendName & PartNumber == partNumber)
   } else {
-    filteredData <- subset(ncrParts.df, Type == ncrType & VendName == vendName & PartNumber == partNumber)
+    filteredData <- subset(ncrParts.sum, Type == ncrType & VendName == vendName & PartNumber == partNumber)
   }
   
   colnames(filteredData)[colnames(filteredData) == 'Qty'] <- 'Record'
@@ -43,7 +50,7 @@ makeSupplierbyPartChart <- function(ncrType, vendName, timeStart = NULL, timeEnd
   filteredData <- with(filteredData, aggregate(Record~DateGroup, FUN=sum))
   colnames(filteredData)[colnames(filteredData) == 'Record'] <- 'NCRQty'
   filteredData$NCRsum <- with(filteredData, cumsum(NCRQty))
-
+  
   suppReceipts <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', suppReceipts, 'PartNumber', startDate, 'Record', 'sum', 0)
   suppReceipts <- suppReceipts[with(suppReceipts, order(DateGroup)),]
   suppReceipts <- with(suppReceipts, aggregate(Record~DateGroup, FUN=sum))

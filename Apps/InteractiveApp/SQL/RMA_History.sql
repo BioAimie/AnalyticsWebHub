@@ -365,7 +365,7 @@ GROUP BY
 
 SELECT 
 	R.[Customer Id],
-	ISNULL(MAX(C.[CustName]),'No Complaint Data') AS [Customer Name],
+	'No Complaint Data' AS [Customer Name],
 	R.[TicketString] AS [RMA],
 	R.[CreatedDate],
 	R.[Status],
@@ -378,14 +378,7 @@ SELECT
 	R.[Hours Run],
 	R.[Root Cause Part Number]
 INTO #leftOver
-FROM #rma R LEFT JOIN 
-(
-	SELECT DISTINCT 
-		[CustID],
-		[CustName]
-	FROM [SQL1-RO].[mas500_app].[dbo].[vdvCustomer]
-) C 
-	ON R.[Customer Id] = C.[CustID]
+FROM #rma R 
 WHERE R.[TicketString] NOT IN (SELECT [RMA] FROM #bestMatch) AND R.[TicketString] NOT IN (SELECT [RMA] FROM #secondMatch)
 GROUP BY
 	R.[Customer Id],
@@ -401,13 +394,13 @@ GROUP BY
 	R.[Root Cause Part Number]
 
 SELECT 
-	REPLACE(T.[Customer Id],' ','') AS [Customer Id],
+	UPPER(REPLACE(T.[Customer Id],' ','')) AS [Customer Id],
 	T.[Customer Name],
 	CAST(T.[CreatedDate] AS DATE) AS [Date Created],
 	T.[Complaint] AS [Related Complaint],
 	T.[RMA],
 	T.[Status],
-	T.[Serial Number],
+	UPPER(T.[Serial Number]) AS [Serial Number],
 	T.[Complaint Failure Mode],
 	T.[RMA Type],
 	T.[Disposition],
@@ -457,7 +450,7 @@ FROM
 		[Root Cause Part Number]
 ) T INNER JOIN #lookUpHours L
 	ON T.[RMA] = L.[TicketString]
-WHERE T.[CreatedDate] > CONVERT(DATETIME, '2014-11-01') --AND [Customer Name] LIKE 'No Complaint Data'
+WHERE T.[CreatedDate] > CONVERT(DATETIME, '2014-11-01') 
 GROUP BY
 	T.[Customer Id],
 	T.[Customer Name],
