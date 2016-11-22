@@ -60,6 +60,10 @@ ui <- dashboardPage(skin = 'red',
                                                 selected = 'All NCRs'
                                     ),
                                     uiOutput('vendorSelector'),
+                                    checkboxInput('supplierFaultParts',
+                                                  label = 'Only Display NCRs where Supplier was at Fault',
+                                                  value = FALSE
+                                    ),
                                     checkboxInput('allVendorCheck', 'Display summary of all parts associated with selected supplier?', value = FALSE),
                                     uiOutput('partSelector'),
                                     downloadButton('downloadRateChart','Download a Copy')
@@ -79,11 +83,20 @@ ui <- dashboardPage(skin = 'red',
                                          box(width=NULL,
                                              selectInput('ncrTypeOP',
                                                          label = 'NCR Type',
-                                                         #choices = c('All NCRs','Raw Material','Instrument Production WIP','BioReagents'),
+                                                         # choices = c('All NCRs','Raw Material','Instrument Production WIP','BioReagents'),
                                                          choices = c('All NCRs','Raw Material','Instrument','BioReagents'),
                                                          selected = 'All NCRs'
                                                          ),
                                              uiOutput('vendorSelectorOP'),
+                                             selectInput('receiptLag',
+                                                         label = 'Include Supplier Receipts from the last:',
+                                                         choices = c('1 Year','2 Years'),
+                                                         selected = '1 Year'
+                                                         ),
+                                             checkboxInput('supplierFaultVendor',
+                                                           label = 'Only Display NCRs where Supplier was at Fault',
+                                                           value = FALSE
+                                             ),
                                              downloadButton('downloadBarChart','Download a Copy')
                                              )
                                          ),
@@ -142,8 +155,8 @@ server <- (function(input, output) {
   output$vendorSelector <- renderUI ({ 
      selectInput('investigateVendor',
                 label = 'Vendor Name:',
-                choices = filterPerInput('ncr',input$ncrType),
-                selected = filterPerInput('ncr',input$ncrType)[1])
+                choices = filterPerInput('ncr',input$ncrType, input$supplierFaultParts),
+                selected = filterPerInput('ncr',input$ncrType, input$supplierFaultParts)[1])
     
   })
 
@@ -151,32 +164,32 @@ server <- (function(input, output) {
     if(input$allVendorCheck == FALSE){
       selectInput('partNumber',
                   label = 'Part Number:',
-                  choices = filterPerInput('parts',input$ncrType, input$investigateVendor),
-                  selected = filterPerInput('parts',input$ncrType, input$investigateVendor)[1]
+                  choices = filterPerInput('parts',input$ncrType, input$supplierFaultParts, input$investigateVendor),
+                  selected = filterPerInput('parts',input$ncrType, input$supplierFaultParts, input$investigateVendor)[1]
       )
     }
   })
   
   output$rollingRatePartVendor <- renderPlot ({
     if(input$allVendorCheck == FALSE){
-      makeSupplierbyPartChart(input$ncrType, input$investigateVendor, input$dateRange[1], input$dateRange[2], input$partNumber)  
+      makeSupplierbyPartChart(input$ncrType, input$investigateVendor, input$supplierFaultParts, input$dateRange[1], input$dateRange[2], input$partNumber)  
       #produceRatesNew(input$ncrType, input$investigateVendor, as.character(paste(year(input$dateRange[1]), week(input$dateRange[1]), sep = '-')), as.character(paste(year(input$dateRange[2]), week(input$dateRange[2]), sep = '-')), input$partNumber)
     } else{
-      makeSupplierChart(input$ncrType, input$investigateVendor, input$dateRange[1], input$dateRange[2])
+      makeSupplierChart(input$ncrType, input$investigateVendor, input$supplierFaultParts, input$dateRange[1], input$dateRange[2])
       #produceRatesNew(input$ncrType, input$investigateVendor, as.character(paste(year(input$dateRange[1]), week(input$dateRange[1]), sep = '-')), as.character(paste(year(input$dateRange[2]), week(input$dateRange[2]), sep = '-')))
     }
   })
   
   output$validation <- renderUI ({
     if(input$allVendorCheck == FALSE) {
-      check <- validateDF(input$ncrType, input$investigateVendor, input$partNumber)
+      check <- validateDF(input$ncrType, input$investigateVendor, input$supplierFaultParts, input$partNumber)
       if (check == 0) {
         tags$h4(paste('No supplier receipts found for part: ', input$partNumber))
       } else if (check == 1) {
         tags$h4(paste('No NCRs found for part: ', input$partNumber))
       } 
     } else {
-      check <- validateDF(input$ncrType, input$investigateVendor)
+      check <- validateDF(input$ncrType, input$investigateVendor, input$supplierFaultParts)
       if (check == 0) {
         tags$h4('No supplier receipts found.')
       } else if (check == 1) {
@@ -195,11 +208,11 @@ server <- (function(input, output) {
   })
   
   output$summaryPerformance <- renderPlot ({
-    makeSummaryChart(input$ncrTypeOP, input$investigateVendorOP)
+    makeSummaryChart(input$ncrTypeOP, input$investigateVendorOP, input$receiptLag, input$supplierFaultVendor)
   })
   
   output$validationOP <- renderUI ({
-      check <- validateDF(input$ncrTypeOP, input$investigateVendorOP)
+      check <- validateDF(input$ncrTypeOP, input$investigateVendorOP, input$supplierFaultVendor)
       if (check == 0) {
         tags$h4('No supplier receipts found.')
       } else if (check == 1) {
@@ -208,13 +221,13 @@ server <- (function(input, output) {
   })
   
   output$partsTable <- renderUI ({
-    check <- validateDF(input$ncrTypeOP, input$investigateVendorOP)
+    check <- validateDF(input$ncrTypeOP, input$investigateVendorOP, input$supplierFaultVendor)
     if (check == 0) {
       tags$h4('No supplier receipts found.')
     } else if (check == 1) {
       tags$h4('No NCRs found for supplier.')
     } else {
-      makeSummaryTable(input$ncrTypeOP, input$investigateVendorOP) 
+      makeSummaryTable(input$ncrTypeOP, input$investigateVendorOP, input$receiptLag, input$supplierFaultVendor) 
     }
   })
   

@@ -1,4 +1,4 @@
-validateDF <- function(ncrType, vendName, partNumber=NULL) {
+validateDF <- function(ncrType, vendName, supplierAtFault=FALSE, partNumber=NULL) {
   
   #######################################
   # ncrType <- 'Raw Material'
@@ -13,23 +13,31 @@ validateDF <- function(ncrType, vendName, partNumber=NULL) {
     return(0)
   }
 
+  if(supplierAtFault) {
+    
+    ncrParts.sum <- subset(ncrParts.df, SupplierAtFault=='Yes')
+  } else {
+    
+    ncrParts.sum <- ncrParts.df
+  }
+  
   if(!is.null(partNumber)) {
     if(ncrType=='All NCRs') {
-      filteredData <- subset(ncrParts.df, Type %in% all & VendName == vendName & PartNumber == partNumber)
+      filteredData <- subset(ncrParts.sum, Type %in% all & VendName == vendName & PartNumber == partNumber)
     } else if(ncrType == 'Instrument') {
-      filteredData <- subset(ncrParts.df, Type %in% iNcrType & VendName == vendName & PartNumber == partNumber)
+      filteredData <- subset(ncrParts.sum, Type %in% iNcrType & VendName == vendName & PartNumber == partNumber)
     } else {
-      filteredData <- subset(ncrParts.df, Type == ncrType & VendName == vendName & PartNumber == partNumber)
+      filteredData <- subset(ncrParts.sum, Type == ncrType & VendName == vendName & PartNumber == partNumber)
     }
     
     suppReceipts <- subset(receipts.df, VendName == vendName & PartNumber == partNumber)
   } else {
     if(ncrType=='All NCRs') {
-      filteredData <- subset(ncrParts.df, Type %in% all & VendName == vendName)
+      filteredData <- subset(ncrParts.sum, Type %in% all & VendName == vendName)
     } else if (ncrType == 'Instrument') {
-      filteredData <- subset(ncrParts.df, Type %in% iNcrType & VendName == vendName)
+      filteredData <- subset(ncrParts.sum, Type %in% iNcrType & VendName == vendName)
     } else {
-      filteredData <- subset(ncrParts.df, Type == ncrType & VendName == vendName)
+      filteredData <- subset(ncrParts.sum, Type == ncrType & VendName == vendName)
     }
     
     suppReceipts <- subset(receipts.df, VendName == vendName)

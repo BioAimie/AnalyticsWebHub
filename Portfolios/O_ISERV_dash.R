@@ -21,7 +21,7 @@ calendar.week <- createCalendarLikeMicrosoft(year(Sys.Date())-2, 'Week')
 startString.week <- findStartDate(calendar.week, 'Week', 54, 5)
 calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
 
-#----------------------------------Instruments Thru Service During Previous Week - IMAGE 0----------------------------------------------------------------------------------------------
+#----------------------------------Instruments Thru Service During Previous Week ----------------------------------------------------------------------------------------------
 
 service.df$Key <- paste(service.df$Disposition, service.df$Version, sep=" ")
 
@@ -66,9 +66,11 @@ BioFirePrevWeek <- ifelse(prevWeekSql-1 < 10,
                   paste(prevYearSql, prevWeekSql-1, sep='-'))
 
 #Reorder factors to make chart have customer on bottom, refurb in middle, and BFDx on top
-fillOrder <- c('Customer FA1.5','Customer FA2.0','Customer Torch','Customer Laptop','Refurbish FA1.5','Refurbish FA2.0','Refurbish Torch','Refurbish Laptop','BFDx FA1.5','BFDx FA2.0','BFDx Torch','BFDx Laptop','Other FA1.5', 'Other FA2.0','Other Torch', 'Other Laptop')
+#fillOrder <- c('Customer FA1.5','Customer FA2.0','Customer Torch','Customer Laptop','Refurbish FA1.5','Refurbish FA2.0','Refurbish Torch','Refurbish Laptop','BFDx FA1.5','BFDx FA2.0','BFDx Torch','BFDx Laptop','Other FA1.5', 'Other FA2.0','Other Torch', 'Other Laptop')
+fillOrder <- c('Other Laptop','Other Torch','Other FA2.0','Other FA1.5','BFDx Laptop','BFDx Torch','BFDx FA2.0','BFDx FA1.5','Refurbish Laptop','Refurbish Torch','Refurbish FA2.0','Refurbish FA1.5','Customer Laptop','Customer Torch','Customer FA2.0','Customer FA1.5')
 #fillColors <- createPaletteOfVariableLength(service.all.df, 'Key')
-fillColors <- c('#4576A3','#5B9BD5','#9DC3E6','#0d0d0d','#C46829','#ED7D31','#F4B183','#5C5C5C','#59873A','#70AD47','#A9D18E','#a3a3a3','#efbbff','#d896ff','#be29ec','#cccccc')
+# fillColors <- c('#4576A3','#5B9BD5','#9DC3E6','#0d0d0d','#C46829','#ED7D31','#F4B183','#5C5C5C','#59873A','#70AD47','#A9D18E','#a3a3a3','#efbbff','#d896ff','#be29ec','#cccccc')
+fillColors <- c('#cccccc','#be29ec','#d896ff','#efbbff','#a3a3a3','#A9D18E','#70AD47','#59873A','#5C5C5C','#F4B183','#ED7D31','#C46829','#0d0d0d','#9DC3E6','#5B9BD5','#4576A3')
 names(fillColors) <- fillOrder
 service.all.df$Key <- factor(service.all.df$Key, levels = fillOrder, ordered=TRUE)
 service.all.df<- service.all.df[with(service.all.df, order(Key)), ]
@@ -80,10 +82,10 @@ service.all.df<- service.all.df[with(service.all.df, order(State)), ]
 p.Service.PrevWk <- ggplot(subset(service.all.df, as.character(DateGroup) == ww), aes(x=State, y=Record, fill=Key)) + 
   geom_bar(stat="identity", position="stack") + xlab('State') + ylab('Instruments') + theme(text=element_text(size=20, face='bold'), 
   axis.text.x=element_text(color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle(paste('Instrument Movement Through Service For Previous Week:\n',BioFirePrevWeek)) + 
+  ggtitle(paste('Instrument Movement Through Service\nFor Previous Week: ',BioFirePrevWeek)) + 
   scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
-#-----------------------------------------Instruments Thru Service During Current Week - IMAGE 1----------------------------------------------------------------------
+#-----------------------------------------Instruments Thru Service During Current Week ----------------------------------------------------------------------
 
 currWeekSql <- subset(calendar.week, Date == Sys.Date())[,'Week']
 currYearSql <- ifelse(currWeekSql == 1,
@@ -101,10 +103,10 @@ BioFireCurrWeek <- ifelse(currWeekSql-1 < 10,
 p.Service.CurrWk <- ggplot(subset(service.all.df, as.character(DateGroup) == curr), aes(x=State, y=Record, fill=Key)) + 
   geom_bar(stat="identity", position="stack") + xlab('State') + ylab('Instruments') + theme(text=element_text(size=20, face='bold'), 
   axis.text.x=element_text(color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle(paste('Instrument Movement Through Service For Current Week:\n', BioFireCurrWeek)) + 
+  ggtitle(paste('Instrument Movement Through Service\nFor Current Week:', BioFireCurrWeek)) + 
   scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
-#-----------------------------------Service Output Thru QC by week - IMAGE 2---------------------------------------------------------------------
+#-----------------------------------Service Output Thru QC by week ---------------------------------------------------------------------
 
 #5 week rolling avg
 agg.thru.df <- with(service.thru.df, aggregate(Record~DateGroup, FUN =sum))
@@ -128,12 +130,10 @@ dateBreaks <- seq(1,length(as.character(unique(agg.thru.df[,'DateGroup']))),12)
 p.ThruQC.service <- ggplot(agg.thru.df, aes(x=as.numeric(as.factor(DateGroup)), y=Record, fill=Key)) + geom_area(stat="identity", position="stack") + 
   geom_line(aes(x=as.numeric(as.factor(DateGroup)), y=RollingAvg, group=1), inherit.aes=FALSE, color='black') + geom_point(aes(x=as.numeric(as.factor(DateGroup)), y=RollingAvg, group=1), inherit.aes=FALSE) +
   scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + xlab('Date\n(Year-Week)\n5-week Rolling Average Line') + ylab('Instruments') + 
-  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90,vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle('Service Output Through QC') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90,vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20), legend.position = 'left') + 
+  ggtitle('Service Output Through QC') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30), position = 'right')
 
-
-
-#-----------------------------------------------FilmArray Received by week - IMAGE 3-------------------------------------------------------------
+#-----------------------------------------------FilmArray Received by week -------------------------------------------------------------
 
 #5 week rolling avg
 agg.rec.df <- with(service.rec.df, aggregate(Record~DateGroup, FUN =sum))
@@ -157,10 +157,10 @@ dateBreaks <- seq(1,length(as.character(unique(agg.rec.df[,'DateGroup']))),12)
 p.RecvdRMA.service <- ggplot(agg.rec.df, aes(x=as.numeric(as.factor(DateGroup)), y=Record, fill=Key)) + geom_area(stat="identity", position="stack") + 
   geom_line(aes(x=as.numeric(as.factor(DateGroup)), y=RollingAvg, group=1), inherit.aes=FALSE, color='black') + geom_point(aes(x=as.numeric(as.factor(DateGroup)), y=RollingAvg, group=1), inherit.aes=FALSE) +
   scale_x_continuous(breaks=dateBreaks,labels=dateLabels) + xlab('Date\n(Year-Week)\n5-week Rolling Average Line') + ylab('Instruments') + 
-  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle('FilmArray Received') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20), legend.position = 'left') + 
+  ggtitle('FilmArray Received') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30), position = 'right')
 
-#----------------------------------------------Service RMAs Created by week - IMAGE 4-------------------------------------------------------------
+#----------------------------------------------Service RMAs Created by week -------------------------------------------------------------
 #5 week rolling avg
 agg.open.df <- with(service.open.df, aggregate(Record~DateGroup, FUN =sum))
 l <- length(agg.open.df$DateGroup)
@@ -183,10 +183,10 @@ dateBreaks <- seq(1,length(as.character(unique(agg.open.df[,'DateGroup']))),12)
 p.OpenRMA.service <- ggplot(agg.open.df, aes(x=as.numeric(as.factor(DateGroup)), y=Record, fill=Key)) + geom_area(stat="identity", position="stack") + 
   geom_line(aes(x=as.numeric(as.factor(DateGroup)), y=RollingAvg, group=1), inherit.aes=FALSE, color='black') + geom_point(aes(x=as.numeric(as.factor(DateGroup)), y=RollingAvg, group=1), inherit.aes=FALSE) +
   scale_x_continuous(breaks=dateBreaks,labels=dateLabels) + xlab('Date\n(Year-Week)\n5-week Rolling Average Line') + ylab('Instruments') + 
-  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle('Service RMAs Created') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20), legend.position = 'left') + 
+  ggtitle('Service RMAs Created') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30), position = 'right')
 
-#----------------------------------------------Shipped RMAs Created by week - IMAGE 5-------------------------------------------------------------
+#----------------------------------------------Shipped RMAs Created by week-------------------------------------------------------------
 #5 week rolling avg
 agg.shipped.df <- with(service.ship.df, aggregate(Record~DateGroup, FUN =sum))
 l <- length(agg.shipped.df$DateGroup)
@@ -209,8 +209,8 @@ dateBreaks <- seq(1,length(as.character(unique(agg.shipped.df[,'DateGroup']))),1
 p.ShippedRMA.service <- ggplot(agg.shipped.df, aes(x=as.numeric(as.factor(DateGroup)), y=Record, fill=Key)) + geom_area(stat="identity", position="stack") + 
   geom_line(aes(x=as.numeric(as.factor(DateGroup)), y=RollingAvg, group=1), inherit.aes=FALSE, color='black') + geom_point(aes(x=as.numeric(as.factor(DateGroup)), y=RollingAvg, group=1), inherit.aes=FALSE) +
   scale_x_continuous(breaks=dateBreaks,labels=dateLabels) + xlab('Date\n(Year-Week)\n5-week Rolling Average Line') + ylab('Instruments') + 
-  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle('Shipped RMAs') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20), legend.position = 'left') + 
+  ggtitle('Shipped RMAs') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30), position = 'right')
 
 #----------------------------------------NEEDS WORK!-----Instruments in Service by month------------------------------------------------
 # Try instruments rec - instruments at QC
@@ -268,24 +268,24 @@ stockInv.agg <- with(stockInv.df, aggregate(Record~ItemID, FUN=sum))
 #add goals
 stockInv.agg$Goal[stockInv.agg$ItemID == 'FLM1-ASY-0001R'] <- 150 
 stockInv.agg$Goal[stockInv.agg$ItemID == 'FLM2-ASY-0001R'] <- 400
-stockInv.agg$Goal[stockInv.agg$ItemID == 'HTFA-ASY-0001R'] <- 30 
-stockInv.agg$Goal[stockInv.agg$ItemID == 'HTFA-ASY-0003R'] <- 2 
+stockInv.agg$Goal[stockInv.agg$ItemID == 'HTFA-ASY-0001R'] <- 2 
+stockInv.agg$Goal[stockInv.agg$ItemID == 'HTFA-ASY-0003R'] <- 30 
 
 stockInv.agg$Key <- ' '
 
 # #new ggplot 2.2.0
-# p.StockInventory <- ggplot(stockInv.agg, aes(x=Key, y=Record)) + geom_bar(stat='identity', width = 0.5) + xlab(' ') + ylab('Inventory') + 
-#   facet_wrap(~ItemID, scales='free_y', strip.position = 'bottom') + geom_hline(aes(yintercept=Goal),linetype = 'dashed', color = 'blue') +
-#   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20), 
-#   axis.text.y=element_text(hjust=1, color='black', size=20), strip.background = element_blank(), strip.placement = 'outside', 
-#   plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) + 
-#   ggtitle('Stock Inventory Levels', subtitle='Goal Lines in Blue') + scale_y_continuous(breaks=pretty_breaks(n=10))
+p.StockInventory <- ggplot(stockInv.agg, aes(x=Key, y=Record)) + geom_bar(stat='identity', width = 0.5) + xlab(' ') + ylab('Inventory') +
+  facet_wrap(~ItemID, scales='free_y', strip.position = 'bottom') + geom_hline(aes(yintercept=Goal),linetype = 'dashed', color = 'blue') +
+  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20),
+  axis.text.y=element_text(hjust=1, color='black', size=20), strip.background = element_blank(), strip.placement = 'outside',
+  plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
+  ggtitle('Stock Inventory Levels', subtitle='Goal Lines in Blue') + scale_y_continuous(breaks=pretty_breaks(n=10))
 
 #old ggplot 2.1.0
-p.StockInventory <- ggplot(stockInv.agg, aes(x=Key, y=Record)) + geom_bar(stat='identity', width = 0.5) + xlab(' ') + ylab('Inventory') +
-  facet_wrap(~ItemID, scales='free_y') + geom_hline(aes(yintercept=Goal),linetype = 'dashed', color = 'blue') +
-  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) +
-  ggtitle('Stock Inventory Levels\nGoal Lines in Blue') + scale_y_continuous(breaks=pretty_breaks(n=10))
+# p.StockInventory <- ggplot(stockInv.agg, aes(x=Key, y=Record)) + geom_bar(stat='identity', width = 0.5) + xlab(' ') + ylab('Inventory') +
+#   facet_wrap(~ItemID, scales='free_y') + geom_hline(aes(yintercept=Goal),linetype = 'dashed', color = 'blue') +
+#   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) +
+#   ggtitle('Stock Inventory Levels\nGoal Lines in Blue') + scale_y_continuous(breaks=pretty_breaks(n=10))
 
 #----------------------FA1.5 To 2.0 Conversions Through QC------------------------------------------------------------------------------------
 conversion.agg <- aggregateAndFillDateGroupGaps(calendar.month,'Month', conversion.df, 'Key', '2015-06', 'Record', 'sum',0)
