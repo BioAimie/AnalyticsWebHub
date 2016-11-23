@@ -56,7 +56,7 @@ PIVOT
 WHERE [Where Found] IS NOT NULL AND [Where Found] NOT LIKE 'N/A' AND [Where Found] NOT LIKE 'No failure complaint'
 
 SELECT 
-	[TicketString],
+	--[TicketString],
 	[Year],
 	[Month],
 	[Quarter], 
@@ -68,8 +68,20 @@ SELECT
 	[ProblemArea],
 	[FailCat],
 	[SubFailCat],
-	1 AS [Record]
+	COUNT([TicketString]) AS [Record]
 FROM #pvc P LEFT JOIN #fail F
 	ON P.[TicketId] = F.[TicketId]
+GROUP BY
+	[Year],
+	[Month],
+	[Quarter], 
+	[last30days],
+	[last90days],
+	[lastYear],
+	[FailType],
+	[WhereFound],
+	[ProblemArea],
+	[FailCat],
+	[SubFailCat]
 
 DROP TABLE #root, #pvc, #fail
