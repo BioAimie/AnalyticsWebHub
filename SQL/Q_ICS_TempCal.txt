@@ -2,7 +2,9 @@ SET NOCOUNT ON
 
 SELECT 
 	[SerialNumber],
-	CAST([DateCalibrated] AS DATE) AS [Date],
+	[DateCalibrated],
+	DATEADD(s, CONVERT(BIGINT, [lastUpdate]), CONVERT(DATETIME, '1-1-1970 00:00:00')) AS [lastUpdate],
+	REPLACE(REPLACE(REPLACE([DateCalibrated], '/',''),'\',''),'-','') AS [DateStrip],
 	[DCID],
 	[ChangeOrder],
 	[pcr1check_50.thermocouple] AS [pcr1_50therm],
@@ -45,7 +47,7 @@ SELECT
 	[pcr2check_90.instrumenttemp] AS [pcr2_90inst],
 	[pcr2check_90.error] AS [pcr2_90error],
 	90 AS [pcr2_90target]
-INTO #tempCal
+INTO #tempCalRaw
 FROM
 (
 	SELECT *
@@ -94,6 +96,72 @@ PIVOT
 		[pcr2check_90.thermocouple]
 	)
 ) PIV
+
+SELECT
+	*,
+	IIF(CHARINDEX('-', [DateCalibrated], 1) <> 0, CAST([DateCalibrated] AS DATE),
+		IIF([lastUpdate] < CONVERT(DATETIME, '2016-09-08'), CAST([DateCalibrated] AS DATE),
+		IIF([lastUpdate] > CONVERT(DATETIME, '2016-11-29'), CAST([DateCalibrated] AS DATE), CAST('1900-01-01' AS DATE)))) AS [DateCalibratedInt]
+INTO #byLastUpdate
+FROM #tempCalRaw
+WHERE [DateCalibrated] IS NOT NULL
+
+SELECT *,
+	IIF([DateCalibratedInt] = CONVERT(DATE, '1900-01-01') AND CAST(SUBSTRING([DateStrip], 1, 1) AS INT) > 1, CAST(SUBSTRING([DateStrip], 1, 1) AS INT), CAST(SUBSTRING([DateStrip], 1, 2) AS INT)) AS [Month],
+	IIF([DateCalibratedInt] = CONVERT(DATE, '1900-01-01') AND CAST(SUBSTRING([DateStrip], 1, 1) AS INT) > 1 AND LEN([DateStrip]) = 6, CAST(SUBSTRING([DateStrip], 2, 1) AS INT),
+		IIF([DateCalibratedInt] = CONVERT(DATE, '1900-01-01') AND CAST(SUBSTRING([DateStrip], 1, 1) AS INT) > 1 AND LEN([DateStrip]) = 7, CAST(SUBSTRING([DateStrip], 2, 2) AS INT), 
+		IIF([DateCalibratedInt] = CONVERT(DATE, '1900-01-01') AND LEN([DateStrip]) = 7, CAST(SUBSTRING([DateStrip], 3, 1) AS INT), CAST(SUBSTRING([DateStrip], 3, 2) AS INT)))) AS [Day],
+	IIF([DateCalibratedInt] = CONVERT(DATE, '1900-01-01'), CAST(RIGHT([DateStrip], 4) AS INT), 0) AS [Year]
+INTO #fixedDate
+FROM #byLastUpdate
+
+SELECT 
+	[SerialNumber],
+	IIF([DateCalibratedInt] = CONVERT(DATE, '1900-01-01'), CAST(CONCAT([Year],'-',[Month],'-',[Day]) AS DATE), [DateCalibrated]) AS [Date],
+	[DCID],
+	[ChangeOrder],
+	[pcr1_50therm],
+	[pcr1_50inst],
+	[pcr1_50error],
+	[pcr1_50target],
+	[pcr1_60therm],
+	[pcr1_60inst],
+	[pcr1_60error],
+	[pcr1_60target],
+	[pcr1_70therm],
+	[pcr1_70inst],
+	[pcr1_70error],
+	[pcr1_70target],
+	[pcr1_80therm],
+	[pcr1_80inst],
+	[pcr1_80error],
+	[pcr1_80target],
+	[pcr1_90therm],
+	[pcr1_90inst],
+	[pcr1_90error],
+	[pcr1_90target],
+	[pcr2_50therm],
+	[pcr2_50inst],
+	[pcr2_50error],
+	[pcr2_50target],
+	[pcr2_60therm],
+	[pcr2_60inst],
+	[pcr2_60error],
+	[pcr2_60target],
+	[pcr2_70therm],
+	[pcr2_70inst],
+	[pcr2_70error],
+	[pcr2_70target],
+	[pcr2_80therm],
+	[pcr2_80inst],
+	[pcr2_80error],
+	[pcr2_80target],
+	[pcr2_90therm],
+	[pcr2_90inst],
+	[pcr2_90error],
+	[pcr2_90target]
+INTO #tempCal
+FROM #fixedDate
 
 SELECT
 	[SerialNo],
@@ -243,4 +311,4 @@ FROM
 WHERE T.[Date] > GETDATE() - 400 AND [pcr1_50therm] IS NOT NULL
 ORDER BY [Date], [SerialNumber]
 
-DROP TABLE #tempCal, #location
+DROP TABLE #byLastUpdate, #fixedDate, #location, #tempCal, #tempCalRaw

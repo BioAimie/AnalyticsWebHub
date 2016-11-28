@@ -7,7 +7,6 @@ setwd(workDir)
 
 # Load needed libraries
 library(ggplot2)
-library(zoo)
 library(scales)
 library(grid)
 library(gridExtra)
@@ -82,17 +81,7 @@ for(i in 1:length(sites)) {
   rp.runs.reg.norm <- rbind(rp.runs.reg.norm, site.norm)
 }
 
-site.starts <- c()
-for(i in 1:length(sites)) {
-  
-  site <- sites[i]
-  first.date <- min(as.character(rp.runs.reg.norm[rp.runs.reg.norm$CustomerSiteId == site,'YearWeek']))
-  temp <- data.frame(SiteId = site, StartDate = first.date)
-  site.starts <- rbind(site.starts, temp)
-}
-
-# using only sites with enough data, find the prevalence of organisms  
-sites <- site.starts[!(is.na(site.starts$StartDate))  & substring(site.starts$StartDate, 1, 4) < 2016, 'SiteId']
+sites <- unique(rp.runs.reg.norm$CustomerSiteId)
 
 # make a season intenstity chart by showing normalized run rates in season-week format
 rp.runs.norm.nat <- with(subset(rp.runs.reg.norm, CustomerSiteId %in% sites), aggregate(NormalizedBurn~YearWeek+Year+Week, FUN=mean))
@@ -540,7 +529,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
@@ -601,7 +590,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
@@ -662,7 +651,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
@@ -724,7 +713,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
@@ -786,7 +775,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
@@ -848,7 +837,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
@@ -910,7 +899,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
@@ -972,7 +961,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
@@ -1034,7 +1023,7 @@ if(TRUE) {
   g1 <- gtable_add_grob(g1, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l)
   
   # Get the y axis title from g2
-  index <- which(g2$layout$name == "ylab") # Which grob contains the y axis title?
+  index <- which(g2$layout$name == "ylab-l") # Which grob contains the y axis title?
   ylab <- g2$grobs[[index]]                # Extract that grob
   ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
   
