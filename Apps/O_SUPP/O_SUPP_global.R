@@ -28,11 +28,11 @@ scars.ltm <- with(scars.ltm, aggregate(Count~PartNumber, FUN=sum))
 scars.ltm <- scars.ltm[scars.ltm$Count >= 3, ]
 
 # CREATE AN EXCEL FILE TO SEND TO FRANKIE... THEN EMAIL IT TO HER
-write.xlsx(bad.yeild.lsd, file = '../MaterialsManagementAlerts.xlsx', sheetName = 'Lot Yield < 95%', row.names = FALSE)
-write.xlsx(bad.defects.lsm, file = '../MaterialsManagementAlerts.xlsx', sheetName = '3+ Defects in Last Six Months', row.names = FALSE, append = TRUE)
-write.xlsx(scars.ltm, file = '../MaterialsManagementAlerts.xlsx', sheetName = '3+ SCAR Parts in Last 12 Months', row.names = FALSE, append = TRUE)
+write.xlsx(bad.yeild.lsd, file = '../../../MaterialsManagementAlerts.xlsx', sheetName = 'Lot Yield < 95%', row.names = FALSE)
+write.xlsx(bad.defects.lsm, file = '../../../MaterialsManagementAlerts.xlsx', sheetName = '3+ Defects in Last Six Months', row.names = FALSE, append = TRUE)
+write.xlsx(scars.ltm, file = '../../../MaterialsManagementAlerts.xlsx', sheetName = '3+ SCAR Parts in Last 12 Months', row.names = FALSE, append = TRUE)
 
-if(wday(Sys.Date()) > 1 & wday(Sys.Date()) < 7) {
+if(wday(Sys.Date()) == 4) {
   
   from <- 'aimie.faucett@biofiredx.com'
   to <- 'Frankie.Tate@biofiredx.com'
