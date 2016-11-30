@@ -84,6 +84,37 @@ ccSummary.lims <- merge(ccSummary.rate, ccSummary.all[,c('DateGroup','UL')], by=
 pal.summary <- createPaletteOfVariableLength(ccSummary.lims, 'RecordedValue')
 p.summary <- ggplot(ccSummary.lims, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_fill_manual(values=pal.summary) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + guides(fill=guide_legend(ncol=3, bycol=TRUE)) + labs(title='Cause of Complaint in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate')
 
+# Rate of Complaint Cause by Summary in Escalated Complaints per all BCID-related escalated complaints (i.e. denom = all CIs where the Version = BCID Panel)
+# NOTE: IF DANA WANTS THE DENOM TO BE ALL COMPLAINTS (NOT JUST ESCALATED) THIS WILL BE HARDER TO DO, BUT WE CAN TRY- WOULD IT BE A COUNT OF COMPLAINTS OR THE QTY AFFECTED??
+# BCID
+bfdxBCID.df <- with(unique(overview.df[overview.df$Version=='BCID Panel', c('bug_id','Year','Week','Version','RecordedValue','Record')]), aggregate(Record~Year+Week+Version, FUN=sum))
+bfdxBCID.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', bfdxBCID.df, c('Version'), startDate, 'Record', 'sum', 0)
+ccBCID.df <- unique(overview.df[overview.df$Version=='BCID Panel', c('bug_id','Year','Week','RecordedValue','Record')])[,c('Year','Week','RecordedValue','Record')]
+ccBCID.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ccBCID.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
+ccBCID.rate <- mergeCalSparseFrames(ccBCID.fill, bfdxBCID.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 0)
+p.ccBCID <- ggplot(ccBCID.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + scale_x_discrete(breaks=dateBreaks) + scale_fill_manual(values=createPaletteOfVariableLength(ccBCID.rate, 'RecordedValue'), name='') + scale_y_continuous(labels=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='Cause of Complaint Ratio for BCID-Related CIs', x='Date\n(Year-Week)', y='Ratio') + guides(fill=guide_legend(ncol=3, byrow=TRUE))
+# GI
+bfdxGI.df <- with(unique(overview.df[overview.df$Version=='GI Panel', c('bug_id','Year','Week','Version','RecordedValue','Record')]), aggregate(Record~Year+Week+Version, FUN=sum))
+bfdxGI.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', bfdxGI.df, c('Version'), startDate, 'Record', 'sum', 0)
+ccGI.df <- unique(overview.df[overview.df$Version=='GI Panel', c('bug_id','Year','Week','RecordedValue','Record')])[,c('Year','Week','RecordedValue','Record')]
+ccGI.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ccGI.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
+ccGI.rate <- mergeCalSparseFrames(ccGI.fill, bfdxGI.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 0)
+p.ccGI <- ggplot(ccGI.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + scale_x_discrete(breaks=dateBreaks) + scale_fill_manual(values=createPaletteOfVariableLength(ccGI.rate, 'RecordedValue'), name='') + scale_y_continuous(labels=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='Cause of Complaint Ratio for GI-Related CIs', x='Date\n(Year-Week)', y='Ratio') + guides(fill=guide_legend(ncol=3, byrow=TRUE))
+# ME
+bfdxME.df <- with(unique(overview.df[overview.df$Version=='ME Panel', c('bug_id','Year','Week','Version','RecordedValue','Record')]), aggregate(Record~Year+Week+Version, FUN=sum))
+bfdxME.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', bfdxME.df, c('Version'), startDate, 'Record', 'sum', 0)
+ccME.df <- unique(overview.df[overview.df$Version=='ME Panel', c('bug_id','Year','Week','RecordedValue','Record')])[,c('Year','Week','RecordedValue','Record')]
+ccME.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ccME.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
+ccME.rate <- mergeCalSparseFrames(ccME.fill, bfdxME.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 0)
+p.ccME <- ggplot(ccME.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + scale_x_discrete(breaks=dateBreaks) + scale_fill_manual(values=createPaletteOfVariableLength(ccME.rate, 'RecordedValue'), name='') + scale_y_continuous(labels=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='Cause of Complaint Ratio for ME-Related CIs', x='Date\n(Year-Week)', y='Ratio') + guides(fill=guide_legend(ncol=3, byrow=TRUE))
+# RP
+bfdxRP.df <- with(unique(overview.df[overview.df$Version=='Respiratory Panel', c('bug_id','Year','Week','Version','RecordedValue','Record')]), aggregate(Record~Year+Week+Version, FUN=sum))
+bfdxRP.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', bfdxRP.df, c('Version'), startDate, 'Record', 'sum', 0)
+ccRP.df <- unique(overview.df[overview.df$Version=='Respiratory Panel', c('bug_id','Year','Week','RecordedValue','Record')])[,c('Year','Week','RecordedValue','Record')]
+ccRP.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ccRP.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
+ccRP.rate <- mergeCalSparseFrames(ccRP.fill, bfdxRP.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 0)
+p.ccRP <- ggplot(ccRP.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + scale_x_discrete(breaks=dateBreaks) + scale_fill_manual(values=createPaletteOfVariableLength(ccRP.rate, 'RecordedValue'), name='') + scale_y_continuous(labels=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='Cause of Complaint Ratio for RP-Related CIs', x='Date\n(Year-Week)', y='Ratio') + guides(fill=guide_legend(ncol=3, byrow=TRUE))
+
 # Rate of Affected Assay in Escalated Complaints per All Complaints - requires that assays be partitioned into the proper panel
 caAssay.df <- unique(overview.df[,c('bug_id','Year','Week','Key','Record')])[,c('Year','Week','Key','Record')]
 caAssay.df[,'Key'] <- as.character(caAssay.df[,'Key'])
@@ -126,21 +157,16 @@ p.specimens <- ggplot(specimens.lims, aes(x=DateGroup, y=Rate, fill=Version)) + 
 # establish some properties to make a monthly bar chart
 bigGroup <- 'Year'
 smallGroup <- 'Month'
-periods <- 7
-weeks <- 53
 months <- 13
 lagPeriods <- 0
-validateDate <- '2016-04'
 
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
-startYear <- year(Sys.Date()) - 1
+startYear <- year(Sys.Date()) - 2
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Month')
-startDate <- findStartDate(calendar.df, 'Month', months, periods)
+startDate <- findStartDate(calendar.df, 'Month', months, lagPeriods)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 1
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(periods,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
-fontSize <- 20
-fontFace <- 'bold'
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # Bar Chart for CI/All Complaints from Complaint Tracker

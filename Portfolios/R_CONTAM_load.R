@@ -13,13 +13,11 @@ query.charVec = scan("SQL/R_CONTAM_masterAssaypalette.txt", what=character(),quo
 query = paste(query.charVec,collapse=" ")
 faAssayPal.df = sqlQuery(PMScxn,query)
 
-
 #Rates
 #swabs from FilmArray Database for Enviro
 query.charVec = scan("SQL/R_CONTAM_Enviro.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 faEnviro.df = sqlQuery(PMScxn,query)
-
 
 #swabs from FilmArray Database for Personnel
 query.charVec = scan("SQL/R_CONTAM_Personnel.txt", what=character(),quote="")
@@ -42,18 +40,15 @@ query.charVec = scan("SQL/R_CONTAM_PersonnelCount.txt", what=character(),quote="
 query = paste(query.charVec,collapse=" ")
 faPersonnelCount.df = sqlQuery(PMScxn,query)
 
-
 #swabs from FilmArray Database for Personnel Pouch Count
 query.charVec = scan("SQL/R_CONTAM_PersonnelCountPouch.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 faPersonnelCountPouch.df = sqlQuery(PMScxn,query)
 
-
 #swabs from FilmArray Database for Pools Pouch Count
 query.charVec = scan("SQL/R_CONTAM_PoolCountPouch.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 faPoolCountPouch.df = sqlQuery(PMScxn,query)
-
 
 #swabs from FilmArray Database for Pools
 query.charVec = scan("SQL/R_CONTAM_PoolCount.txt", what=character(),quote="")
