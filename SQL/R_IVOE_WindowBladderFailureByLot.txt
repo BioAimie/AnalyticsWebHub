@@ -16,8 +16,7 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 								ON ULLL.[LotNumberId] = UPPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLLL WITH(NOLOCK)
 									ON UPPP.[LotNumber] = ULLLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPPP WITH(NOLOCK)
 										ON ULLLL.[LotNumberId] = UPPPP.[LotNumberId]
-WHERE P.[PartNumber] LIKE 'FLM%-ASY-0001' AND UP.[PartNumber] LIKE 'FLM%-SUB-0013' AND (UPP.[PartNumber] LIKE 'FLM%-SUB-0037' OR UPP.[PartNumber] LIKE 'FLM2-SUB-0066')
-		AND UPPP.[PartNumber] LIKE 'FLM%-SUB-0055' AND UPPPP.[PartNumber] LIKE 'FLM1-SUB-0044' AND UPPPP.[Quantity] > 0
+WHERE P.[PartNumber] LIKE 'FLM%-ASY-0001' AND UPPPP.[PartNumber] LIKE 'FLM1-SUB-0044' AND UPPPP.[Quantity] > 0
 
 SELECT 
 	[TicketId],

@@ -23,7 +23,7 @@ source('O_SUPP_makeSupplierChart.R')
 source('O_SUPP_makeSummaryChart.R')
 source('O_SUPP_makeSummaryTable.R')
 source('O_SUPP_createMatManPareto.R')
-# source('O_SUPP_createMatManTable.R')
+source('O_SUPP_createMatManTable.R')
 
 ui <- dashboardPage(skin = 'red',
                     
