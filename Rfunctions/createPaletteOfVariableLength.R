@@ -6,7 +6,7 @@ createPaletteOfVariableLength <- function(dataFrame, colorVariable, greyscale=FA
     
     colorVector <- c('midnightblue','steelblue4','royalblue1','steelblue1','slategray3','orangered3','tomato2','orange','sienna1','mediumorchid3','mediumpurple4','orchid',
                      'plum3','green4','limegreen','seagreen3','seagreen1','palegreen','turquoise4','lightseagreen','cyan','mediumvioletred','maroon1','hotpink','lightcoral','goldenrod',
-                     'khaki','lightgoldenrodyellow','red4','red','firebrick1','lightslateblue','lightskyblue4','grey29','grey47','seashell4','grey80')
+                     'khaki','lightgoldenrodyellow','red4','red','firebrick1','lightslateblue','lightskyblue4','grey29','grey47','seashell4','grey80','darkgreen','darkolivegreen','darkolivegreen3','saddlebrown','tan3','peru','violetred4','violetred','violet')
     myPal <- colorRampPalette(colorVector[1:numberOfColors])(numberOfColors)
   } else if(greyscale == TRUE) {
     
