@@ -232,17 +232,11 @@ sup {
     border-top: solid grey 2px;
     padding-top: 20px;
 }
-/*
+.betaLink {
+    padding-left: 20px;
+    padding-top: 20px;
+    display: inline;
+} 
 #appChoices {
     text-align: center;
-    align-content: center;
-    align-items: center;
-    float: left;
-}
-*/
-#betaLink {
-    padding: 20px;
-    text-align: center;
-    float: left;
-    margin-left: 20%;
 }
