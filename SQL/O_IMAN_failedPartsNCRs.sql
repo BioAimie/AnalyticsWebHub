@@ -56,23 +56,14 @@ WHERE [ObjectName] LIKE 'Parts Affected' AND [PropertyName] LIKE 'Part Affected'
 	AND [TicketID] IN (SELECT [TicketID] FROM #Tickets)
 	AND [RecordedValue] NOT LIKE 'N/A' AND [RecordedValue] NOT LIKE 'NA'
 GROUP BY [TicketID], [RecordedValue]
-/*
-SELECT 
-	[PartNumber],
-	[Name] 
-INTO #Pnames
-FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] WITH(NOLOCK)
-*/
+
 SELECT
-	--[TicketString],
 	[Year],
 	[Month],
 	[Week],
-	UPPER([FailedPart]) AS [FailedPart]--,
-	--[PartNumber],
-	--[Name] AS [FailedPart]
-FROM #Fail f --INNER JOIN #Pnames p
---	ON f.[FailedPart] = p.[PartNumber]
+	UPPER([FailedPart]) AS [FailedPart],
+	1 AS [Record]
+FROM #Fail f 
 ORDER BY [TicketString]
 
-DROP TABLE #TicketsA, #MasClass, #MasClassParts, #TicketsB, #Raw, #Tickets, #Fail--, #Pnames
+DROP TABLE #TicketsA, #MasClass, #MasClassParts, #TicketsB, #Raw, #Tickets, #Fail

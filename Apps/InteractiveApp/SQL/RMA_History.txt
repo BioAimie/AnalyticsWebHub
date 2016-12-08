@@ -406,7 +406,7 @@ SELECT
 	T.[Disposition],
 	T.[Early Failure Type],
 	T.[Root Cause Part Number],
-	MAX(L.[Hours Inc]) AS [Runs Since Last Failure]
+	ISNULL(CAST(MAX(L.[Hours Inc]) AS VARCHAR), 'N/A') AS [Runs Since Last Failure]
 FROM
 (
 	SELECT 
@@ -448,7 +448,7 @@ FROM
 		[Early Failure Type],
 		[Hours Run],
 		[Root Cause Part Number]
-) T INNER JOIN #lookUpHours L
+) T LEFT JOIN #lookUpHours L
 	ON T.[RMA] = L.[TicketString]
 WHERE T.[CreatedDate] > CONVERT(DATETIME, '2014-11-01') 
 GROUP BY

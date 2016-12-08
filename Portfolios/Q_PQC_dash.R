@@ -59,7 +59,10 @@ leak.fail <- merge(pqcRuns.df[,c('SerialNumber','Year','Week')], ptRuns.df, by='
 leak.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', leak.fail, c('Key'), startDate, 'Record', 'sum', 0)
 leak.rate <- mergeCalSparseFrames(leak.fill, runs.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 leak.lims <- addStatsToSparseHandledData(leak.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0)
-p.leak.fail <- ggplot(leak.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Leak Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate')
+x_pos.leak <- c('2016-32')
+annot.leak <- c('DX-DCT-031999')
+y_pos.leak <- leak.lims[(leak.lims[,'DateGroup']) %in% x_pos.leak, 'Rate'] + 0.0001
+p.leak.fail <- ggplot(leak.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Leak Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + annotate("text", x=x_pos.leak, y=y_pos.leak, label=annot.leak, size=4)
 
 # Rehydration trends
 rehydration.df <- rehydration.df[rehydration.df[,'Record'] >= 0 & rehydration.df[,'Record'] <= 1.6, ]
@@ -95,7 +98,8 @@ control.fail.field <- merge(control.fail.field.complaints, control.fail.field.si
 control.fail.field[,'Rate'] <- with(control.fail.field, ComplaintQty/QtyShipped)
 control.fail.field[,'Key'] <- 'fieldComplaints'
 control.fail.combo <- rbind(control.fail.field[,c('LotNo','Key','Rate')], control.fail.qc[control.fail.qc[,'LotNo'] %in% control.fail.field[,'LotNo'],c('LotNo','Key','Rate')])
-p.control.QCvField <- ggplot(subset(control.fail.combo, substr(control.fail.combo[,'LotNo'], 5, 6)  == '16'), aes(x=as.factor(LotNo), y=Rate)) + geom_bar(stat='identity') + facet_wrap(~Key, scales='free_y', ncol=1) + scale_x_discrete(breaks=as.character(unique(subset(control.fail.combo, substr(control.fail.combo[,'LotNo'], 5, 6)  == '16')[,'LotNo']))) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(size=fontSize, color='black',face=fontFace)) + labs(y='Failures/QC Runs, Complaints/Qty Shipped', x='Lot Number', title='WIP:\nControl Failure Rate in Field vs. Lot Performance in QC')
+control.breaks <- sort(as.character(unique(subset(control.fail.combo, substr(control.fail.combo[,'LotNo'], 5, 6)  == '16')[, 'LotNo'])))[seq(1,length(as.character(unique(subset(control.fail.combo, substr(control.fail.combo[,'LotNo'], 5, 6)  == '16')[, 'LotNo']))), 5)]
+p.control.QCvField <- ggplot(subset(control.fail.combo, substr(control.fail.combo[,'LotNo'], 5, 6)  == '16'), aes(x=as.factor(LotNo), y=Rate)) + geom_bar(stat='identity') + facet_wrap(~Key, scales='free_y', ncol=1) + scale_x_discrete(breaks=control.breaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(size=fontSize, color='black',face=fontFace)) + labs(y='Failures/QC Runs, Complaints/Qty Shipped', x='Lot Number', title='WIP:\nControl Failure Rate in Field vs. Lot Performance in QC')
 
 # Compare the rate of Hydration Failures in Pouch QC to those in the field by lot
 hydration.fail.field.complaints <- with(subset(field.df, Complaint == 'Failure To Hydrate'), aggregate(ComplaintQty~LotNo, FUN=sum))
@@ -108,7 +112,8 @@ hydration.runs.qc <- with(data.frame(LotNo = pqcRuns.df[pqcRuns.df[,'LotNumber']
 hydration.fail.qc <- merge(hydration.runs.qc, hydration.fail.qc, by.x='LotNo', by.y='LotNumber', all.x=TRUE)
 hydration.fail.qc[,'Rate'] <- with(hydration.fail.qc, Record/Runs)
 hydration.fail.combo <- rbind(hydration.fail.field[,c('LotNo','Key','Rate')], hydration.fail.qc[,c('LotNo','Key','Rate')])
-p.hydration.QCvField <- ggplot(subset(hydration.fail.combo, substr(hydration.fail.combo[,'LotNo'], 5, 6)  == '16'), aes(x=as.factor(LotNo), y=Rate)) + geom_bar(stat='identity') + facet_wrap(~Key, scales='free_y', ncol=1) + scale_x_discrete(breaks=as.character(unique(subset(hydration.fail.combo, substr(hydration.fail.combo[,'LotNo'], 5, 6)  == '16')[,'LotNo']))) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(size=fontSize, color='black',face=fontFace)) + labs(y='Failures/QC Runs, Complaints/Qty Shipped', x='Lot Number', title='Hydration Failure Rate in Field vs. Lot Performance in QC')
+hydration.breaks <- sort(as.character(unique(subset(hydration.fail.combo, substr(hydration.fail.combo[,'LotNo'], 5, 6)  == '16')[, 'LotNo'])))[seq(1,length(as.character(unique(subset(hydration.fail.combo, substr(hydration.fail.combo[,'LotNo'], 5, 6)  == '16')[, 'LotNo']))), 5)]
+p.hydration.QCvField <- ggplot(subset(hydration.fail.combo, substr(hydration.fail.combo[,'LotNo'], 5, 6)  == '16'), aes(x=as.factor(LotNo), y=Rate)) + geom_bar(stat='identity') + facet_wrap(~Key, scales='free_y', ncol=1) + scale_x_discrete(breaks=hydration.breaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(size=fontSize, color='black',face=fontFace)) + labs(y='Failures/QC Runs, Complaints/Qty Shipped', x='Lot Number', title='Hydration Failure Rate in Field vs. Lot Performance in QC')
 
 # Create images for the Web Hub
 setwd(imgDir)
