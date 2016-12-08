@@ -1,6 +1,6 @@
 SET NOCOUNT ON
 
-SELECT
+SELECT DISTINCT
 	REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'.','') AS [SerialNo],
 	L.[DateOfManufacturing],
 	UPPPP.[LotNumber] AS [WindowBladderLot]
@@ -16,9 +16,13 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 								ON ULLL.[LotNumberId] = UPPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLLL WITH(NOLOCK)
 									ON UPPP.[LotNumber] = ULLLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPPP WITH(NOLOCK)
 										ON ULLLL.[LotNumberId] = UPPPP.[LotNumberId]
+<<<<<<< HEAD
+WHERE P.[PartNumber] IN ('FLM1-ASY-0001' ,'FLM2-ASY-0001','HTFA-ASY-0003','FLM2-ASY-0001R','HTFA-ASY-0003R') AND UPPPP.[PartNumber] LIKE 'FLM1-SUB-0044' AND UPPPP.[Quantity] > 0
+=======
 WHERE P.[PartNumber] LIKE 'FLM%-ASY-0001' AND UPPPP.[PartNumber] LIKE 'FLM1-SUB-0044' AND UPPPP.[Quantity] > 0
+>>>>>>> 751e4c5351f0b444b8742080d57c4b1f1f8f2750
 
-SELECT 
+SELECT
 	[TicketId],
 	[TicketString],
 	[CreatedDate],
@@ -29,7 +33,7 @@ INTO #freePropPrePiv
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] IN ('RMA Title', 'RMA Type', 'Complaint Number', 'Hours Run')
 
-SELECT 
+SELECT
 	[TicketId],
 	[ObjectId],
 	[PropertyName],
@@ -51,7 +55,7 @@ SELECT DISTINCT
 	[TicketId]
 INTO #servCodeIndicatesFailure
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Service Codes' AND [RecordedValue] IN ('53','55','50','54','56')
+WHERE [ObjectName] LIKE 'Service Codes' AND [RecordedValue] IN ('53','55','50','54','56','51','52')
 
 SELECT 
 	[TicketId]
@@ -83,8 +87,9 @@ PIVOT
 	)
 ) PIV	
 
-SELECT 
+SELECT
 	[TicketId],
+	[Part Number],
 	REPLACE(REPLACE(REPLACE([Lot/Serial Number], ' ',''),'.',''),'_','') AS [SerialNo],
 	[Early Failure Type] AS [CustFailType]
 INTO #partInfoPiv
@@ -100,11 +105,11 @@ PIVOT
 		[Early Failure Type]
 	)
 ) PIV
-WHERE [Part Number] LIKE '%FLM%-ASY-000%'
+WHERE [Part Number] LIKE '%FLM%-ASY-0001%' OR [Part Number] LIKE '%HTFA%'
 
 SELECT 
 	[TicketId],
-	UPPER([Lot/Serial Number]) AS [WindowBladderReplacementLot]
+	IIF(CHARINDEX(':', [Lot/Serial Number], 1) = 0, UPPER(REPLACE(REPLACE([Lot/Serial Number],' ',''), ')','')), UPPER(REPLACE(REPLACE(SUBSTRING([Lot/Serial Number], 1, CHARINDEX(':', [Lot/Serial Number], 1)-1),' ',''), ')',''))) AS [WindowBladderReplacementLot]
 INTO #windowBladderLotUsed
 FROM #partsUsedPrePiv P
 PIVOT
@@ -117,7 +122,7 @@ PIVOT
 		[Lot/Serial Number]
 	)
 ) PIV
-WHERE [Part Used] LIKE 'FLM1-SUB-0044'
+WHERE REPLACE([Part Used],' ','') LIKE 'FLM1-SUB-0044'
 
 SELECT DISTINCT
 	[SerialNo]
@@ -125,7 +130,7 @@ INTO #hasShipped
 FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
 WHERE [TranType] IN ('IS','SA','SH') AND [WhseID] IN ('STOCK','IFSTK') AND [DistQty] = -1
 
-SELECT 
+SELECT
 	[WindowBladderLot],
 	[LotSizeInField],
 	IIF([DateOfManufacturing] IS NOT NULL, CAST([DateOfManufacturing] AS DATE),
@@ -149,10 +154,10 @@ FROM
 		FROM #windowBladderAtBirth W INNER JOIN #hasShipped S
 			ON W.[SerialNo] = S.[SerialNo]
 		UNION ALL
-		SELECT 
+		SELECT
 			P.[SerialNo],
 			REPLACE(W.[WindowBladderReplacementLot],' ','') AS [WindowBladderLot],
-			1 AS [Record]		
+			1 AS [Record]	
 		FROM #windowBladderLotUsed W INNER JOIN #partInfoPiv P
 			ON W.[TicketId] = P.[TicketId]
 		WHERE [WindowBladderReplacementLot] IS NOT NULL
@@ -162,8 +167,7 @@ FROM
 	ON W.[WindowBladderLot] = L.[LotNumber]
 WHERE [WindowBladderLot] NOT LIKE 'N%A'
 
-
-SELECT 
+SELECT
 	[TicketId],
 	[TicketString],
 	[ObjectId],
@@ -176,7 +180,7 @@ WHERE [ObjectName] LIKE 'BFDX Part Number' AND [PropertyName] IN ('Lot/Serial Nu
 SELECT 
 	[TicketId],
 	[TicketString],
-	[Lot/Serial Number] AS [SerialNo]
+	REPLACE(REPLACE(REPLACE([Lot/Serial Number], ' ',''),'.',''),'_','') AS [SerialNo]
 INTO #relatedComplaints
 FROM #complaints C
 PIVOT
@@ -200,11 +204,13 @@ INTO #relatedRMA
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'Related RMAs' AND [TicketId] IN (SELECT [TicketId] FROM #relatedComplaints)
 
-SELECT 
+SELECT
 	[TicketId],
 	CONCAT('RMA-',[RMA]) AS [RelatedRMA],
-	[Description],
-	SUBSTRING([Description],CHARINDEX('FA',[Description]),6) AS [SerialNo]
+	REPLACE(IIF(CHARINDEX('KTM', [Description], 1) <> 0, SUBSTRING([Description], CHARINDEX('KTM', [Description], 1), 9),
+				IIF(CHARINDEX('TM', [Description], 1) <> 0, SUBSTRING([Description], CHARINDEX('TM', [Description], 1), 7),
+				IIF(CHARINDEX('2FA', [Description], 1) <> 0, SUBSTRING([Description], CHARINDEX('2FA', [Description], 1), 8),
+				IIF(CHARINDEX('FA', [Description], 1) <> 0, SUBSTRING([Description], CHARINDEX('FA', [Description], 1), 6), NULL)))),' ','') AS [SerialNo]
 INTO #relateToSerial
 FROM #relatedRMA R
 PIVOT
@@ -217,7 +223,7 @@ PIVOT
 		[Description]
 	)
 ) PIV
-WHERE [Description] IS NOT NULL AND ISNUMERIC([RMA] ) = 1
+WHERE [Description] IS NOT NULL AND ISNUMERIC([RMA]) = 1
 
 SELECT DISTINCT
 	C.[TicketId],
@@ -227,14 +233,17 @@ SELECT DISTINCT
 INTO #pressureFail
 FROM #relatedComplaints C INNER JOIN #relateToSerial S
 	ON C.[TicketId] = S.[TicketId] AND C.[SerialNo] = S.[SerialNo]
+ORDER BY [SerialNo]
 
-SELECT
+SELECT 
 	F.[TicketId],
 	F.[TicketString],
 	F.[CreatedDate],
 	F.[Status],
 	IIF(ISNUMERIC(F.[HoursRun]) = 1, CAST(REPLACE(F.[HoursRun],',','') AS FLOAT), NULL) AS [HoursRun],
-	IIF(LEFT(S.[SerialNo],2) LIKE 'FA', UPPER(SUBSTRING(S.[SerialNo],1,6)), UPPER(SUBSTRING(S.[SerialNo],1,8))) AS [SerialNo],
+	REPLACE(IIF(LEFT(S.[SerialNo],2) LIKE 'FA', UPPER(SUBSTRING(S.[SerialNo],1,6)), 
+				IIF(LEFT(S.[SerialNo],3) LIKE '2FA', UPPER(SUBSTRING(S.[SerialNo],1,8)),
+				IIF(LEFT(S.[SerialNo],3) LIKE 'KTM', UPPER(SUBSTRING(S.[SerialNo],1,9)), CONCAT('K', UPPER(SUBSTRING(S.[SerialNo],1,7)))))),' ','') AS [SerialNo],
 	W.[WindowBladderReplacementLot],
 	IIF(W.[WindowBladderReplacementLot] IS NOT NULL AND C.[TicketId] IS NOT NULL, 1,
 		IIF(R.[TicketId] IS NOT NULL, 1, 0)) AS [WindowBladderFailure],
@@ -246,9 +255,9 @@ FROM #freePropPiv F LEFT JOIN #partInfoPiv S
 			ON F.[TicketId] = C.[TicketId] LEFT JOIN #rootCauseIndicatesFailure R
 				ON F.[TicketId] = R.[TicketId] LEFT JOIN #pressureFail P
 					ON S.[SerialNo] = P.[SerialNo] AND F.[TicketString] = P.[RelatedRMA]
-WHERE (W.[WindowBladderReplacementLot] IS NOT NULL OR (F.[Status] IN ('Reporting','Receiving','Quarantine') AND P.[SerialNo] IS NOT NULL)) AND LEFT(S.[SerialNo],2) IN ('FA','2F')
+WHERE (W.[WindowBladderReplacementLot] IS NOT NULL OR (F.[Status] IN ('Reporting','Receiving','Quarantine') AND P.[SerialNo] IS NOT NULL)) AND LEFT(S.[SerialNo],2) IN ('FA','2F','KT','TM')
 
-SELECT
+SELECT 
 	R.[SerialNo],
 	R.[WindowBladderFailure],
 	R.[FieldV041Error],
@@ -268,7 +277,7 @@ FROM
 ) R LEFT JOIN 
 (
 	SELECT *
-	FROM #windowBladderAtBirth 
+	FROM #windowBladderAtBirth
 ) B
 	ON R.[SerialNo] = B.[SerialNo]
 
