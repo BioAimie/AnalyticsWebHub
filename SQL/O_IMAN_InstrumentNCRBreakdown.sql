@@ -45,7 +45,7 @@ FROM #TicketsB
 
 SELECT 
 	[TicketID],
-	[RecordedValue] AS [WhereFound]
+	REPLACE([RecordedValue], 'Instrument ','') AS [WhereFound]
 INTO #Where
 FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'Where Found' AND [TicketID] IN (SELECT [TicketID] FROM #Tickets)
@@ -54,7 +54,7 @@ GROUP BY [TicketID], [RecordedValue]
 
 SELECT 
 	[TicketID],
-	[RecordedValue] AS [ProblemArea]
+	REPLACE([RecordedValue], 'Instrument ','') AS [ProblemArea]
 INTO #Prob
 FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'Problem Area' AND [TicketID] IN (SELECT [TicketID] FROM #Tickets)
@@ -66,7 +66,8 @@ SELECT
 	MONTH([CreatedDate]) AS [Month],
 	DATEPART(ww, [CreatedDate]) AS [Week],
 	[WhereFound],
-	[ProblemArea]
+	[ProblemArea],
+	1 AS [Record]
 FROM #Tickets t LEFT JOIN #Where w ON t.[TicketID] = w.[TicketID]
 	LEFT JOIN #Prob p ON w.[TicketID] = p.[TicketID]
 ORDER BY [TicketString] 
