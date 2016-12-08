@@ -15,7 +15,7 @@ library(sendmailR)
 # source('O_SUPP_loadApp.R')
 source('O_SUPP_global.R')
 
-#source('O_SUPP_createPaletteOfVariableLength.R')
+source('O_SUPP_createPaletteOfVariableLength.R')
 source('O_SUPP_makeSupplierbyPartChart.R')
 source('O_SUPP_filterPerInput.R')
 source('O_SUPP_validateDF.R')
@@ -130,6 +130,7 @@ ui <- dashboardPage(skin = 'red',
                                                             min = '2014-01-01',
                                                             max = Sys.Date()
                                              ),
+                                             uiOutput('toggleRate'),
                                              checkboxInput('supplierFault',
                                                            label = 'Only Display NCRs where Supplier was at Fault',
                                                            value = FALSE
@@ -327,12 +328,39 @@ server <- (function(input, output) {
     }
   })
   
+  output$toggleRate <- renderUI({
+    
+    if(input$paretoFilterType == 'Vendor Name') {
+      
+      checkboxInput('toggleRateChoice', 
+                    label = 'Show Vendor Summary as Percent Accepted', 
+                    value = TRUE
+                    )
+    } 
+    # else {
+    # 
+    #   checkboxInput('toggleRateChoice',
+    #                 value = FALSE,
+    #                 label = '',
+    #                 width = NULL
+    #                 )
+    # }
+  })
+  
   output$paretoChart <- renderPlot({
     
     if(input$supplierFault) {
       
       if(input$paretoType %in% c('Supplier Performance - Best','Supplier Performance - Worst')) {
         
+        createMatManPareto(input$paretoType, input$paretoFilterType, input$paretoFilterValue, input$paretoDateRange[1], input$paretoDateRange[2], TRUE, TRUE)
+      } else if(is.null(input$toggleRateChoice)==TRUE) {
+        
+        createMatManPareto(input$paretoType, input$paretoFilterType, input$paretoFilterValue, input$paretoDateRange[1], input$paretoDateRange[2], FALSE, TRUE)
+      }
+      
+      else if(input$paretoType == 'Vendor NCR Summary' & is.null(input$toggleRateChoice)==FALSE & input$toggleRateChoice==TRUE) {
+      
         createMatManPareto(input$paretoType, input$paretoFilterType, input$paretoFilterValue, input$paretoDateRange[1], input$paretoDateRange[2], TRUE, TRUE)
       } else {
         
@@ -341,6 +369,12 @@ server <- (function(input, output) {
     } else {
       
       if(input$paretoType %in% c('Supplier Performance - Best','Supplier Performance - Worst')) {
+        
+        createMatManPareto(input$paretoType, input$paretoFilterType, input$paretoFilterValue, input$paretoDateRange[1], input$paretoDateRange[2], TRUE, FALSE)
+      } else if(is.null(input$toggleRateChoice)==TRUE) {
+        
+        createMatManPareto(input$paretoType, input$paretoFilterType, input$paretoFilterValue, input$paretoDateRange[1], input$paretoDateRange[2], FALSE, FALSE)
+      } else if(input$paretoType == 'Vendor NCR Summary' & is.null(input$toggleRateChoice)==FALSE & input$toggleRateChoice==TRUE) {
         
         createMatManPareto(input$paretoType, input$paretoFilterType, input$paretoFilterValue, input$paretoDateRange[1], input$paretoDateRange[2], TRUE, FALSE)
       } else {
