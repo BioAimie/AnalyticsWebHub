@@ -36,7 +36,7 @@ SELECT
 FROM #C C INNER JOIN #I I
 	ON C.[TicketId] = I.[TicketId] LEFT JOIN #D D
 		ON C.[TicketId] = D.[TicketId]
-WHERE (I.[RecordedValue] LIKE 'FLM%-ASY-0001%' OR I.[RecordedValue] LIKE 'HTFA-ASY-0003%')
+WHERE (I.[RecordedValue] LIKE 'FLM%-ASY-0001%' OR I.[RecordedValue] LIKE 'HTFA-ASY-0003%' OR I.[RecordedValue] LIKE 'HTFA-SUB-0103%')
 GROUP BY 
 	[Year],
 	[Week],
