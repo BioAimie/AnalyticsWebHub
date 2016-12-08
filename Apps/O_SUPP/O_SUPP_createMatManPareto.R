@@ -56,7 +56,7 @@ createMatManPareto <- function(paretoType, paretoFilterType, paretoFilterValue, 
         ncr.trim <- rate.df[rate.df$Rate >= quantile(rate.df$Rate, probs = 0.5), ]
       }
       
-    } else {
+    } else if(paretoType == 'Supplier Performance - Worst') {
       
       rate.df <- rate.df[with(rate.df, order(Rate, decreasing = TRUE)), ]
       ncr.trim <- rate.df[rate.df$Rate <= quantile(rate.df$Rate, probs = 0.1), ]
@@ -64,10 +64,24 @@ createMatManPareto <- function(paretoType, paretoFilterType, paretoFilterValue, 
         
         ncr.trim <- rate.df[rate.df$Rate <= quantile(rate.df$Rate, probs = 0.5), ]
       }
+    } else if(paretoType == 'Vendor NCR Summary') {
+      
+      ncr.agg <- with(ncr.trim, aggregate(Record~PartNumber, FUN=sum))
+      receipt.trim <- with(receipts.df[receipts.df$Date >= dateStart & receipts.df$Date <= dateEnd & receipts.df$VendName==paretoFilterValue, c('VendName','PartNumber','RcvQty')], aggregate(RcvQty~PartNumber, FUN=sum))
+      ncr.rate <- merge(ncr.agg, receipt.trim, by='PartNumber')
+      ncr.rate$Rate <- with(ncr.rate, Record/RcvQty)
+      ncr.trim <- rbind(ncr.rate, data.frame(PartNumber = 'All Parts', Record = rate.df$QtyNCR, RcvQty = rate.df$QtyRcv, Rate = rate.df$Rate))
     }
     
-    ncr.trim <- ncr.trim[,c('Vendor','Rate')]
-    colnames(ncr.trim) <- c('Category','Record')
+    if(paretoType == 'Vendor NCR Summary') {
+      
+      ncr.trim <- ncr.trim[,c('PartNumber','Rate')]
+      colnames(ncr.trim) <- c('Category','Record')
+    } else {
+      
+      ncr.trim <- ncr.trim[,c('Vendor','Rate')]
+      colnames(ncr.trim) <- c('Category','Record')
+    }
   } else {
     
     ncr.trim <- switch(paretoType,
@@ -81,6 +95,7 @@ createMatManPareto <- function(paretoType, paretoFilterType, paretoFilterValue, 
     
     if(paretoType=='Vendor NCR Summary') {
       
+      # this is where I need to all code to put a count of all parts... do I really need to do that for count?
       ncr.trim <- ncr.trim
     } else if(length(ncr.trim$Category) > 10) {
       
@@ -95,9 +110,21 @@ createMatManPareto <- function(paretoType, paretoFilterType, paretoFilterValue, 
     p <- ggplot(ncr.trim) + geom_blank() + theme(panel.background=element_rect(fill='white', color='white'), text=element_text(size=20, face='bold'), axis.text=element_text(size=18, color='black', face='bold'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title = 'No Data Available with Current Input Parameters')
   } else {
     
-    ncr.trim$Name <- factor(ncr.trim$Category, levels = ncr.trim[with(ncr.trim, order(Record, decreasing = TRUE)), 'Category'])
+    if(paretoType=='Vendor NCR Summary' & rate==TRUE) {
+      
+      ordered.cats <- as.character(ncr.trim[with(ncr.trim, order(Record, decreasing = TRUE)), 'Category'])
+      ordered.cats <- ordered.cats[ordered.cats!=ordered.cats[grep('All Parts', ordered.cats)]]
+      ordered.cats <- c('All Parts', ordered.cats)
+      ncr.trim$Name <- factor(ncr.trim$Category, levels = ordered.cats)
+    } else {
+      
+      ncr.trim$Name <- factor(ncr.trim$Category, levels = ncr.trim[with(ncr.trim, order(Record, decreasing = TRUE)), 'Category'])
+    }
     
     if(paretoType %in% c('Supplier Performance - Best','Supplier Performance - Worst')) {
+      
+      p <- ggplot(ncr.trim, aes(x=Name, y=Record, fill='filling')) + geom_bar(stat='identity') + scale_fill_manual(values='orange', guide=FALSE) + theme(panel.background=element_rect(fill='white', color='white'), text=element_text(size=20, face='bold'), axis.text=element_text(size=18, color='black', face='bold'), axis.text.x=element_text(angle=90, hjust=1)) + scale_y_continuous(labels=percent) + coord_cartesian(ylim=c(min(ncr.trim$Record)-0.1, 1)) + labs(x='', y='Percent Accepted', title=paste(paretoType, 'where', paretoFilterType,'=',paretoFilterValue, sep=' '))
+    } else if(paretoType=='Vendor NCR Summary' & rate==TRUE) {
       
       p <- ggplot(ncr.trim, aes(x=Name, y=Record, fill='filling')) + geom_bar(stat='identity') + scale_fill_manual(values='orange', guide=FALSE) + theme(panel.background=element_rect(fill='white', color='white'), text=element_text(size=20, face='bold'), axis.text=element_text(size=18, color='black', face='bold'), axis.text.x=element_text(angle=90, hjust=1)) + scale_y_continuous(labels=percent) + coord_cartesian(ylim=c(min(ncr.trim$Record)-0.1, 1)) + labs(x='', y='Percent Accepted', title=paste(paretoType, 'where', paretoFilterType,'=',paretoFilterValue, sep=' '))
     } else {
