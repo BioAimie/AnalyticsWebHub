@@ -44,8 +44,10 @@ SELECT
 		WHEN [ItemID] LIKE 'FLM1-ASY-0001R' THEN 'FA1.5R'
 		WHEN [ItemID] LIKE 'FLM2-ASY-0001' THEN 'FA2.0'
 		WHEN [ItemID] LIKE 'FLM2-ASY-0001R' THEN 'FA2.0R'
-		WHEN [ItemID] IN ('HTFA-ASY-0001','HTFA-ASY-0003') THEN 'HTFA'
-		WHEN [ItemID] IN ('HTFA-ASY-0001R','HTFA-ASY-0003R') THEN 'HTFAR'
+		WHEN [ItemID] LIKE 'HTFA-ASY-0001' THEN 'Torch Base'
+		WHEN [ItemID] LIKE 'HTFA-ASY-0001R' THEN 'Torch Base R'
+		WHEN [ItemID] LIKE 'HTFA-ASY-0003' THEN 'Torch Module'
+		WHEN [ItemID] LIKE 'HTFA-ASY-0003R' THEN 'Torch Module R'
 		ELSE 'Other'
 	END AS [Product],
 	[CustID],
@@ -58,8 +60,9 @@ SELECT
 		IIF ([SalesTerritoryID] LIKE 'SE%', 'South East',
 		IIF ([SalesTerritoryID] LIKE 'GL%', 'Great Lakes',
 		IIF ([SalesTerritoryID] LIKE 'C%', 'Central',
+		IIF ([SalesTerritoryID] LIKE 'MA%', 'Mid Atlantic',
 		IIF ([SalesTerritoryID] IS NULL, 'Other',
-			[SalesTerritoryID])))))) AS [SalesTerritory],
+			[SalesTerritoryID]))))))) AS [SalesTerritory],
 	[SalesSource],
 	CASE
 		WHEN [SalesSource] IN ('REG Trade ADDON', 'RRA Cap Lease', 'FP OpLease', 'FP CapLeas', 'OPLease/Flex', 'Inst OpLease', 'RRA Op Lease', 
