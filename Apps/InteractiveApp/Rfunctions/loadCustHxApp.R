@@ -14,6 +14,14 @@ queryText <- scan("SQL/RMA_CustomerNames.txt",what=character(),quote="")
 query <- paste(queryText,collapse=" ")
 CustNames.df <- sqlQuery(PMScxn,query)
 
+queryText <- scan("SQL/RMA_MfgDate.txt",what=character(),quote="")
+query <- paste(queryText,collapse=" ")
+MfgDate.df <- sqlQuery(PMScxn,query)
+
+queryText <- scan("SQL/RMA_PartNames.txt",what=character(),quote="")
+query <- paste(queryText,collapse=" ")
+PartNames.df <- sqlQuery(PMScxn,query)
+
 odbcClose(PMScxn)
 
 #Take out beginning and ending spaces and tabs from customer name
@@ -36,3 +44,18 @@ CustHx.Names[,'Customer Name'][is.na(CustHx.Names[,'Customer Name'])] <- as.char
 CustHx.Names[as.character(CustHx.Names[,'Customer Id']) == 'HUNTEC', 'Customer Name'] <- 'Huntington Technology Finance, Inc. (University of Michigan)'
 
 CustHx.Names <- subset(CustHx.Names, select = c('Customer Id', 'Customer Name', 'Date Created', 'Related Complaint', 'RMA', 'Status', 'Serial Number', 'Complaint Failure Mode', 'RMA Type', 'Disposition', 'Early Failure Type', 'Root Cause Part Number', 'Runs Since Last Failure'))
+
+#merge to get Manufacturing date of instrument
+CustHx.Names <- merge(CustHx.Names, MfgDate.df, by = 'Serial Number', all.x = TRUE)
+
+#Root Cause Description
+CustHx.Names[,'Root Cause Part Name'] <- NA
+
+for(i in 1:length(CustHx.Names[, 'Root Cause Part Number'])) {
+  part <- as.character(CustHx.Names[, 'Root Cause Part Number'][i])
+  if(is.na(part) | part == '' | part == 'N/A')
+    next
+  temp <- do.call(cbind, strsplit(part, split=','))
+  temp <- merge(temp, PartNames.df, by.x ='V1', by.y =  'PartNumber')
+  CustHx.Names[ , 'Root Cause Part Name'][i] <- paste(as.character(temp$Name), collapse=', ')
+}
