@@ -19,7 +19,7 @@ SELECT
 	[RecordedValue]
 INTO #PropertiesRMA
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] LIKE 'RMA' AND [PropertyName] IN ('RMA Type','Customer Id','Complaint Number','Hours Run','RMA Title')
+WHERE [Tracker] LIKE 'RMA' AND [PropertyName] IN ('RMA Type','Customer Id','Complaint Number','Hours Run','RMA Title','Received Date','Shipping Date','Assigned Service Center')
 
 SELECT 
 	[TicketId],
@@ -41,8 +41,55 @@ FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [Tracker] LIKE 'COMPLAINT' AND [PropertyName] IN ('Customer Id','Customer Name')
 
 SELECT 
+	A.[TicketId],
+	A.[SerialNo],
+	B.[ServiceDate],
+	LAG(B.[ServiceDate]) OVER(PARTITION BY A.[SerialNo] ORDER BY A.[TicketId]) AS [Date of Last Service]
+INTO #ServiceLagged
+FROM
+(
+	SELECT 
+			[TicketId],
+			REPLACE([Lot/Serial Number],' ','') AS [SerialNo]
+	FROM
+	(
+		SELECT
+			[TicketId],
+			[TicketString],
+			[CreatedDate],
+			[Status],
+			[ObjectId],
+			[PropertyName],
+			[RecordedValue]
+		FROM #ObjectsRMA 
+		WHERE [ObjectName] LIKE 'Part Information'
+	) P PIVOT
+	(
+		MAX([RecordedValue])
+		FOR [PropertyName]
+		IN
+		(
+			[Part Number],
+			[Lot/Serial Number]
+		)
+	) PIV
+	WHERE LEFT([Part Number],13) IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-SUB-0103') AND [Lot/Serial Number] NOT LIKE ''
+) A
+LEFT JOIN 
+(
+	SELECT 
+		[TicketId],
+		CAST(MAX([RecordedValue]) AS DATE) AS [ServiceDate]
+	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
+	WHERE [PropertyName] LIKE 'Service Completed'
+	GROUP BY [TicketId]
+) B
+	ON A.[TicketId] = B.[TicketId]
+
+SELECT 
 	SUBSTRING(T1.[TicketString],5,10) AS [TicketString],
 	T1.[CreatedDate],
+	CAST(T2.[Received Date] AS DATE) AS [Received Date],
 	T1.[Status],
 	UPPER(T1.[Serial Number]) AS [Serial Number],
 	T1.[Disposition],
@@ -52,7 +99,10 @@ SELECT
 	T2.[RMA Title],
 	T2.[RMA Type],
 	T2.[Hours Run],
-	T3.[Root Cause Part Number]
+	UPPER(T3.[Root Cause Part Number]) AS [Root Cause Part Number],
+	T2.[Assigned Service Center] AS [Service Center], 
+	T4.[Date of Last Service],
+	CAST(T2.[Shipping Date] AS DATE) AS [Shipped Date]
 INTO #rma
 FROM
 (
@@ -88,7 +138,7 @@ FROM
 			[Early Failure Type]
 		)
 	) PIV
-	WHERE LEFT([Part Number],13) IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003')
+	WHERE LEFT([Part Number],13) IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-SUB-0103')
 ) T1 LEFT JOIN
 (
 	SELECT 
@@ -97,7 +147,10 @@ FROM
 		[RMA Type],
 		[Customer Id],
 		[Complaint Number],
-		[Hours Run]
+		[Hours Run],
+		[Received Date],
+		[Shipping Date],
+		[Assigned Service Center] 
 	FROM #PropertiesRMA P
 	PIVOT
 	(
@@ -109,7 +162,10 @@ FROM
 			[RMA Type],
 			[Customer Id],
 			[Complaint Number],
-			[Hours Run]
+			[Hours Run],
+			[Received Date],
+			[Shipping Date],
+			[Assigned Service Center]
 		)
 	) PIV
 ) T2
@@ -129,7 +185,15 @@ FROM
 	FROM #ObjectsRMA OR1
 	WHERE [ObjectName] LIKE 'Root Causes' AND [PropertyName] LIKE 'Part Number'
 ) T3
-	ON T1.[TicketId] = T3.[TicketId]
+	ON T1.[TicketId] = T3.[TicketId] LEFT JOIN
+(
+	SELECT
+		[TicketId],
+		[Date of Last Service]
+	FROM #ServiceLagged
+) T4	
+	ON T1.[TicketId] = T4.[TicketId]
+
 
 SELECT 
 	F.[Complaint],
@@ -300,7 +364,11 @@ SELECT
 	R.[Disposition],
 	R.[Early Failure Type],
 	R.[Hours Run],
-	R.[Root Cause Part Number]
+	R.[Root Cause Part Number],
+	R.[Received Date],
+	R.[Shipped Date],
+	R.[Date of Last Service],
+	R.[Service Center]
 INTO #bestMatch
 FROM #rma R INNER JOIN #complaintRMAs C
 	ON R.[Complaint Number] = C.[Complaint] AND R.[TicketString] = C.[RMA] AND R.[Serial Number] = C.[SerialNoEst]
@@ -318,7 +386,11 @@ GROUP BY
 	R.[Disposition],
 	R.[Early Failure Type],
 	R.[Hours Run],
-	R.[Root Cause Part Number]
+	R.[Root Cause Part Number],
+	R.[Received Date],
+	R.[Shipped Date],
+	R.[Date of Last Service],
+	R.[Service Center]
 
 SELECT 
 	R.[Customer Id],
@@ -341,7 +413,11 @@ SELECT
 	R.[Disposition],
 	R.[Early Failure Type],
 	R.[Hours Run],
-	R.[Root Cause Part Number]
+	R.[Root Cause Part Number],
+	R.[Received Date],
+	R.[Shipped Date],
+	R.[Date of Last Service],
+	R.[Service Center]
 INTO #secondMatch
 FROM #rma R INNER JOIN #complaintRMAs C
 	ON R.[Complaint Number] = C.[Complaint]
@@ -361,7 +437,11 @@ GROUP BY
 	R.[Disposition],
 	R.[Early Failure Type],
 	R.[Hours Run],
-	R.[Root Cause Part Number]
+	R.[Root Cause Part Number],
+	R.[Received Date],
+	R.[Shipped Date],
+	R.[Date of Last Service],
+	R.[Service Center]
 
 SELECT 
 	R.[Customer Id],
@@ -376,7 +456,11 @@ SELECT
 	R.[Disposition],
 	R.[Early Failure Type],
 	R.[Hours Run],
-	R.[Root Cause Part Number]
+	R.[Root Cause Part Number],
+	R.[Received Date],
+	R.[Shipped Date],
+	R.[Date of Last Service],
+	R.[Service Center]
 INTO #leftOver
 FROM #rma R 
 WHERE R.[TicketString] NOT IN (SELECT [RMA] FROM #bestMatch) AND R.[TicketString] NOT IN (SELECT [RMA] FROM #secondMatch)
@@ -391,12 +475,17 @@ GROUP BY
 	R.[Disposition],
 	R.[Early Failure Type],
 	R.[Hours Run],
-	R.[Root Cause Part Number]
+	R.[Root Cause Part Number],
+	R.[Received Date],
+	R.[Shipped Date],
+	R.[Date of Last Service],
+	R.[Service Center]
 
 SELECT 
 	UPPER(REPLACE(T.[Customer Id],' ','')) AS [Customer Id],
 	T.[Customer Name],
 	CAST(T.[CreatedDate] AS DATE) AS [Date Created],
+	T.[Received Date],
 	T.[Complaint] AS [Related Complaint],
 	T.[RMA],
 	T.[Status],
@@ -405,8 +494,11 @@ SELECT
 	T.[RMA Type],
 	T.[Disposition],
 	T.[Early Failure Type],
-	T.[Root Cause Part Number],
-	ISNULL(CAST(MAX(L.[Hours Inc]) AS VARCHAR), 'N/A') AS [Runs Since Last Failure]
+	T.[Service Center],
+	REPLACE(T.[Root Cause Part Number], ' ','') AS [Root Cause Part Number],
+	ISNULL(CAST(MAX(L.[Hours Inc]) AS VARCHAR), 'N/A') AS [Runs Since Last Failure],
+	T.[Date of Last Service],
+	T.[Shipped Date]
 FROM
 (
 	SELECT 
@@ -422,7 +514,11 @@ FROM
 		[Disposition],
 		[Early Failure Type],
 		[Hours Run],
-		[Root Cause Part Number]
+		[Root Cause Part Number],
+		[Received Date],
+		[Shipped Date],
+		[Date of Last Service],
+		[Service Center]
 	FROM
 	(
 		SELECT *
@@ -447,7 +543,11 @@ FROM
 		[Disposition],
 		[Early Failure Type],
 		[Hours Run],
-		[Root Cause Part Number]
+		[Root Cause Part Number],
+		[Received Date],
+		[Shipped Date],
+		[Date of Last Service],
+		[Service Center]
 ) T LEFT JOIN #lookUpHours L
 	ON T.[RMA] = L.[TicketString]
 WHERE T.[CreatedDate] > CONVERT(DATETIME, '2014-11-01') 
@@ -463,7 +563,11 @@ GROUP BY
 	T.[RMA Type],
 	T.[Disposition],
 	T.[Early Failure Type],
-	T.[Root Cause Part Number]
+	T.[Root Cause Part Number],
+	T.[Received Date],
+	T.[Shipped Date],
+	T.[Date of Last Service],
+	T.[Service Center]
 ORDER BY CAST([RMA] AS INT)
 
-DROP TABLE #ObjectsComplaint, #ObjectsRMA, #PropertiesComplaint, #PropertiesRMA, #complaintRMAs, #rma, #bestMatch, #failureHours, #failures, #lookUpHours, #numericHours, #secondMatch, #leftOver
+DROP TABLE #ObjectsComplaint, #ObjectsRMA, #PropertiesComplaint, #PropertiesRMA, #complaintRMAs, #rma, #bestMatch, #failureHours, #failures, #lookUpHours, #numericHours, #secondMatch, #leftOver, #ServiceLagged
