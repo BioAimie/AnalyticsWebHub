@@ -5,7 +5,7 @@ SELECT
 	[TicketString],
 	[CreatedDate]
 INTO #TicketsA
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'NCR Type' AND [RecordedValue] LIKE '%Instrument%'
 
 SELECT *
@@ -17,7 +17,7 @@ SELECT
 	[TicketId],
 	[TicketString]
 INTO #MasClassParts
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] N WITH(NOLOCK) INNER JOIN #MasClass M
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] N WITH(NOLOCK) INNER JOIN #MasClass M
 	ON N.[RecordedValue] = M.[ItemID]
 WHERE [ObjectName] LIKE 'Parts Affected' AND [PropertyName] LIKE 'Part Affected'
 
@@ -25,7 +25,7 @@ SELECT
 	[TicketId],
 	[CreatedDate]
 INTO #Raw
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'NCR Type' AND [RecordedValue] LIKE 'Raw Material'
 
 SELECT 
@@ -51,7 +51,7 @@ SELECT
 	DATEPART(ww, MAX([CreatedDate])) AS [Week],
 	[RecordedValue] AS [FailedPart]
 INTO #Fail
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'Parts Affected' AND [PropertyName] LIKE 'Part Affected' 
 	AND [TicketID] IN (SELECT [TicketID] FROM #Tickets)
 	AND [RecordedValue] NOT LIKE 'N/A' AND [RecordedValue] NOT LIKE 'NA'

@@ -6,7 +6,7 @@ SELECT
 	[CreatedDate],
 	MAX([RecordedValue]) AS [Type]
 INTO #Tickets
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'NCR Type' AND ([RecordedValue] LIKE 'Raw Material' OR [RecordedValue] LIKE 'BioReagents')
 GROUP BY [TicketId], [TicketString], [CreatedDate]
 
@@ -16,7 +16,7 @@ SELECT
 	[RecordedValue] AS [WhereFound], 
 	[Stage] 
 INTO #Where
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'Where Found' AND [TicketId] IN (SELECT [TicketId] FROM #Tickets)
 	AND [Stage] LIKE 'Reporting'
 
@@ -29,7 +29,7 @@ SELECT
 	[PropertyName],
 	[RecordedValue]
 INTO #PartInfo
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [TicketId] IN (SELECT [TicketId] FROM #Tickets) 
 	AND [ObjectName] LIKE 'Parts Affected' AND [PropertyName] IN ('Part Affected','Lot or Serial Number')
 
@@ -91,7 +91,7 @@ SELECT
 	[TicketId],
 	[RecordedValue] AS [SupplierResponsible]
 INTO #Supplier
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'Supplier responsibility identified' AND [TicketId] IN (SELECT [TicketId] FROM #Tickets)
 
 SELECT 
@@ -101,7 +101,7 @@ SELECT
 	[PropertyName],
 	[RecordedValue]
 INTO #FailInfo
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [TicketId] IN (SELECT [TicketId] FROM #Tickets) 
 	AND [ObjectName] LIKE 'Failure Details' AND [PropertyName] IN ('Failure Category','Sub-failure Category')
 
