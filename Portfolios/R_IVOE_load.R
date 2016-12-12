@@ -42,17 +42,17 @@ query.charVec = scan("SQL/R_IVOE_Thermoboard.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 board.thermo.df = sqlQuery(PMScxn,query)
 
-# get board VoE: Thermoboard
+# get board VoE: Valve
 query.charVec = scan("SQL/R_IVOE_ValveBoard.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 board.valve.df = sqlQuery(PMScxn,query)
 
-# get board VoE: Thermoboard
+# get board VoE: Master board
 query.charVec = scan("SQL/R_IVOE_ImageMasterBoard.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 board.image.df = sqlQuery(PMScxn,query)
 
-# get board VoE: Thermoboard
+# get board VoE: Camera board
 query.charVec = scan("SQL/R_IVOE_CameraBoard.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 board.camera.df = sqlQuery(PMScxn,query)

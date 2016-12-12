@@ -3,7 +3,6 @@ library(RODBC)
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS_PROD")
 
-
 queryText <- scan("SQL/O_ISERV_InstrumentsThruService.txt",what=character(),quote="")
 query <- paste(queryText,collapse=" ")
 service.df <- sqlQuery(PMScxn,query)
