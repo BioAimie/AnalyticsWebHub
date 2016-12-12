@@ -59,3 +59,12 @@ for(i in 1:length(CustHx.Names[, 'Root Cause Part Number'])) {
   temp <- merge(temp, PartNames.df, by.x ='V1', by.y =  'PartNumber')
   CustHx.Names[ , 'Root Cause Part Name'][i] <- paste(as.character(temp$Name), collapse=', ')
 }
+
+#Links for RMA
+CustHx.Names[,'RMA'] <- paste0("<a href='http://trackers.biofiredx.net/GeneralTicket/LoadTicket?TrackerType=RMA&TicketString=RMA-", CustHx.Names[,'RMA'], "' target='_blank'>", CustHx.Names[,'RMA'], "</a>")
+
+#Links for Complaint
+CustHx.Names[,'Related Complaint'] <- as.numeric(as.character(CustHx.Names[,'Related Complaint']))
+CustHx.Names[,'Related Complaint'] <- ifelse(is.na(CustHx.Names[,'Related Complaint']),
+                                                    NA,
+                                                    paste0("<a href='http://trackers.biofiredx.net/GeneralTicket/LoadTicket?TrackerType=COMPLAINT&TicketString=COMPLAINT-", CustHx.Names[,'Related Complaint'], "' target='_blank'>", CustHx.Names[,'Related Complaint'], "</a>"))
