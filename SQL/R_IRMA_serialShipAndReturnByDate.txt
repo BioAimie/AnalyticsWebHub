@@ -15,7 +15,7 @@ SELECT
 	[RecordedValue]
 INTO #partinfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [ObjectName] LIKE 'Part Information'
 
 SELECT 
 	[TicketId],
@@ -23,7 +23,7 @@ SELECT
 	[RecordedValue]
 INTO #workflow
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'RMA Workflow' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [ObjectName] LIKE 'RMA Workflow'
 
 SELECT 
 	[TicketId],
@@ -31,7 +31,7 @@ SELECT
 	[RecordedValue]
 INTO #properties
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] IN ('RMA Title','RMA Type','Complaint Number','Hours Run','Service Completed') AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [PropertyName] IN ('RMA Title','RMA Type','Complaint Number','Hours Run','Service Completed')
 
 SELECT
 	[TicketId],
@@ -40,7 +40,7 @@ SELECT
 	[RecordedValue]
 INTO #rootCause
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK) 
-WHERE [ObjectName] LIKE 'Root Causes' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [ObjectName] LIKE 'Root Causes'
 
 SELECT 
 	I.[TicketId],
@@ -86,7 +86,7 @@ FROM
 			[Early Failure Type]
 		)
 	) PIV
-	WHERE [Part Number] LIKE '%FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%'
+	WHERE ([Part Number] LIKE '%FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%' OR [Part Number] LIKE 'HTFA-SUB-0103%') AND [TicketId] IN (SELECT [TicketId] FROM #consider)
 ) I LEFT JOIN
 (
 	SELECT 
@@ -128,7 +128,7 @@ FROM
 	WHERE [PropertyName] LIKE 'Service'
 ) W
 	ON I.[TicketId] = W.[TicketId]
-WHERE (LEFT([SerialNo],2) IN ('FA','2F','HT') OR [Part Number] LIKE 'HTFA-%') AND [ServiceReq] LIKE 'true' 
+WHERE (LEFT([SerialNo],2) IN ('FA','2F','HT','TM','KT') OR [Part Number] LIKE 'HTFA-%') AND [ServiceReq] LIKE 'true' 
 
 SELECT 
 	[TicketId]

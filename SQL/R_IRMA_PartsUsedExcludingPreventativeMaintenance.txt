@@ -6,7 +6,7 @@ SELECT
 	YEAR([RecordedValue]) AS [Year], 
 	DATEPART(ww, [RecordedValue]) AS [Week]
 INTO #date
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'Service Completed' AND [RecordedValue] IS NOT NULL AND [CreatedDate] >= GETDATE() - 400
 
 SELECT 
@@ -15,7 +15,7 @@ SELECT
 	[PropertyName],
 	[RecordedValue]
 INTO #parts
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'Parts Used' AND [TicketId] IN (SELECT [TicketId] FROM #date)
 
 SELECT 
@@ -23,7 +23,7 @@ SELECT
 	[RecordedValue] AS [ServiceCode],
 	IIF(ISNUMERIC([RecordedValue]) = 1, 1, 0) AS [Numeric]
 INTO #codes
-FROM  [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] WITH(NOLOCK)
+FROM  [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'Service Codes' AND [PropertyName] LIKE 'Service Code' AND [TicketId] IN (SELECT [TicketId] FROM #date)
 
 SELECT
@@ -81,7 +81,7 @@ SELECT
 	[PropertyName],
 	[RecordedValue]
 INTO #partInfo
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'Part Information'
 
 SELECT 
@@ -110,7 +110,7 @@ SELECT
 	[TicketId],
 	MAX([RecordedValue]) AS [HoursRun]
 INTO #hours
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'Hours Run'
 GROUP BY [TicketId] 
 
@@ -201,7 +201,6 @@ SELECT
 FROM #partsReplaced p LEFT JOIN #visitOrdered v
 	ON p.[TicketId] = v.[TicketId]
 ORDER BY [SerialNo], [VisitNo]
-
 
 DROP TABLE #date, #parts, #codes, #codeParts, #pivParts, #remove, #partInfo, #partInfoPiv, #partsReplaced, #hours,
 	#visitOrdered, #tickets 
