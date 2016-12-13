@@ -21,7 +21,8 @@ SELECT
 INTO #fail
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] P WITH(NOLOCK) INNER JOIN #bom B
 	ON P.[RecordedValue] = B.[ComponentItemID]
-WHERE [ObjectName] LIKE 'Root Causes' AND [PropertyName] LIKE 'Part Number'
+WHERE [ObjectName] LIKE 'Root Causes' AND [PropertyName] LIKE 'Part Number' AND [RecordedValue] IS NOT NULL
+
 
 SELECT *,
 	CAST([RecordedValue] AS DATETIME) AS [ServiceDate]
