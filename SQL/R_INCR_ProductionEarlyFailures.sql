@@ -95,7 +95,7 @@ SELECT
 	[Type],
 	CAST([HoursRun] AS FLOAT) AS [HoursRun],
 	IIF([Type] LIKE '% - Failure', 1, 0) AS [FailureType],
-	IIF([SystemFailure] = 'True', 1, 0) AS [FailCheck],
+	IIF([FailCheck] = 'True', 1, 0) AS [FailCheck],
 	IIF([CustFailType] IN ('DOA','ELF'), 1, 0) AS [CustFailTypeProd],
 	IIF(CAST([HoursRun] AS FLOAT) < 100.0001, 1, 0) AS [HoursRunLow],
 	IIF([Title] LIKE '% error%' OR [Title] LIKE '% fail%' OR [Title] LIKE '%DOA%' OR [Title] LIKE '%ELF%',1, 0) AS [TitleFail],
