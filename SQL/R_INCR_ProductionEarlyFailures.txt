@@ -7,7 +7,7 @@ SELECT
 INTO #birthDate
 FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
 	ON P.[PartNumberId] = L.[PartNumberId]
-WHERE [PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103','HTFA-ASY-0003') AND [DateOfManufacturing] > CONVERT(datetime,'2014-06-01')
+WHERE [PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103','HTFA-ASY-0003','HTFA-SUB-0103') AND [DateOfManufacturing] > CONVERT(datetime,'2014-06-01')
 
 SELECT 
 	[TicketId],
@@ -28,7 +28,7 @@ SELECT
 	[RecordedValue]
 INTO #freePropPivrops
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title') 
+WHERE [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title','System Failure') 
 
 SELECT 
 	[TicketId],
@@ -60,6 +60,7 @@ SELECT
 	[RMA Type] AS [Type],
 	[RMA Title] AS [Title],
 	[Complaint Number] AS [Complaint],
+	[System Failure] AS [FailCheck],
 	REPLACE([Hours Run],',','') AS [HoursRun]
 INTO #freePropPiv
 FROM 
@@ -76,6 +77,7 @@ PIVOT
 		[RMA Type],
 		[RMA Title],
 		[Complaint Number],
+		[System Failure],
 		[Hours Run]
 	)
 ) PIV
@@ -93,6 +95,7 @@ SELECT
 	[Type],
 	CAST([HoursRun] AS FLOAT) AS [HoursRun],
 	IIF([Type] LIKE '% - Failure', 1, 0) AS [FailureType],
+	IIF([SystemFailure] = 'True', 1, 0) AS [FailCheck],
 	IIF([CustFailType] IN ('DOA','ELF'), 1, 0) AS [CustFailTypeProd],
 	IIF(CAST([HoursRun] AS FLOAT) < 100.0001, 1, 0) AS [HoursRunLow],
 	IIF([Title] LIKE '% error%' OR [Title] LIKE '% fail%' OR [Title] LIKE '%DOA%' OR [Title] LIKE '%ELF%',1, 0) AS [TitleFail],
@@ -115,10 +118,11 @@ SELECT
 	[CreatedDate],
 	[HoursRun],
 	IIF([FailureType] = 1 AND [HoursRunLow] = 1, 1,
+		IIF([FailCheck] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([CustFailTypeProd] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([CustFailTypeProd] = 1 AND [HoursRun] IS NULL, 1,
 		IIF([TitleFail] = 1 AND [HoursRunLow] = 1, 1, 
-		IIF([Complaint] = 1 AND [HoursRunLow] = 1, 1, 0))))) AS [Failure]
+		IIF([Complaint] = 1 AND [Title] NOT LIKE '%loaner%' AND [HoursRunLow] = 1, 1, 0)))))) AS [Failure]
 INTO #master
 FROM #flaggedForFailures
 

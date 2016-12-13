@@ -1,13 +1,13 @@
 SET NOCOUNT ON
 
 SELECT 
-	UPPER([LotNumber]) AS [LotNumber],
+	REPLACE(REPLACE(REPLACE(UPPER([LotNumber]),' ',''),'_',''),'-','') AS [LotNumber],
 	[PartNumber],
 	[DateOfManufacturing]
 INTO #birthDate
 FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
 	ON P.[PartNumberId] = L.[PartNumberId]
-WHERE [PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003') AND [DateOfManufacturing] > CONVERT(datetime,'2014-06-01')
+WHERE [PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-SUB-0103') AND [DateOfManufacturing] > CONVERT(datetime,'2014-06-01')
 
 SELECT 
 	[TicketId],
@@ -20,7 +20,7 @@ INTO #partInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'Part Information'
 
-SELECT 
+SELECT
 	[TicketId],
 	[TicketString],
 	[CreatedDate],
@@ -28,14 +28,14 @@ SELECT
 	[RecordedValue]
 INTO #freePropPivrops
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title') 
+WHERE [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title','System Failure') 
 
 SELECT 
 	[TicketId],
 	[TicketString],
 	[CreatedDate],
 	[Part Number], 
-	UPPER([Lot/Serial Number]) AS [SerialNo],
+	REPLACE(REPLACE(REPLACE(UPPER([Lot/Serial Number]),' ',''),'_',''),'-','') AS [SerialNo],
 	[Early Failure Type] AS [CustFailType]
 INTO #partInfoPiv
 FROM
@@ -60,6 +60,7 @@ SELECT
 	[RMA Type] AS [Type],
 	[RMA Title] AS [Title],
 	[Complaint Number] AS [Complaint],
+	[System Failure] AS [SystemFailure],
 	REPLACE([Hours Run],',','') AS [HoursRun]
 INTO #freePropPiv
 FROM 
@@ -76,11 +77,12 @@ PIVOT
 		[RMA Type],
 		[RMA Title],
 		[Complaint Number],
+		[System Failure],
 		[Hours Run]
 	)
 ) PIV
 
-SELECT 
+SELECT
 	[LotNumber] AS [SerialNo],
 	[PartNumber] AS [PartNo],
 	[DateOfManufacturing] AS [BirthDate],
@@ -93,9 +95,10 @@ SELECT
 	[Type],
 	CAST([HoursRun] AS FLOAT) AS [HoursRun],
 	IIF([Type] LIKE '% - Failure', 1, 0) AS [FailureType],
+	IIF([SystemFailure] = 'True', 1, 0) AS [FailCheck],
 	IIF([CustFailType] IN ('DOA','ELF'), 1, 0) AS [CustFailTypeProd],
 	IIF(CAST([HoursRun] AS FLOAT) < 100.0001, 1, 0) AS [HoursRunLow],
-	IIF([Title] LIKE '% error%' OR [Title] LIKE '% fail%' OR [Title] LIKE '%DOA%' OR [Title] LIKE '%ELF%',1, 0) AS [TitleFail],
+	IIF([Title] LIKE '% error%' OR [Title] LIKE '% fail%' OR [Title] LIKE '% DOA%' OR [Title] LIKE '% ELF%',1, 0) AS [TitleFail],
 	IIF(ISNUMERIC([Complaint])=1, 1, 0) AS [Complaint]
 INTO #flaggedForFailures
 FROM #birthDate B LEFT JOIN #partInfoPiv P
@@ -114,10 +117,11 @@ SELECT
 	[CreatedDate],
 	[HoursRun],
 	IIF([FailureType] = 1 AND [HoursRunLow] = 1, 1,
+		IIF([FailCheck] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([CustFailTypeProd] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([CustFailTypeProd] = 1 AND [HoursRun] IS NULL, 1,
 		IIF([TitleFail] = 1 AND [HoursRunLow] = 1, 1, 
-		IIF([Complaint] = 1 aND [HoursRunLow] = 1, 1, 0))))) AS [Failure]
+		IIF([Complaint] = 1 AND [Title] NOT LIKE '%loaner%' AND [HoursRunLow] = 1, 1, 0)))))) AS [Failure]
 INTO #master
 FROM #flaggedForFailures
 
@@ -132,7 +136,7 @@ SELECT
 INTO #firstFailure
 FROM #master WHERE [TicketId] IN 
 (
-	SELECT 
+	SELECT
 		MIN([TicketId]) AS [TicketId]
 	FROM #master
 	WHERE [TicketString] IS NOT NULL
@@ -141,19 +145,31 @@ FROM #master WHERE [TicketId] IN
 
 SELECT 
 	[TicketId],
-	REPLACE(REPLACE(REPLACE(UPPER([Lot/Serial Number]),',',''),' ',''),'.','') AS [SerialNo],
+	[TicketString],
+	[CreatedDate],
+	[ObjectId],
+	[PropertyName],
+	[RecordedValue]
+INTO #bfdxParts
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
+WHERE [ObjectName] LIKE 'BFDX Part Number'
+
+SELECT 
+	[TicketId],
+	[TicketString],
+	REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER([Lot/Serial Number]),',',''),' ',''),'.',''),'_',''),'-','') AS [SerialNo],
 	SUBSTRING([Failure Mode], 1, CHARINDEX('-',[Failure Mode],1)-1) AS [Complaint]
 INTO #complaints
 FROM
 (
 	SELECT 
 		[TicketId],
+		[TicketString],
 		[CreatedDate],
 		[ObjectId],
 		[PropertyName],
 		[RecordedValue]
-	FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-	WHERE [ObjectName] LIKE 'BFDX Part Number'
+	FROM #bfdxParts
 ) P
 PIVOT
 (
@@ -172,6 +188,7 @@ SELECT
 	F.[Version],
 	F.[Year],
 	F.[Week],
+	C.[TicketString],
 	ISNULL(C.[Complaint], 'No Complaint') AS [Complaint]
 INTO #combined
 FROM
@@ -193,6 +210,7 @@ FROM
 (
 	SELECT 
 		C1.[SerialNo],
+		C1.[TicketString],
 		IIF(C1.[Complaint] LIKE '%Pressure Error%', 'Pressure Errors',
 			IIF(C1.[Complaint] LIKE '%Seal Bar%', 'Seal Bar Errors',
 			IIF(C1.[Complaint] LIKE '%Lid Lock%', 'Lid Lock Errors',
@@ -208,8 +226,9 @@ FROM
 		GROUP BY [SerialNo]
 	) C2
 		ON C1.[TicketId] = C2.[TicketId]
-) C 
+) C
 	ON F.[SerialNo] = C.[SerialNo]
+ORDER BY [Year], [Week]
 
 SELECT 
 	C.[Year],
@@ -227,7 +246,7 @@ FROM
 	GROUP BY [Year], [Week], [Complaint]
 ) C LEFT JOIN 
 (
-	SELECT 
+	SELECT
 		[Year],
 		[Week],
 		COUNT([SerialNo]) AS [Record]
@@ -249,4 +268,4 @@ SELECT DISTINCT
 		), 2, 1000) AS [Annotation]
 FROM #labels L2
 
-DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels
+DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts
