@@ -1,4 +1,5 @@
 SET NOCOUNT ON
+
 SELECT
 	YEAR([CreatedDate]) AS [Year],
 	DATEPART(mm,[CreatedDate]) AS [Month],

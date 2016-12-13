@@ -17,16 +17,16 @@ query.charVec = scan("SQL/R_CI_productShipped.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 productShipped.df = sqlQuery(PMScxn,query)
 
+# run the query to get the total count of CIs only
+query.charVec = scan("SQL/R_CI_countComplaints.txt", what=character(),quote="")
+query = paste(query.charVec,collapse=" ")
+countComplaint.df = sqlQuery(PMScxn,query)
+
 # close remote connection
 close(PMScxn)
 
 # open database connection 
 PMScxn = odbcConnect("PMS1_LOC")
-
-# run the query to get the total count of CIs only
-query.charVec = scan("SQL/R_CI_countComplaints.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
-countComplaint.df = sqlQuery(PMScxn,query)
 
 # run the query to get the total count of CIs only
 query.charVec = scan("SQL/R_CI_countCI.txt", what=character(),quote="")
