@@ -8,7 +8,7 @@ SELECT
 	[PropertyName],
 	[RecordedValue]
 INTO #PartInfo
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [Tracker] LIKE 'RMA' AND [ObjectName] LIKE 'Part Information'
 
 SELECT
@@ -60,7 +60,7 @@ FROM
 		t.[Version],
 		t.[Disposition],
 		p.[TicketID]
-	FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] p WITH(NOLOCK) JOIN #Tickets t
+	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] p WITH(NOLOCK) JOIN #Tickets t
 		ON p.[TicketID] = t.[TicketID]
 	WHERE [PropertyName] LIKE 'Service Completed' AND [RecordedValue] IS NOT NULL AND [RecordedValue] NOT LIKE ''
 ) S
@@ -96,7 +96,7 @@ FROM
 			o.[RecordedValue],
 			t.[Version],
 			t.[Disposition]
-		FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] o WITH(NOLOCK) JOIN #Tickets t
+		FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] o WITH(NOLOCK) JOIN #Tickets t
 			ON o.[TicketID] = t.[TicketID]
 		WHERE [ObjectName] LIKE 'QC Check' 
 	) P
@@ -135,7 +135,7 @@ FROM
 		[Version],
 		[Disposition],
 		p.[TicketID]
-	FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] p WITH(NOLOCK) JOIN #Tickets t
+	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] p WITH(NOLOCK) JOIN #Tickets t
 		ON p.[TicketID] = t.[TicketID]
 	WHERE [PropertyName] LIKE 'Quarantine Release Date' AND [RecordedValue] IS NOT NULL
 	GROUP BY p.[TicketID], [Version], [Disposition]
@@ -172,7 +172,7 @@ FROM
 		t.[Version],
 		t.[Disposition],
 		p.[TicketID]
-	FROM [RO_TRACKERS].[Trackers].[dbo].[vAllPopertiesByStatus] p WITH(NOLOCK) JOIN #Tickets t
+	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] p WITH(NOLOCK) JOIN #Tickets t
 		ON p.[TicketID] = t.[TicketID]
 	WHERE [PropertyName] LIKE 'Shipping Date'
 ) S

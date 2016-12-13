@@ -122,7 +122,7 @@ shinyServer(function(input, output, session) {
       if(is.null(input$dfName))
         return()
       output$dataTable <- renderDataTable(
-        datatable(custData(), options = list(pageLength = 25), rownames=FALSE)
+        datatable(custData(), options = list(pageLength = 25), rownames=FALSE, escape = FALSE)
       )
     })
     

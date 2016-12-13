@@ -15,7 +15,7 @@ SELECT
 	[RecordedValue]
 INTO #partinfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [ObjectName] LIKE 'Part Information'
 
 SELECT 
 	[TicketId],
@@ -23,7 +23,7 @@ SELECT
 	[RecordedValue]
 INTO #workflow
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'RMA Workflow' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [ObjectName] LIKE 'RMA Workflow'
 
 SELECT 
 	[TicketId],
@@ -57,7 +57,7 @@ SELECT
 	P.[Type],
 	R.[RCFail],
 	W.[ServiceReq],
-	IIF(P.[Title] LIKE '%error%' OR P.[Title] LIKE '%fail%' OR P.[Title] LIKE ' DOA%' OR P.[Title] LIKE ' ELF%' OR P.[Title] LIKE ' SDOA%' OR P.[Title] LIKE ' SELF%', 1, 0) AS [TitleFlag],
+	IIF(P.[Title] LIKE '%error%' OR P.[Title] LIKE '%fail%' OR P.[Title] LIKE '% DOA%' OR P.[Title] LIKE '% ELF%' OR P.[Title] LIKE '% SDOA%' OR P.[Title] LIKE '% SELF%', 1, 0) AS [TitleFlag],
 	IIF(ISNUMERIC(P.[Complaint]) = 1, 1, 0) AS [ComplaintFlag],
 	IIF(ISNUMERIC(P.[Complaint]) = 1 AND P.[Title] LIKE '%loaner%', 1, 
 		IIF(ISNUMERIC(P.[Complaint]) = 1 AND P.[Title] LIKE '%demo%', 1, 
@@ -86,7 +86,7 @@ FROM
 			[Early Failure Type]
 		)
 	) PIV
-	WHERE [Part Number] LIKE '%FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%'
+	WHERE ([Part Number] LIKE '%FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%' OR [Part Number] LIKE 'HTFA-SUB-0103%') AND [TicketId] IN (SELECT [TicketId] FROM #consider)
 ) I LEFT JOIN
 (
 	SELECT 
@@ -125,10 +125,10 @@ FROM
 		[TicketId],
 		[RecordedValue] AS [ServiceReq]
 	FROM #workflow
-	WHERE [PropertyName] LIKE 'Service'
+	WHERE [PropertyName] LIKE 'Service' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
 ) W
 	ON I.[TicketId] = W.[TicketId]
-WHERE (LEFT([SerialNo],2) IN ('FA','2F','HT') OR [Part Number] LIKE 'HTFA-%') AND [ServiceReq] LIKE 'true' 
+WHERE (LEFT([SerialNo],2) IN ('FA','2F','HT','TM') OR [Part Number] LIKE 'HTFA-%') AND [ServiceReq] LIKE 'true' 
 
 SELECT 
 	[TicketId]

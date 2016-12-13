@@ -16,11 +16,7 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 								ON ULLL.[LotNumberId] = UPPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLLL WITH(NOLOCK)
 									ON UPPP.[LotNumber] = ULLLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPPP WITH(NOLOCK)
 										ON ULLLL.[LotNumberId] = UPPPP.[LotNumberId]
-<<<<<<< HEAD
 WHERE P.[PartNumber] IN ('FLM1-ASY-0001' ,'FLM2-ASY-0001','HTFA-ASY-0003','FLM2-ASY-0001R','HTFA-ASY-0003R') AND UPPPP.[PartNumber] LIKE 'FLM1-SUB-0044' AND UPPPP.[Quantity] > 0
-=======
-WHERE P.[PartNumber] LIKE 'FLM%-ASY-0001' AND UPPPP.[PartNumber] LIKE 'FLM1-SUB-0044' AND UPPPP.[Quantity] > 0
->>>>>>> 751e4c5351f0b444b8742080d57c4b1f1f8f2750
 
 SELECT
 	[TicketId],
@@ -85,7 +81,7 @@ PIVOT
 		[Complaint Number],
 		[Hours Run]
 	)
-) PIV	
+) PIV
 
 SELECT
 	[TicketId],
@@ -107,7 +103,7 @@ PIVOT
 ) PIV
 WHERE [Part Number] LIKE '%FLM%-ASY-0001%' OR [Part Number] LIKE '%HTFA%'
 
-SELECT 
+SELECT
 	[TicketId],
 	IIF(CHARINDEX(':', [Lot/Serial Number], 1) = 0, UPPER(REPLACE(REPLACE([Lot/Serial Number],' ',''), ')','')), UPPER(REPLACE(REPLACE(SUBSTRING([Lot/Serial Number], 1, CHARINDEX(':', [Lot/Serial Number], 1)-1),' ',''), ')',''))) AS [WindowBladderReplacementLot]
 INTO #windowBladderLotUsed
@@ -124,10 +120,18 @@ PIVOT
 ) PIV
 WHERE REPLACE([Part Used],' ','') LIKE 'FLM1-SUB-0044'
 
-SELECT DISTINCT
+SELECT 
+	[SerialNo],
+	[WhseID],
+	[TranType],
+	[DistQty]
+INTO #serialTrans
+FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
+
+SELECT DISTINCT 
 	[SerialNo]
 INTO #hasShipped
-FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
+FROM #serialTrans
 WHERE [TranType] IN ('IS','SA','SH') AND [WhseID] IN ('STOCK','IFSTK') AND [DistQty] = -1
 
 SELECT
@@ -434,4 +438,4 @@ WHERE [Year] IS NOT NULL
 
 DROP TABLE #freePropPiv, #freePropPrePiv, #hasShipped, #partInfoPiv, #partInfoPrePiv, #partsUsedPrePiv, #rootCauseIndicatesFailure, #servCodeIndicatesFailure, 
 			#badLots, #failByLot, #failedBladderStats, #lotsBySize, #preppedForAnalysis, #windowBladderAtBirth, #windowBladderLotUsed, #windowBladderReplacements, #complaints,
-			#pressureFail, #relatedComplaints, #relatedRMA, #relateToSerial
+			#pressureFail, #relatedComplaints, #relatedRMA, #relateToSerial, #serialTrans

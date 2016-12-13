@@ -65,11 +65,7 @@ BioFirePrevWeek <- ifelse(prevWeekSql-1 < 10,
                   paste(prevYearSql, paste('0',prevWeekSql-1,sep=''), sep='-'),
                   paste(prevYearSql, prevWeekSql-1, sep='-'))
 
-#Reorder factors to make chart have customer on bottom, refurb in middle, and BFDx on top
-#fillOrder <- c('Customer FA1.5','Customer FA2.0','Customer Torch','Customer Laptop','Refurbish FA1.5','Refurbish FA2.0','Refurbish Torch','Refurbish Laptop','BFDx FA1.5','BFDx FA2.0','BFDx Torch','BFDx Laptop','Other FA1.5', 'Other FA2.0','Other Torch', 'Other Laptop')
 fillOrder <- c('Other Laptop','Other Torch','Other FA2.0','Other FA1.5','BFDx Laptop','BFDx Torch','BFDx FA2.0','BFDx FA1.5','Refurbish Laptop','Refurbish Torch','Refurbish FA2.0','Refurbish FA1.5','Customer Laptop','Customer Torch','Customer FA2.0','Customer FA1.5')
-#fillColors <- createPaletteOfVariableLength(service.all.df, 'Key')
-# fillColors <- c('#4576A3','#5B9BD5','#9DC3E6','#0d0d0d','#C46829','#ED7D31','#F4B183','#5C5C5C','#59873A','#70AD47','#A9D18E','#a3a3a3','#efbbff','#d896ff','#be29ec','#cccccc')
 fillColors <- c('#cccccc','#be29ec','#d896ff','#efbbff','#a3a3a3','#A9D18E','#70AD47','#59873A','#5C5C5C','#F4B183','#ED7D31','#C46829','#0d0d0d','#9DC3E6','#5B9BD5','#4576A3')
 names(fillColors) <- fillOrder
 service.all.df$Key <- factor(service.all.df$Key, levels = fillOrder, ordered=TRUE)
@@ -212,50 +208,6 @@ p.ShippedRMA.service <- ggplot(agg.shipped.df, aes(x=as.numeric(as.factor(DateGr
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20), legend.position = 'left') + 
   ggtitle('Shipped RMAs') + scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30), position = 'right')
 
-#----------------------------------------NEEDS WORK!-----Instruments in Service by month------------------------------------------------
-# Try instruments rec - instruments at QC
-# smallGroup <- 'Month'
-# 
-# service.open.m.df <- subset(service.df, select=c('Year','Month','Version','Key','Opened'))
-# colnames(service.open.m.df)[grep('Opened', colnames(service.open.m.df))] <- 'Record'
-# service.open.m.df <- makeDateGroupAndFillGaps(calendar.df, service.open.m.df, bigGroup, smallGroup, c('Version', 'Key'), startString.month)
-# service.open.m.df$State <- 'Opened'
-# service.open.m.df$Type <- paste(service.open.m.df$Key, service.open.m.df$Version, sep=" ")
-# 
-# service.rec.m.df <- subset(service.df, select=c('Year','Month','Version','Key','Received'))
-# colnames(service.rec.m.df)[grep('Received', colnames(service.rec.m.df))] <- 'Record'
-# service.rec.m.df <- makeDateGroupAndFillGaps(calendar.df, service.rec.m.df, bigGroup, smallGroup, c('Version', 'Key'), startString.month)
-# service.rec.m.df$State <- 'Received'
-# service.rec.m.df$Type <- paste(service.rec.m.df$Key, service.rec.m.df$Version, sep=" ")
-# 
-# service.to.m.df <- subset(service.df, select=c('Year','Month','Version','Key','ToQC'))
-# colnames(service.to.m.df)[grep('ToQC', colnames(service.to.m.df))] <- 'Record'
-# service.to.m.df <- makeDateGroupAndFillGaps(calendar.df, service.to.m.df, bigGroup, smallGroup, c('Version', 'Key'), startString.month)
-# service.to.m.df$State <- 'ToQC'
-# service.to.m.df$Type <- paste(service.to.m.df$Key, service.to.m.df$Version, sep=" ")
-# 
-# service.thru.m.df <- subset(service.df, select=c('Year','Month','Version','Key','ThruQC'))
-# colnames(service.thru.m.df)[grep('ThruQC', colnames(service.thru.m.df))] <- 'Record'
-# service.thru.m.df <- makeDateGroupAndFillGaps(calendar.df, service.thru.m.df, bigGroup, smallGroup, c('Version', 'Key'), startString.month)
-# service.thru.m.df$State <- 'ThruQC'
-# service.thru.m.df$Type <- paste(service.thru.m.df$Key, service.thru.m.df$Version, sep=" ")
-# 
-# service.allm.df <- Reduce(function(x, y) merge(x, y, all=TRUE), list(service.to.m.df, service.rec.m.df, service.thru.m.df, service.open.m.df))
-# #not opened, not rec
-# service.allm.df <- Reduce(function(x, y) merge(x, y, all=TRUE), list(service.thru.m.df, service.to.m.df))
-# ggplot(service.allm.df, aes(x=DateGroup, y=Record, fill=Type)) + geom_bar(stat="identity", position="stack")
-
-#---------------------NEEDS WORK!!!-----------Open RMAs awaiting receipt by week------------------------------------------------------------------------------
-# smallGroup <- 'Week'
-# 
-# #running total of opened - running total of recd
-# service.waiting.df <- subset(service.df, select=c('Year','Week','Version','Key','Opened','Received'))
-# service.waiting.df$runOpen <- sapply(1:length(service.waiting.df[,1]), function(x) sum(service.waiting.df[1:x, 'Opened']))
-# service.waiting.df$runRec <- sapply(1:length(service.waiting.df[,1]), function(x) sum(service.waiting.df[1:x, 'Received']))
-# service.waiting.df$Record <- service.waiting.df$runOpen - service.waiting.df$runRec
-# 
-# service.waiting.df <- makeDateGroupAndFillGaps(calendar.df, service.waiting.df, bigGroup, smallGroup, c('Version', 'Key'), startString.week)
-
 #----------------------------Inventory Stock Levels and Goals-------------------------------------------------------------------------------------
 #add all ItemIDs to be sure there is at least one row for each
 stockInv.df$ItemID <- as.character(stockInv.df$ItemID)
@@ -273,19 +225,12 @@ stockInv.agg$Goal[stockInv.agg$ItemID == 'HTFA-ASY-0003R'] <- 30
 
 stockInv.agg$Key <- ' '
 
-# #new ggplot 2.2.0
 p.StockInventory <- ggplot(stockInv.agg, aes(x=Key, y=Record)) + geom_bar(stat='identity', width = 0.5) + xlab(' ') + ylab('Inventory') +
   facet_wrap(~ItemID, scales='free_y', strip.position = 'bottom') + geom_hline(aes(yintercept=Goal),linetype = 'dashed', color = 'blue') +
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20),
   axis.text.y=element_text(hjust=1, color='black', size=20), strip.background = element_blank(), strip.placement = 'outside',
   plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) +
   ggtitle('Stock Inventory Levels', subtitle='Goal Lines in Blue') + scale_y_continuous(breaks=pretty_breaks(n=10))
-
-#old ggplot 2.1.0
-# p.StockInventory <- ggplot(stockInv.agg, aes(x=Key, y=Record)) + geom_bar(stat='identity', width = 0.5) + xlab(' ') + ylab('Inventory') +
-#   facet_wrap(~ItemID, scales='free_y') + geom_hline(aes(yintercept=Goal),linetype = 'dashed', color = 'blue') +
-#   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) +
-#   ggtitle('Stock Inventory Levels\nGoal Lines in Blue') + scale_y_continuous(breaks=pretty_breaks(n=10))
 
 #----------------------FA1.5 To 2.0 Conversions Through QC------------------------------------------------------------------------------------
 conversion.agg <- aggregateAndFillDateGroupGaps(calendar.month,'Month', conversion.df, 'Key', '2015-06', 'Record', 'sum',0)

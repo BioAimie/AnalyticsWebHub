@@ -6,9 +6,9 @@ SELECT
 	[CreatedDate],
 	UPPER([RecordedValue]) AS [PartNo]
 INTO #PartInfo
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] WITH(NOLOCK)
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [Tracker] LIKE 'RMA' AND [ObjectName] LIKE 'Part Information'
-	AND [PropertyName] LIKE 'Part Number' AND ([RecordedValue] LIKE 'FLM%-ASY-0001%' OR [RecordedValue] LIKE 'HTFA-ASY-000%')
+	AND [PropertyName] LIKE 'Part Number' AND ([RecordedValue] LIKE 'FLM%-ASY-0001%' OR [RecordedValue] LIKE 'HTFA-ASY-000%' OR [RecordedValue] LIKE 'HTFA-SUB-0103%')
 
 SELECT 
 	[TicketId], 
@@ -16,7 +16,7 @@ SELECT
 	[PropertyName],
 	[RecordedValue]
 INTO #QCcheck
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus] o WITH(NOLOCK) 
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] o WITH(NOLOCK) 
 WHERE [ObjectName] LIKE 'QC Check' AND [TicketId] IN (SELECT [TicketId] FROM #PartInfo)
 
 SELECT 
@@ -62,6 +62,7 @@ SELECT
 		WHEN [PartNo] LIKE 'FLM2-ASY-0001' THEN 'FA2.0'
 		WHEN [PartNo] LIKE 'FLM2-ASY-0001R' THEN 'FA2.0R'
 		WHEN [PartNo] LIKE 'HTFA-ASY-0003%' THEN 'Torch Module'
+		WHEN [PartNo] LIKE 'HTFA-SUB-0103%' THEN 'Torch Module'
 		WHEN [PartNo] LIKE 'HTFA-ASY-0001%' THEN 'Torch Base'
 		ELSE 'Other'
 	END AS [Version],
@@ -80,4 +81,3 @@ FROM #final
 GROUP BY [Year], [Month], [Week], [Version]
 
 DROP TABLE #PartInfo, #QCcheck, #ThruQC, #QCDate, #final 
-
