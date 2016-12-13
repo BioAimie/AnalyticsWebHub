@@ -120,10 +120,18 @@ PIVOT
 ) PIV
 WHERE REPLACE([Part Used],' ','') LIKE 'FLM1-SUB-0044'
 
-SELECT DISTINCT
+SELECT 
+	[SerialNo],
+	[WhseID],
+	[TranType],
+	[DistQty]
+INTO #serialTrans
+FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
+
+SELECT DISTINCT 
 	[SerialNo]
 INTO #hasShipped
-FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
+FROM #serialTrans
 WHERE [TranType] IN ('IS','SA','SH') AND [WhseID] IN ('STOCK','IFSTK') AND [DistQty] = -1
 
 SELECT
@@ -430,4 +438,4 @@ WHERE [Year] IS NOT NULL
 
 DROP TABLE #freePropPiv, #freePropPrePiv, #hasShipped, #partInfoPiv, #partInfoPrePiv, #partsUsedPrePiv, #rootCauseIndicatesFailure, #servCodeIndicatesFailure, 
 			#badLots, #failByLot, #failedBladderStats, #lotsBySize, #preppedForAnalysis, #windowBladderAtBirth, #windowBladderLotUsed, #windowBladderReplacements, #complaints,
-			#pressureFail, #relatedComplaints, #relatedRMA, #relateToSerial
+			#pressureFail, #relatedComplaints, #relatedRMA, #relateToSerial, #serialTrans

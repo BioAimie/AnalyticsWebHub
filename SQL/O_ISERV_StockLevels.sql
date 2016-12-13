@@ -4,7 +4,7 @@ SELECT
 	S.[SerialNo],
 	S.[ItemID],
 	S.[WhseID],
-	S.[InvtTranDistKey],
+	S.[InvtTranKey],
 	I.[TranDate],
 	I.[TranType],
 	IIF(I.[TranQty] < 0, -1, 1) AS [Qty]
@@ -25,16 +25,14 @@ FROM
 		REPLACE(REPLACE([SerialNo], '_', ''), '.', '') AS [SerialNo],
 		[ItemID],
 		[WhseID],
-		[InvtTranKey], 
-		[InvtTranDistKey]
+		[InvtTranKey]
 	FROM [SQL1-RO].[mas500_app].[dbo].[vdvSerialTransactions]
 	WHERE ([ItemID] LIKE 'HTFA-ASY-0001%' OR [ItemID] LIKE 'HTFA-ASY-0003%'OR [ItemID] LIKE 'FLM1-ASY-0001%' OR [ItemID] LIKE 'FLM2-ASY-0001%')
 ) S 
 	ON I.[InvtTranKey] = S.[InvtTranKey]
-ORDER BY [SerialNo], [InvtTranDistKey]
 
 SELECT 
-	ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [InvtTranDistKey]) AS [TranNum],
+	ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [InvtTranKey]) AS [TranNum],
 	*
 INTO #SerialsOrdered
 FROM #SerialTran

@@ -5,7 +5,7 @@ SELECT
 	[TicketString],
 	[RecordedValue] AS [Code]
 INTO #allcodes
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus]
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'Service Code' 
 	AND [RecordedValue] IS NOT NULL
 
@@ -22,7 +22,7 @@ SELECT
 	[PropertyName],
 	[RecordedValue] 
 INTO #QCInfo
-FROM [RO_TRACKERS].[Trackers].[dbo].[vAllObjectPropertiesByStatus]
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'QC Check' AND [TicketId] IN (SELECT [TicketId] FROM #Tickets)
 
 SELECT 
