@@ -99,11 +99,11 @@ p.needsPre <- p.needsPre + scale_color_manual(values = myPalTeam, name="Assigned
 dateBreaks.week <- as.character(unique(pouches.week$DateGroup))[order(as.character(unique(pouches.week$DateGroup)))][seq(1, 53, 4)]
 p.pouch2016 <- ggplot(pouches.week, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + scale_x_discrete(breaks=dateBreaks.week) + scale_fill_manual(values=myPalPanel, name='') + labs(title='Pouches Shipped by Panel Type', y='Quantity Shipped', x='Date\n(Year-Week)')
 
-# p.becameAware <- ggplot(becameAware.df, aes(x=BugId, y=Days, group=Note, fill=Note)) + geom_line(aes(color=Note), size=1) + geom_point(aes(color=Note), size=2)+
-# theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) +
-#   labs(title='Became Aware Date Until PRE vs CI Created Date Until PRE', x='Bug ID', y='Days') +
-#   geom_hline(aes(yintercept=30),color="green", linetype="dashed") +
-#   geom_text_repel(data=subset(becameAware.df,Days>30),aes(label=BugId), size=5,  arrow= arrow(length = unit(0.01,'npc')), force=1, segment.size=0.5, box.padding=unit(0.5,'lines'), point.padding=unit(1, 'lines'))
+p.becameAware <- ggplot(becameAware.df, aes(x=BugId, y=Days, group=Note, fill=Note)) + geom_line(aes(color=Note), size=1) + geom_point(aes(color=Note), size=2)+
+theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) +
+  labs(title='Became Aware Date Until PRE vs CI Created Date Until PRE', x='Bug ID', y='Days') +
+  geom_hline(aes(yintercept=30),color="green", linetype="dashed") +
+  geom_text_repel(data=subset(becameAware.df,Days>30),aes(label=BugId), size=5,  arrow= arrow(length = unit(0.01,'npc')), force=1, segment.size=0.5, box.padding=unit(0.5,'lines'), point.padding=unit(1, 'lines'))
 
 #count of unique z codes created by CI Team
 p.codes <- ggplot(codes.df, aes(x=CreatedDate, y=Record, group=Code, fill=Code)) +
