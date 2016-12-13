@@ -58,11 +58,11 @@ WHERE [ObjectName] LIKE 'Parts Affected' AND [PropertyName] LIKE 'Part Affected'
 GROUP BY [TicketID], [RecordedValue]
 
 SELECT
-
 	[Year],
 	[Month],
 	[Week],
-	UPPER([FailedPart]) AS [FailedPart]
+	UPPER([FailedPart]) AS [FailedPart],
+	1 AS [Record]
 FROM #Fail f 
 ORDER BY [TicketString]
 
