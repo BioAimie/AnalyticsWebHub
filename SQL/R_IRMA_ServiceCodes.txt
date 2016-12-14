@@ -55,7 +55,7 @@ FROM #Z Z INNER JOIN
 (
 	SELECT *
 	FROM #P 
-	WHERE [PartNo] LIKE 'FLM%-ASY-0001%' OR [PartNo] LIKE 'HTFA-ASY-0003%'
+	WHERE [PartNo] LIKE 'FLM%-ASY-0001%' OR [PartNo] LIKE 'HTFA-ASY-0003%' OR [PartNo] LIKE 'HTFA-SUB-0103%'
 ) P
 	ON Z.[TicketId] = P.[TicketId]
 WHERE [Key] IN 
