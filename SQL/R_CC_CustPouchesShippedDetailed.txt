@@ -6,4 +6,4 @@ SELECT
 	IIF([SalesTerritoryID] LIKE 'International', [SalesTerritoryID], 'Domestic') AS [RecordedValue],
 	IIF([TranType] NOT LIKE 'SH',-1*[QtyShipped],[QtyShipped]) AS [Record]
 FROM [PMS1].[dbo].[vPouchShipmentsWithAnnotations_IOID] WITH(NOLOCK)
-WHERE [ShipDate] > GETDATE() - 400 AND [ProductClass] LIKE 'IVD' AND [CustID] NOT LIKE 'IDATEC'
+WHERE [ProductClass] LIKE 'IVD' AND [CustID] NOT LIKE 'IDATEC'
