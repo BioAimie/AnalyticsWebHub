@@ -26,7 +26,7 @@ SELECT
 	COUNT(DISTINCT Q.[TicketId]) AS [Record]
 FROM #qcDate Q INNER JOIN #partNo P
 	ON Q.[TicketId] = P.[TicketId]
-WHERE ([PartNo] LIKE 'FLM%-ASY-0001%' OR [PartNo] LIKE 'HTFA-ASY-0003%') AND [qcDate] >= GETDATE() - 400
+WHERE ([PartNo] LIKE 'FLM%-ASY-0001%' OR [PartNo] LIKE 'HTFA-ASY-0003%' OR [PartNo] LIKE 'HTFA-SUB-0103%') AND [qcDate] >= GETDATE() - 400
 GROUP BY YEAR([QcDate]), MONTH([QcDate]), DATEPART(ww,[QcDate]), [PartNo]
 ORDER BY YEAR([QcDate]), DATEPART(ww,[QcDate])
 

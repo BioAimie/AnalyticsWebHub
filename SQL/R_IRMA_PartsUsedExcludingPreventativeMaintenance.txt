@@ -104,7 +104,7 @@ FROM
 		)
 	) PIV
 ) D
-WHERE [Part Number] LIKE 'FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%'
+WHERE [Part Number] LIKE 'FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%' OR [Part Number] LIKE 'HTFA-SUB-0103%'
 
 SELECT 
 	[TicketId],
@@ -168,7 +168,7 @@ WHERE [RemovePart] IS NULL AND P.[PartNumber] IN
 	'PCBA-SUB-0838',
 	'FLM1-SUB-0074',
 	'FLM1-SUB-0078'
-) AND D.[Year] > 1900 AND (V.[PartNo] LIKE 'FLM%-ASY-0001%' OR V.[PartNo] LIKE 'HTFA-ASY-0003%')
+) AND D.[Year] > 1900 AND (V.[PartNo] LIKE 'FLM%-ASY-0001%' OR V.[PartNo] LIKE 'HTFA-ASY-0003%' OR V.[PartNo] LIKE 'HTFA-SUB-0103%')
 ORDER BY D.[Year], D.[Week], V.[PartNo], P.[PartNumber]
 
 SELECT 

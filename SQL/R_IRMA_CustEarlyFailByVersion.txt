@@ -35,7 +35,7 @@ PIVOT
 		[Early Failure Type]
 	)
 ) PIV
-WHERE [Early Failure Type] IS NOT NULL AND [Early Failure Type] NOT LIKE 'N/A' AND ([Part Number] LIKE 'FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%')
+WHERE [Early Failure Type] IS NOT NULL AND [Early Failure Type] NOT LIKE 'N/A' AND [Early Failure Type] NOT LIKE '' AND ([Part Number] LIKE 'FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%' OR [Part Number] LIKE 'HTFA-SUB-0103%')
 GROUP BY YEAR([CreatedDate]), MONTH([CreatedDate]), DATEPART(ww, [CreatedDate]), [Part Number], [Early Failure Type]
 
 DROP TABLE #partInfo

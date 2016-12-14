@@ -40,7 +40,7 @@ SELECT
 	'NewInstShip' AS [Key],
 	COUNT(DISTINCT [SerialNo]) AS [Record]
 FROM #Transact
-WHERE ([Version] LIKE 'HTFA-ASY-0003%' OR [Version] LIKE 'FLM%-ASY-0001%') AND [TranDate] > GETDATE() - 400
+WHERE ([Version] LIKE 'HTFA-SUB-0103%' OR [Version] LIKE 'HTFA-ASY-0003%' OR [Version] LIKE 'FLM%-ASY-0001%') AND [TranDate] > GETDATE() - 400
 GROUP BY YEAR([TranDate]), MONTH([TranDate]), DATEPART(ww, [TranDate]), [Version]
 
 DROP TABLE #id, #Transact

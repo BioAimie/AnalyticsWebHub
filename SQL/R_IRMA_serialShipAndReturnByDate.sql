@@ -57,7 +57,7 @@ SELECT
 	P.[Type],
 	R.[RCFail],
 	W.[ServiceReq],
-	IIF(P.[Title] LIKE '%error%' OR P.[Title] LIKE '%fail%' OR P.[Title] LIKE ' DOA%' OR P.[Title] LIKE ' ELF%' OR P.[Title] LIKE ' SDOA%' OR P.[Title] LIKE ' SELF%', 1, 0) AS [TitleFlag],
+	IIF(P.[Title] LIKE '%error%' OR P.[Title] LIKE '%fail%' OR P.[Title] LIKE '% DOA%' OR P.[Title] LIKE '% ELF%' OR P.[Title] LIKE '% SDOA%' OR P.[Title] LIKE '% SELF%', 1, 0) AS [TitleFlag],
 	IIF(ISNUMERIC(P.[Complaint]) = 1, 1, 0) AS [ComplaintFlag],
 	IIF(ISNUMERIC(P.[Complaint]) = 1 AND P.[Title] LIKE '%loaner%', 1, 
 		IIF(ISNUMERIC(P.[Complaint]) = 1 AND P.[Title] LIKE '%demo%', 1, 
@@ -238,7 +238,7 @@ SELECT
 	S.[Year],
 	S.[Month],
 	S.[Shipments],
-	R.[Returned],
+	ISNULL(R.[Returned],0) AS [Returned],
 	F.[FailCount]
 FROM
 (
@@ -264,7 +264,7 @@ FROM
 ) R 
 	ON (S.[Year] = R.[Year] AND S.[Month] = R.[Month]) LEFT JOIN
 (
-	SELECT 
+	SELECT
 		[Year],
 		[Month],
 		SUM([TimesReturnedDueToFailure]) AS [FailCount]
