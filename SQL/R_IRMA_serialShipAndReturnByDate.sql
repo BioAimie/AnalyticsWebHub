@@ -4,7 +4,7 @@ SELECT
 	[TicketId]
 INTO #consider
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] LIKE 'RMA' AND [Status] IN ('Closed','Accounting','Shipping','SalesOrderGeneration','Closure','InstrumentQCandDHR')
+WHERE [Tracker] LIKE 'RMA' AND [Status] IN ('Closed','Accounting','Shipping','SalesOrderGeneration','Closure','InstrumentQCandDHR','ClosedFollowup')
 
 SELECT 
 	[TicketId],

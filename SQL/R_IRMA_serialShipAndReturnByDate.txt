@@ -4,7 +4,7 @@ SELECT
 	[TicketId]
 INTO #consider
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] LIKE 'RMA' AND [Status] IN ('Closed','Accounting','Shipping','SalesOrderGeneration','Closure','InstrumentQCandDHR')
+WHERE [Tracker] LIKE 'RMA' AND [Status] IN ('Closed','Accounting','Shipping','SalesOrderGeneration','Closure','InstrumentQCandDHR','ClosedFollowup')
 
 SELECT 
 	[TicketId],
@@ -277,5 +277,4 @@ FROM
 WHERE S.[Year] > 2012
 ORDER BY S.[Year], S.[Month]
 
-DROP TABLE #bestSet, #complaintsReal, #consider, #flagged, #partinfo, #properties, #rootCause, #serialReturns, #serialShipId, #serialShipments, 
-			#shipFailTracker, #workflow, #instShip
+DROP TABLE #bestSet, #complaintsReal, #consider, #flagged, #partinfo, #properties, #rootCause, #serialReturns, #serialShipId, #serialShipments, #shipFailTracker, #workflow, #instShip
