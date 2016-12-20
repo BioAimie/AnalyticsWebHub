@@ -28,12 +28,14 @@ sdFactor <- 3
 validateDate <- '2015-50'
 
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
-startYear <- year(Sys.Date()) - 2
+startYear <- year(Sys.Date()) - 3
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
 startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+threeyr <- findStartDate(calendar.df, 'Week', 159, 4)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
+dateBreaks.3yr <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= threeyr,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= threeyr,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= threeyr,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
@@ -133,6 +135,10 @@ instrument.all.rate <- mergeCalSparseFrames(instrument.all, pouches.all, c('Date
 instrument.all.lims <- addStatsToSparseHandledData(instrument.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
 p.instrument.all <- ggplot(instrument.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Pouches Shipped', x='Date', y='4 Week Rolling Average')
 p.instrument.all.hist <- ggplot(instrument.all.lims, aes(x=Rate)) + geom_histogram(aes(y=(..count../sum(..count..)))) + scale_x_continuous(labels=percent) + coord_flip() + labs(x='Proportion', y='') + theme(plot.margin=unit(c(1.45,1,0.2,0.5), 'cm'), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(hjust=1, angle=90), axis.text=element_text(color='black', face=fontFace, size=fontSize))
+pouches.all.3yr <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c('Key'), threeyr, 'Record', 'sum', 0)
+instrument.all.3yr <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('Key'), threeyr, 'Record', 'sum', 0)
+instrument.all.3yr.rate <- mergeCalSparseFrames(instrument.all.3yr, pouches.all.3yr, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
+p.instrument.all.3yr <- ggplot(instrument.all.3yr.rate, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point() + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Pouches Shipped', subtitle = 'Over Three Years', x='Date', y='4 Week Rolling Average')
 instrument.all.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), startDate, 'Record', 'sum', 0)
 instrument.all.version.count <- instrument.all.version[instrument.all.version[,'DateGroup'] >= startDate.16, ]
 instrument.all.version.count[,'Period'] <- with(instrument.all.version.count, ifelse(DateGroup < startDate.8, '16 Weeks', '8 Weeks'))
@@ -169,9 +175,8 @@ instrument.build.lims <- addStatsToSparseHandledData(instrument.build.rate[as.ch
 p.instrument.build <- ggplot(instrument.build.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_grid(RecordedValue~Version, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Top 6 Instrument Complaints By Version and Type per Pouches Shipped to Install Base', x='Date', y='4 Week Rolling Average')
 # add in all instrument complaints by install base
 install.base.agg <- with(install.base.count, aggregate(Record~DateGroup, FUN=sum))
-instrument.all.installed.rate <- mergeCalSparseFrames(instrument.all, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
-instrument.all.installed.lims <- addStatsToSparseHandledData(instrument.all.installed.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
-p.instrument.all.installed <- ggplot(instrument.all.installed.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Instruments Installed', x='Date', y='4 Week Rolling Average') 
+instrument.all.installed.3yr.rate <- mergeCalSparseFrames(instrument.all.3yr, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
+p.instrument.all.installed.3yr <- ggplot(instrument.all.installed.3yr.rate, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point() + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Instruments Installed', subtitle = 'Over Three Years', x='Date', y='4 Week Rolling Average') 
 instrument.all.version.installed.rate <- mergeCalSparseFrames(instrument.all.version, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
 instrument.all.version.installed.lims <- addStatsToSparseHandledData(instrument.all.version.installed.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0)
 p.instrument.version.installed <- ggplot(instrument.all.version.installed.lims, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instrument Complaints By Type per Instruments Installed', x='Date', y='4 Week Rolling Average')

@@ -221,7 +221,7 @@ stockInv.agg <- with(stockInv.df, aggregate(Record~ItemID, FUN=sum))
 stockInv.agg$Goal[stockInv.agg$ItemID == 'FLM1-ASY-0001R'] <- 150 
 stockInv.agg$Goal[stockInv.agg$ItemID == 'FLM2-ASY-0001R'] <- 400
 stockInv.agg$Goal[stockInv.agg$ItemID == 'HTFA-ASY-0001R'] <- 2 
-stockInv.agg$Goal[stockInv.agg$ItemID == 'HTFA-ASY-0003R'] <- 30 
+stockInv.agg$Goal[stockInv.agg$ItemID == 'HTFA-ASY-0003R'] <- 20 
 
 stockInv.agg$Key <- ' '
 

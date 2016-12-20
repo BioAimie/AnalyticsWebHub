@@ -5,7 +5,7 @@ SELECT
 	[RecordedValue] AS [Date]
 INTO #aware
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Became Aware Date' AND [CreatedDate] > GETDATE() - 400
+WHERE [PropertyName] LIKE 'Became Aware Date' 
 
 SELECT 
 	[TicketId],
@@ -15,7 +15,7 @@ SELECT
 	[RecordedValue]
 INTO #fail
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'BFDX Part Number' AND [CreatedDate] > GETDATE() - 400
+WHERE [ObjectName] LIKE 'BFDX Part Number' 
 
 SELECT DISTINCT
 	[ItemID],

@@ -354,7 +354,7 @@ FROM
 		[DateOfManufacturing]
 	FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
 		ON P.[PartNumberId] = L.[PartNumberId]
-	WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003')
+	WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-SUB-0103')
 ) P
 	ON D.[SerialNo] = P.[LotNumber]
 WHERE [DateOfManufacturing] IS NOT NULL
