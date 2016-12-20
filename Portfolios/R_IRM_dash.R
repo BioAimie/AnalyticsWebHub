@@ -2,8 +2,6 @@ workDir <- '~/WebHub/AnalyticsWebHub/'
 imgDir <- '~/WebHub/images/Dashboard_InternalReliability/'
 pdfDir <- '~/WebHub/pdfs/'
 
-dungInsts <- read.csv('~/DungeonFAsRD.csv',header=TRUE,sep=',')
-
 setwd(workDir)
 
 # Load needed libraries
@@ -13,11 +11,14 @@ library(scales)
 library(zoo)
 library(lubridate)
 library(devtools)
+library(xlsx)
 install_github('BioAimie/dateManip')
 library(dateManip)
 
 # load the data from SQL
 source('Portfolios/R_IRM_load.R')
+dungInsts <- read.xlsx('\\\\Filer01/Data/Departments/BioChem/BioChem1_Shared/Lab Management/Instruments/FA Instruments.xlsx', sheetName = 'FA Instruments', colIndex = c(1, 4, 10))
+dungInsts <- dungInsts[as.character(dungInsts$Owner)=='IDATEC', ] 
 
 # load user-defined functions necessary to produce the metrics, limits, and charts for the WebHub
 source('Rfunctions/createPaletteOfVariableLength.R')
