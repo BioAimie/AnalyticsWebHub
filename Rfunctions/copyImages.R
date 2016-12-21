@@ -4,7 +4,7 @@ dashboards <- c('Dashboard_InstrumentQC','Dashboard_InstrumentRMA','Dashboard_In
                 'Dashboard_ComplaintInvestigation','Dashboard_CustomerComplaints','Dashboard_InternalReliability',
                 'Dashboard_InstrumentVOE','Dashboard_PouchManufacturingQuality','Dashboard_PouchQC','Dashboard_InstrumentManufacturing',
                 'Dashboard_InstrumentServicing','Dashboard_InstrumentCalibration','Dashboard_SupplierReliability','Dashboard_ProgramManagement',
-                'Dashboard_Contamination', 'Dashboard_PRE', 'Dashboard_Trends', 'Dashboard_GoLiveToThrive')
+                'Dashboard_Contamination', 'Dashboard_PRE', 'Dashboard_Trends', 'Dashboard_GoLiveToThrive', 'Dashboard_PouchSPC')
 
 copyPath.gd <- '\\\\Filer01/Data/Departments/PostMarket/~Dashboards/WebHub/images/'
 copyPath.it <- '\\\\biofirestation/WebHub/WebHub/images/' 
