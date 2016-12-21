@@ -1,9 +1,9 @@
 SET NOCOUNT ON
 
-SELECT 
-	L.[LotNumber] AS [SerialNo],
+SELECT
+	REPLACE(REPLACE(REPLACE(L.[LotNumber],'.',''),'_',''),' ','') AS [SerialNo],
 	UPP.[PartNumber],
-	SUBSTRING(ULLL.[LotNumber], 1, CHARINDEX('.', ULLL.[LotNumber],1)-1) AS [LotNumber],
+    ULLL.[LotNumber] AS [LotNumber],
 	ULLL.[ActualLotSize]
 INTO #pcbaLotsInProd
 FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
@@ -14,10 +14,11 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 					ON UP.[LotNumber] = ULL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPP WITH(NOLOCK)
 						ON ULL.[LotNumberId] = UPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLL WITH(NOLOCK)
 							ON UPP.[LotNumber] = ULLL.[LotNumber]
-WHERE P.[PartNumber] LIKE 'FLM%-ASY-0001' AND UP.[PartNumber] LIKE 'FLM%-SUB-0013' AND UPP.[PartNumber] LIKE 'PCBA-SUB-0839' AND UPP.[Quantity] > 0 AND ULLL.[LotNumber] NOT LIKE 'N/A'
+WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103') 
+AND UPP.[PartNumber] = 'PCBA-SUB-0839' AND UPP.[Quantity] > 0 AND ULLL.[LotNumber] NOT LIKE 'N/A'
 
 SELECT DISTINCT
-	SUBSTRING(L.[LotNumber], 1, CHARINDEX('.', L.[LotNumber],1)-1) AS [LotNumber],
+	L.[LotNumber],
 	L.[ActualLotSize]
 INTO #pcbaLots
 FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
@@ -33,36 +34,7 @@ SELECT
 	[RecordedValue]
 INTO #rawNCR
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Parts Affected' AND [PropertyName] IN ('Part Affected', 'Lot or Serial Number', 'Quantity Affected', 'Disposition')
-
-SELECT 
-	[LotNumber],
-	SUM(CAST([ncrQty] AS INT)) AS [ncrQty]
-INTO #pcbaNCRs
-FROM
-(
-	SELECT 
-		[TicketString],
-		[CreatedDate],
-		REPLACE(SUBSTRING(REPLACE([Lot or Serial Number],' ',''), 1, CHARINDEX('.', REPLACE([Lot or Serial Number],' ',''), 1)),'.','') AS [LotNumber],
-		[Quantity Affected] AS [ncrQty],
-		[Disposition]
-	FROM #rawNCR P
-	PIVOT
-	(
-		MAX([RecordedValue])
-		FOR [PropertyName]
-		IN
-		(
-			[Part Affected],
-			[Lot or Serial Number],
-			[Quantity Affected],
-			[Disposition]
-		)
-	) PIV
-	WHERE [Part Affected] LIKE 'PCBA-SUB-0839'
-) T
-GROUP BY [LotNumber]
+WHERE Tracker = 'NCR' AND [ObjectName] LIKE 'Parts Affected' AND [PropertyName] IN ('Part Affected', 'Lot or Serial Number', 'Quantity Affected', 'Disposition')
 
 SELECT 
 	[TicketId],
@@ -73,7 +45,7 @@ SELECT
 	[RecordedValue]
 INTO #partInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information'
+WHERE Tracker = 'RMA' AND [ObjectName] LIKE 'Part Information'
 
 SELECT 
 	[TicketId],
@@ -83,7 +55,17 @@ SELECT
 	[RecordedValue]
 INTO #freePropPivrops
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title') 
+WHERE Tracker = 'RMA' AND [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title') 
+
+SELECT 
+	[TicketId],
+	[TicketString],
+	[ObjectId],
+	[PropertyName],
+	[RecordedValue]
+INTO #partsUsed
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
+WHERE Tracker = 'RMA' AND [ObjectName] = 'Parts Used'
 
 SELECT 
 	[TicketId],
@@ -136,6 +118,36 @@ PIVOT
 ) PIV
 
 SELECT 
+	[LotNumber],
+	SUM(CAST([ncrQty] AS INT)) AS [ncrQty]
+INTO #pcbaNCRs
+FROM
+(
+	SELECT 
+		[TicketString],
+		[CreatedDate],
+		RTRIM(LTRIM(SUBSTRING([Lot or Serial Number], 1, CHARINDEX(':',[Lot or Serial Number]+':')-1))) AS [LotNumber],
+		[Quantity Affected] AS [ncrQty],
+		[Disposition]
+	FROM #rawNCR P
+	PIVOT
+	(
+		MAX([RecordedValue])
+		FOR [PropertyName]
+		IN
+		(
+			[Part Affected],
+			[Lot or Serial Number],
+			[Quantity Affected],
+			[Disposition]
+		)
+	) PIV
+	WHERE [Part Affected] LIKE 'PCBA-SUB-0839'
+) T
+GROUP BY [LotNumber]
+
+
+SELECT 
 	P.[TicketId],
 	P.[SerialNo],
 	[TicketString],
@@ -167,25 +179,20 @@ INTO #failedInst
 FROM #flaggedForFailures
 
 SELECT 
-	[TicketId],
-	[ObjectId],
-	[PropertyName],
-	[RecordedValue]
-INTO #partsUsed
-FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Parts Used'
-
-SELECT 
 	F.[TicketId],
-	F.[SerialNo],
-	REPLACE(SUBSTRING(P.[LotNumber], 1, CHARINDEX('.', P.[LotNumber],1)),'.','') AS [LotNumber],
+	TicketString,
+	REPLACE(REPLACE(REPLACE(F.[SerialNo],'.',''),'_',''),' ','') AS [SerialNo],
+	P.[LotNumber],
 	F.[Failure]
 INTO #pcbaRMAs
 FROM #failedInst F INNER JOIN
 (
 	SELECT 
 		[TicketId],
-		[Lot/Serial Number] AS [LotNumber]
+		TicketString,
+		SUBSTRING(LTRIM([Lot/Serial Number]), 1, PATINDEX('%[:/ ]%',[Lot/Serial Number]+':')-1) AS [LotNumber],
+		[Part Used],
+		[Lot/Serial Number]
 	FROM #partsUsed P
 	PIVOT
 	(
@@ -197,7 +204,7 @@ FROM #failedInst F INNER JOIN
 			[Lot/Serial Number]
 		)
 	) PIV
-	WHERE [Part Used] LIKE 'PCBA-SUB-0839'
+	WHERE [Part Used] = 'PCBA-SUB-0839'
 ) P
 	ON F.[TicketId] = P.[TicketId]
 
@@ -229,8 +236,24 @@ GROUP BY
 	R.[LotSizeUsed]
 
 SELECT 
+    R.[SerialNo],
+	LAG(R.[LotNumber],1) OVER(PARTITION BY R.[SerialNo] ORDER BY R.[TicketId]) AS [LotNumber],
+	R.[Failure],
+	P.[LotNumber] AS [BirthLot]
+INTO #RMApreviousLot
+FROM #pcbaRMAs R LEFT JOIN #pcbaLotsInProd P
+	ON R.[SerialNo] = P.[SerialNo]
+
+SELECT 
+    [SerialNo],
+	IIF([BirthLot] IS NULL, [LotNumber], [BirthLot]) AS [LotNumber],
+	[Failure]
+INTO #RMAfailingLot
+FROM #RMApreviousLot
+
+SELECT 
 	L.[LotNumber], 
-	CAST(CONCAT(CONCAT('20', SUBSTRING(RIGHT(L.[LotNumber], 6), 5, 2)), '-', SUBSTRING(RIGHT(L.[LotNumber], 6), 1, 2), '-', SUBSTRING(RIGHT(L.[LotNumber], 6), 3, 2)) AS DATE) AS [Date],
+	CAST(CONCAT(CONCAT('20', SUBSTRING(RIGHT(L.[LotNumber], 9), 5, 2)), '-', SUBSTRING(RIGHT(L.[LotNumber], 9), 1, 2), '-', SUBSTRING(RIGHT(L.[LotNumber], 9), 3, 2)) AS DATE) AS [Date],
 	L.[ActualLotSize],
 	L.[LotSizeUsed],
 	N.[ncrQty],
@@ -241,9 +264,9 @@ FROM #lotSizes L LEFT JOIN #pcbaNCRs N
 	(
 		SELECT 
 			[LotNumber],
-			COUNT([TicketId]) AS [rmaQty]
-		FROM #pcbaRMAs
-		WHERE [Failure] = 1
+			COUNT(*) AS [rmaQty]
+		FROM #RMAfailingLot
+		WHERE [Failure] = 1 AND [LotNumber] IS NOT NULL
 		GROUP BY [LotNumber]
 	) R
 		ON L.[LotNumber] = R.[LotNumber]
@@ -261,4 +284,5 @@ FROM #master
 WHERE [ActualLotSize] > 5
 ORDER BY [Date]
 
-DROP TABLE  #failedInst, #flaggedForFailures, #freePropPiv, #freePropPivrops, #lotSizes, #master, #partInfo, #partInfoPiv, #partsUsed, #pcbaLots, #pcbaLotsInProd, #pcbaNCRs, #pcbaRMAs, #rawNCR
+DROP TABLE  #failedInst, #flaggedForFailures, #freePropPiv, #freePropPivrops, #lotSizes, #master, #partInfo, #partInfoPiv, 
+	#partsUsed, #pcbaLots, #pcbaLotsInProd, #pcbaNCRs, #pcbaRMAs, #rawNCR, #RMAfailingLot, #RMApreviousLot
