@@ -1,21 +1,21 @@
 SET NOCOUNT ON
 
 SELECT 
-	REPLACE(REPLACE(REPLACE(UPPER([LotNumber]),' ',''),'_',''),'-','') AS [LotNumber],
-	[PartNumber],
-	[DateOfManufacturing]
+       REPLACE(REPLACE(REPLACE(UPPER([LotNumber]),' ',''),'_',''),'-','') AS [LotNumber],
+       [PartNumber],
+       [DateOfManufacturing]
 INTO #birthDate
 FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-	ON P.[PartNumberId] = L.[PartNumberId]
+       ON P.[PartNumberId] = L.[PartNumberId]
 WHERE [PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-SUB-0103') AND [DateOfManufacturing] > CONVERT(datetime,'2014-06-01')
 
 SELECT 
-	[TicketId],
-	[TicketString],
-	[CreatedDate],
-	[ObjectId],
-	[PropertyName],
-	[RecordedValue]
+       [TicketId],
+       [TicketString],
+       [CreatedDate],
+       [ObjectId],
+       [PropertyName],
+       [RecordedValue]
 INTO #partInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'Part Information'
@@ -155,117 +155,134 @@ FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] LIKE 'BFDX Part Number'
 
 SELECT 
-	[TicketId],
-	[TicketString],
-	REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER([Lot/Serial Number]),',',''),' ',''),'.',''),'_',''),'-','') AS [SerialNo],
-	SUBSTRING([Failure Mode], 1, CHARINDEX('-',[Failure Mode],1)-1) AS [Complaint]
+       [TicketId],
+       [TicketString],
+       REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER([Lot/Serial Number]),',',''),' ',''),'.',''),'_',''),'-','') AS [SerialNo],
+       IIF(CHARINDEX('-',[Failure Mode],1)<>0, SUBSTRING([Failure Mode], 1, CHARINDEX('-',[Failure Mode],1)-1), [Failure Mode]) AS [Complaint],
+	   IIF([Failure Mode] LIKE '%-1-%', 'InstrumentError','OtherError') AS [InstError]
 INTO #complaints
 FROM
 (
-	SELECT 
-		[TicketId],
-		[TicketString],
-		[CreatedDate],
-		[ObjectId],
-		[PropertyName],
-		[RecordedValue]
-	FROM #bfdxParts
+       SELECT 
+             [TicketId],
+             [TicketString],
+             [CreatedDate],
+             [ObjectId],
+             [PropertyName],
+             [RecordedValue]
+       FROM #bfdxParts
 ) P
 PIVOT
 (
-	MAX([RecordedValue])
-	FOR [PropertyName]
-	IN
-	(
-		[Lot/Serial Number],
-		[Failure Mode]
-	)
+       MAX([RecordedValue])
+       FOR [PropertyName]
+       IN
+       (
+             [Lot/Serial Number],
+             [Failure Mode]
+       )
 ) PIV
-WHERE [Failure Mode] LIKE '%-1-%'
 
 SELECT 
-	F.[SerialNo],
-	F.[Version],
-	F.[Year],
-	F.[Week],
-	C.[TicketString],
-	ISNULL(C.[Complaint], 'No Complaint') AS [Complaint]
+	[SerialNo],
+	[TicketId],
+	[TicketString],
+	[Complaint]
+INTO #complaintsCollapsed
+FROM
+(
+	SELECT *,
+		ROW_NUMBER() OVER(PARTITION BY [TicketId] ORDER BY [InstError]) AS [RowNo]
+	FROM #complaints
+) T
+WHERE [RowNo] = 1
+
+SELECT 
+       F.[SerialNo],
+       F.[Version],
+	   F.[RMA],
+       F.[Year],
+       F.[Week],
+       C.[TicketString],
+       ISNULL(C.[Complaint], 'No Complaint') AS [Complaint]
 INTO #combined
 FROM
 (
-	SELECT
-		[SerialNo],
-		[Version],
-		[Year],
-		[Week],
-		1 AS [Record]
-	FROM #firstFailure
-	WHERE [Failure] = 1
-	GROUP BY 
-		[SerialNo],
-		[Version],
-		[Year],
-		[Week]
+       SELECT 
+             [SerialNo],
+             [Version],
+			 [TicketString] AS [RMA],
+             [Year],
+             [Week],
+             1 AS [Record]
+       FROM #firstFailure
+       WHERE [Failure] = 1
+       GROUP BY 
+             [SerialNo],
+             [Version],
+			 [TicketString],
+             [Year],
+             [Week]
 ) F LEFT JOIN 
 (
-	SELECT 
-		C1.[SerialNo],
-		C1.[TicketString],
-		IIF(C1.[Complaint] LIKE '%Pressure Error%', 'Pressure Errors',
-			IIF(C1.[Complaint] LIKE '%Seal Bar%', 'Seal Bar Errors',
-			IIF(C1.[Complaint] LIKE '%Lid Lock%', 'Lid Lock Errors',
-			IIF(C1.[Complaint] LIKE '%Bead Motor Stall%', 'Bead Beater Stall',
-			IIF(C1.[Complaint] LIKE '%7003%', 'LED Excitation Error',
-			IIF(C1.[Complaint] LIKE '%Temp %', 'Temp Timeout Errors', C1.[Complaint])))))) AS [Complaint]
-	FROM #complaints C1 INNER JOIN
-	(
-		SELECT 
-			[SerialNo],
-			MIN([TicketId]) AS [TicketId]
-		FROM #complaints 
-		GROUP BY [SerialNo]
-	) C2
-		ON C1.[TicketId] = C2.[TicketId]
+       SELECT 
+             C1.[SerialNo],
+             C1.[TicketString],
+             IIF(C1.[Complaint] LIKE '%Pressure Error%', 'Pressure Errors',
+                    IIF(C1.[Complaint] LIKE '%Seal Bar%', 'Seal Bar Errors',
+                    IIF(C1.[Complaint] LIKE '%Lid Lock%', 'Lid Lock Errors',
+                    IIF(C1.[Complaint] LIKE '%Bead Motor Stall%', 'Bead Beater Stall',
+                    IIF(C1.[Complaint] LIKE '%7003%', 'LED Excitation Error',
+                    IIF(C1.[Complaint] LIKE '%Temp %', 'Temp Timeout Errors', C1.[Complaint])))))) AS [Complaint]
+       FROM #complaintsCollapsed C1 INNER JOIN
+       (
+             SELECT 
+                    [SerialNo],
+                    MIN([TicketId]) AS [TicketId]
+             FROM #complaintsCollapsed
+             GROUP BY [SerialNo]
+       ) C2
+             ON C1.[TicketId] = C2.[TicketId]
 ) C
-	ON F.[SerialNo] = C.[SerialNo]
+       ON F.[SerialNo] = C.[SerialNo]
 ORDER BY [Year], [Week]
 
 SELECT 
-	C.[Year],
-	C.[Week],
-	CONCAT(C.[Complaint], ' ', CONCAT(ROUND(100*CAST(C.[Record] AS FLOAT)/CAST(A.[Record] AS FLOAT), 0),'%')) AS [Label]
+       C.[Year],
+       C.[Week],
+       CONCAT(C.[Complaint], ' ', CONCAT(ROUND(100*CAST(C.[Record] AS FLOAT)/CAST(A.[Record] AS FLOAT), 0),'%')) AS [Label]
 INTO #labels
 FROM
 (
-	SELECT 
-		[Year],
-		[Week],
-		[Complaint],
-		COUNT([SerialNo]) AS [Record]
-	FROM #combined
-	GROUP BY [Year], [Week], [Complaint]
+       SELECT 
+             [Year],
+             [Week],
+             [Complaint],
+             COUNT([SerialNo]) AS [Record]
+       FROM #combined
+       GROUP BY [Year], [Week], [Complaint]
 ) C LEFT JOIN 
 (
-	SELECT
-		[Year],
-		[Week],
-		COUNT([SerialNo]) AS [Record]
-	FROM #combined
-	GROUP BY [Year], [Week]
+       SELECT
+             [Year],
+             [Week],
+             COUNT([SerialNo]) AS [Record]
+       FROM #combined
+       GROUP BY [Year], [Week]
 ) A
 	ON C.[Year] = A.[Year] AND C.[Week] = A.[Week]
 
 SELECT DISTINCT
-	IIF(L2.[Week] < 10, CONCAT(L2.[Year], '-0', L2.[Week]), CONCAT(L2.[Year], '-', L2.[Week])) AS [DateGroup],
-	SUBSTRING(
-		(
-			SELECT
-				',' + L1.[Label] AS [text()]
-			FROM #labels L1
-			WHERE L1.[Year] = L2.[Year] AND L1.[Week] = L2.[Week]
-			ORDER BY L1.[Label]
-			FOR XML PATH('')
-		), 2, 1000) AS [Annotation]
+       IIF(L2.[Week] < 10, CONCAT(L2.[Year], '-0', L2.[Week]), CONCAT(L2.[Year], '-', L2.[Week])) AS [DateGroup],
+       SUBSTRING(
+             (
+                    SELECT
+                           ',' + L1.[Label] AS [text()]
+                    FROM #labels L1
+                    WHERE L1.[Year] = L2.[Year] AND L1.[Week] = L2.[Week]
+                    ORDER BY L1.[Label]
+                    FOR XML PATH('')
+             ), 2, 1000) AS [Annotation]
 FROM #labels L2
 
-DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts
+DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts, #complaintsCollapsed
