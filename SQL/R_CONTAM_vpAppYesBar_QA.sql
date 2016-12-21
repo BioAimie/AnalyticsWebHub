@@ -1,4 +1,5 @@
 SET NOCOUNT ON
+
 SELECT 
 	CONVERT(CHAR(7), [creation_ts], 120) AS [CreatedDate],
 	IIF([cf_vpapproval]='---','No',[cf_vpapproval]) AS [Key],

@@ -5,7 +5,6 @@
 #*note: to set DB paths go to Control Panel/Systems & Security/Administrative Tools/Data Sources (ODBC)
 library(RODBC)
 # open database connection 
-BFDXcxn = odbcConnect("Datamart")
 PMScxn <- odbcConnect("PMS_PROD")
 
 #master assay list for RP palette
@@ -55,11 +54,12 @@ query.charVec = scan("SQL/R_CONTAM_PoolCount.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 faPoolCount.df = sqlQuery(PMScxn,query)
 
+# close remote connection
+close(PMScxn)
+
 #vpYesBar
+BFDXcxn = odbcConnect("Datamart")
 query.charVec = scan("SQL/R_CONTAM_vpAppYesBar_QA.txt", what=character(),quote="")
 query = paste(query.charVec,collapse=" ")
 vpAppYesBar.df = sqlQuery(BFDXcxn,query)
-                        
-# close remote connection
 close(BFDXcxn)
-close(PMScxn)
