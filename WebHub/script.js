@@ -42,4 +42,9 @@ $(document).ready(function () {
         autoplay: false,
         dots: true
     });
+    $('.image-slider2').slick({
+        arrows: true,
+        autoplay: false,
+        dots: false
+    });
 });
