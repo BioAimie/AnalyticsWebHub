@@ -1,7 +1,7 @@
 SET NOCOUNT ON
 
 SELECT
-	REPLACE(REPLACE(REPLACE(L.[LotNumber],'.',''),'_',''),' ','') AS [SerialNo],
+	REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],'.',''),'_',''),' ',''),'KTM','TM') AS [SerialNo],
 	UPP.[PartNumber],
     ULLL.[LotNumber] AS [LotNumber],
 	ULLL.[ActualLotSize]
@@ -11,11 +11,11 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 		ON L.[LotNumberId] = U.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
 			ON U.[LotNumber] = UL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UP WITH(NOLOCK)
 				ON UL.[LotNumberId] = UP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULL WITH(NOLOCK)
-					ON UP.[LotNumber] = ULL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPP WITH(NOLOCK)
-						ON ULL.[LotNumberId] = UPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLL WITH(NOLOCK)
-							ON UPP.[LotNumber] = ULLL.[LotNumber]
-WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103') 
-AND UPP.[PartNumber] = 'PCBA-SUB-0839' AND UPP.[Quantity] > 0 AND ULLL.[LotNumber] NOT LIKE 'N/A'
+				     ON UP.[LotNumber] = ULL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPP WITH(NOLOCK)
+					     ON ULL.[LotNumberId] = UPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLL WITH(NOLOCK)
+						     ON UPP.[LotNumber] = ULLL.[LotNumber]
+WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003')
+	AND UPP.[PartNumber] = 'PCBA-SUB-0839' AND UPP.[Quantity] > 0 AND ULLL.[LotNumber] NOT LIKE 'N/A'
 
 SELECT DISTINCT
 	L.[LotNumber],
@@ -72,7 +72,8 @@ SELECT
 	[TicketString],
 	[CreatedDate],
 	[Part Number], 
-	UPPER([Lot/Serial Number]) AS [SerialNo],
+	REPLACE(REPLACE(REPLACE(REPLACE(UPPER([Lot/Serial Number]),'.',''),'_',''),' ',''),'KTM','TM') AS [SerialNo],
+	[Lot/Serial Number],
 	[Early Failure Type] AS [CustFailType]
 INTO #partInfoPiv
 FROM
@@ -146,7 +147,6 @@ FROM
 ) T
 GROUP BY [LotNumber]
 
-
 SELECT 
 	P.[TicketId],
 	P.[SerialNo],
@@ -164,7 +164,7 @@ SELECT
 	IIF(ISNUMERIC([Complaint])=1, 1, 0) AS [Complaint]
 INTO #flaggedForFailures
 FROM #partInfoPiv P LEFT JOIN #freePropPiv F
-		ON P.[TicketId] = F.[TicketId]
+	ON P.[TicketId] = F.[TicketId]
 WHERE [HoursRun] NOT LIKE 'N%A' AND [HoursRun] IS NOT NULL
 
 SELECT 
@@ -180,16 +180,16 @@ FROM #flaggedForFailures
 
 SELECT 
 	F.[TicketId],
-	TicketString,
-	REPLACE(REPLACE(REPLACE(F.[SerialNo],'.',''),'_',''),' ','') AS [SerialNo],
+	P.[TicketString],
+	F.[SerialNo],
 	P.[LotNumber],
 	F.[Failure]
 INTO #pcbaRMAs
 FROM #failedInst F INNER JOIN
 (
-	SELECT 
+	SELECT
 		[TicketId],
-		TicketString,
+		[TicketString],
 		SUBSTRING(LTRIM([Lot/Serial Number]), 1, PATINDEX('%[:/ ]%',[Lot/Serial Number]+':')-1) AS [LotNumber],
 		[Part Used],
 		[Lot/Serial Number]
@@ -208,7 +208,7 @@ FROM #failedInst F INNER JOIN
 ) P
 	ON F.[TicketId] = P.[TicketId]
 
-SELECT 
+SELECT
 	L.[LotNumber],
 	SUM(L.[ActualLotSize]) AS [ActualLotSize],
 	ISNULL(N.[LotSizeUsed],0) + ISNULL(R.[LotSizeUsed],0) AS [LotSizeUsed]
@@ -220,7 +220,7 @@ FROM #pcbaLots L LEFT JOIN
 		COUNT([SerialNo]) AS [LotSizeUsed]
 	FROM #pcbaLotsInProd
 	GROUP BY [LotNumber]
-) N	
+) N    
 	ON L.[LotNumber] = N.[LotNumber] LEFT JOIN
 	(
 		SELECT 
@@ -235,7 +235,7 @@ GROUP BY
 	N.[LotSizeUsed],
 	R.[LotSizeUsed]
 
-SELECT 
+SELECT
     R.[SerialNo],
 	LAG(R.[LotNumber],1) OVER(PARTITION BY R.[SerialNo] ORDER BY R.[TicketId]) AS [LotNumber],
 	R.[Failure],
@@ -260,7 +260,7 @@ SELECT
 	R.[rmaQty]
 INTO #master
 FROM #lotSizes L LEFT JOIN #pcbaNCRs N
-	ON L.[LotNumber] = N.[LotNumber] LEFT JOIN 
+	ON L.[LotNumber] = N.[LotNumber] LEFT JOIN
 	(
 		SELECT 
 			[LotNumber],
