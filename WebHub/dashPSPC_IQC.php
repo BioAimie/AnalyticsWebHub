@@ -2,7 +2,7 @@
 <html>
 
     <head>
-        <title> Pouch Final QC Trend Portfolio </title>
+        <title> Pouch SPC IQC Trend Portfolio </title>
         <!-- HTML5 and mobile devices -->
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,7 +51,7 @@
             
             <div class="container" id="navigator2">
                 <ul class="pull-left">
-                    <li class="brighten"><a href="pdfs/PouchQC.pdf"> DOWNLOAD PDF REPORT</a></li>
+                    <li class="brighten"><a href="pdfs/PouchSPC_IQC.pdf"> DOWNLOAD PDF REPORT</a></li>
                 </ul>
             </div>
         </div>
@@ -153,86 +153,42 @@
         </div>
         </div>
         
-        <h2 id="pageTitle">Pouch Final QC</h2>
-        
+        <h2 id="pageTitle">Pouch SPC - IQC</h2>
         <div class="background">
             <div class="chart-area">
                 <div class="row">
-                    <div class="image-slider">
-                        <div> 
-                            <p> 1 </p>
-                            <a href = "images/Dashboard_PouchQC/SmoothedControlFailureRate.png" download = "SmoothedControlFailureRate.png" title = "SmoothedControlFailureRate.png"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/SmoothedControlFailureRate.png' alt = "SmoothedControlFailureRate.png"/> </a>
-                        </div>
-                        <div> 
-                            <p> 2 </p>
-                            <a href = "images/Dashboard_PouchQC/SmoothedUnexpectedNegativeRate.png" download = "SmoothedUnexpectedNegativeRate.png" title = "SmoothedUnexpectedNegativeRate.png"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/SmoothedUnexpectedNegativeRate.png' alt = "SmoothedUnexpectedNegativeRate.png"/> </a>
-                        </div>
-                        <div> 
-                            <p> 3 </p>
-                            <a href = "images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRate.png" download = "SmoothedUnexpectedPositiveRate.png" title = "SmoothedUnexpectedPositiveRate.png"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRate.png' alt = "SmoothedUnexpectedPositiveRate.png"/> </a>
-                        </div>
-                        <div> 
-                            <p> 4 </p>
-                            <a href = "images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRateForRP.png" download = "SmoothedUnexpectedPositiveRateForRP.png" title = "SmoothedUnexpectedPositiveRateForRP.png"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRateForRP.png' alt = "SmoothedUnexpectedPositiveRateForRP.png"/> </a>
-                        </div>
-                        <div> 
-                            <p> 5 </p>
-                            <a href = "images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRateForBCID.png" download = "SmoothedUnexpectedPositiveRateForBCID.png" title = "SmoothedUnexpectedPositiveRateForBCID.png"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRateForBCID.png' alt = "SmoothedUnexpectedPositiveRateForBCID.png"/> </a>
-                        </div>
-                        <div> 
-                            <p> 6 </p>
-                            <a href = "images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRateForGI.png" download = "SmoothedUnexpectedPositiveRateForGI.png" title = "SmoothedUnexpectedPositiveRateForGI.png"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRateForGI.png' alt = "SmoothedUnexpectedPositiveRateForGI.png"/> </a>
-                        </div>
-                        <div> 
-                            <p> 7 </p>
-                            <a href = "images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRateForME.png" download = "SmoothedUnexpectedPositiveRateForME.png" title = "SmoothedUnexpectedPositiveRateForME.png"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/SmoothedUnexpectedPositiveRateForME.png' alt = "SmoothedUnexpectedPositiveRateForME.png"/> </a>
-                        </div>
-                        <div> 
-                            <p> 8 </p>
-                            <a href = "images/Dashboard_PouchQC/hydra.fail.png" download = "PQCdash_hydra.fail.png" title = "hydra.fail"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/hydra.fail.png' alt = "hydra.fail"/> </a>
-                        </div>
-                        <div> 
-                            <p> 9 </p>
-                            <a href = "images/Dashboard_PouchQC/leak.fail.png" download = "PQCdash_leak.fail.png" title = "leak.fail"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/leak.fail.png' alt = "leak.fail"/> </a>
-                        </div>
-                        <div> 
-                            <p> 10 </p>
-                            <a href = "images/Dashboard_PouchQC/rehydration.box.png" download = "PQCdash_rehydration.box.png" title = "rehydration.box"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/rehydration.box.png' alt = "rehydration.box"/> </a>
-                        </div>
-                        <div> 
-                            <p> 11 </p>
-                            <a href = "images/Dashboard_PouchQC/rehydration.trend.png" download = "PQCdash_rehydration.trend.png" title = "rehydration.trend"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/rehydration.trend.png' alt = "rehydration.trend"/> </a>
-                        </div>
-                        <div> 
-                            <p> 12 </p>
-                            <a href = "images/Dashboard_PouchQC/hydration.QCvField.png" download = "PQCdash_hydration.QCvField.png" title = "hydration.QCvField"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/hydration.QCvField.png' alt = "hydration.QCvField"/> </a>
-                        </div>
-                        <div> 
-                            <p> 13 </p>
-                            <a href = "images/Dashboard_PouchQC/control.QCvField.png" download = "PQCdash_control.QCvField.png" title = "control.QCvField"> 
-                            <img class='chart' src='images/Dashboard_PouchQC/control.QCvField.png' alt = "control.QCvField"/> </a>
-                        </div>
+                    <div class="image-slider2">
+                        <?php
+                            $dir = 'images\Dashboard_PouchSPC';
+                            $files = scandir($dir);
+                            $newFiles = preg_grep('/IQC-/', $files);
+                            sort($newFiles);
+                            $count = 1;
+                            foreach($newFiles as $img) {
+                                echo "<div> 
+                                            <p> $count </p>
+                                            <a href = 'images/Dashboard_PouchSPC/$img' download = $img title = $img>
+                                            <img class='chart' src='images/Dashboard_PouchSPC/".$img."' alt = '$img'/></a>
+                                        </div>";
+                                $count++;
+                            }
+                        ?>
                     </div>
-                    <p> Charts are updated daily. Click chart to download a copy.</p>
+                    <div id='panelButtons'>
+                        <a class='buttonLink' href='dashPSPC.php'>All</a>
+                        <a class='buttonLink' href='dashPSPC_RP.php'>RP</a>
+                        <a class='buttonLink' href='dashPSPC_GI.php'>GI</a>
+                        <a class='buttonLink' href='dashPSPC_BCID.php'>BCID</a>
+                        <a class='buttonLink' href='dashPSPC_ME.php'>ME</a>
+                    </div>
+                    <p> Click chart to download a copy. Click a link above to see charts specific to each panel.</p>
                 </div> 
             </div>
         </div>
-
+        
         <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
         <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-        <script type="text/javascript" src="slick/slick.min.js"></script>    
+        <script type="text/javascript" src="slick/slick.min.js"></script>   
 
     </body>
     
