@@ -32,7 +32,7 @@ lagPeriods <- 0
 validateDate <- '2016-04'
 
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
-startYear <- year(Sys.Date()) - 1
+startYear <- year(Sys.Date()) - 2
 calendar.df <- createCalendarLikeMicrosoft(startYear, smallGroup)
 startDate <- findStartDate(calendar.df, smallGroup, 12, 0)
 
