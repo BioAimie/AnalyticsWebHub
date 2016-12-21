@@ -1,7 +1,7 @@
 SET NOCOUNT ON
 
-SELECT 
-	R.[StartTime] AS [Date], --Remove
+SELECT
+	R.[StartTime] AS [Date],
 	R.[PouchSerialNumber] AS [SerialNo],
 	R.[PouchLotNumber] AS [LotNo],
 	R.[SampleId] AS [SampleId],
@@ -13,12 +13,17 @@ FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[Target_Assay] TA WITH(NOLOCK) INNER
 		ON T.[Id] = TR.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] A WITH(NOLOCK)
 			ON TR.[analysis_id] = A.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R WITH(NOLOCK)
 				ON A.[experiment_id] = R.[Id]
-WHERE TR.[TypeCode] LIKE 'control' AND R.[RunStatus] LIKE 'Completed' AND R.[SampleId] LIKE 'QC[_]%' AND RIGHT(R.[PouchLotNumber],2) IN ('15','16')
-
+WHERE TR.[TypeCode] = 'control' AND 
+(
+	R.[SampleId] LIKE 'QC_RP%' OR 
+	R.[SampleId] LIKE 'QC_BCID%' OR 
+	R.[SampleId] LIKE 'QC_GI%' OR
+	R.[SampleId] LIKE 'QC_ME%'
+) AND R.[StartTime] >= GETDATE() - 400
 
 SELECT
-	YEAR([Date]) AS [Year], --Remove
-	DATEPART(ww,[Date]) AS [Week], --Remove
+	YEAR([Date]) AS [Year],
+	DATEPART(ww,[Date]) AS [Week],
 	[SerialNo],
 	[LotNo],
 	[SampleId],
@@ -27,21 +32,19 @@ INTO #qcRunsWithFailFlag
 FROM
 (
 	SELECT *,
-	DATEPART(ww,[Date]) AS [Week],
 		IIF([Result] LIKE 'Pass', 0, 1) AS [FailFlag]
 	FROM #fa1
-	WHERE [ControlName] NOT LIKE 'PCR1 Control'
 ) T
 GROUP BY
-	YEAR([Date]), --Remove
-	DATEPART(ww,[Date]), --Remove
+	YEAR([Date]),
+	DATEPART(ww,[Date]),
 	[SerialNo],
 	[LotNo],
 	[SampleId]
 
 SELECT
-	[Year], --Remove
-	[Week], --Remove
+	[Year],
+	[Week],
 	[SerialNo],
 	IIF([SampleId] LIKE '%_RP%', 'RP',
 		IIF([SampleId] LIKE '%_GI%', 'GI',
