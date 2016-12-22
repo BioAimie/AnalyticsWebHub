@@ -6,12 +6,13 @@ SELECT
 	DATEPART(yy,[CreatedDate]) AS [Year],
 	DATEPART(mm,[CreatedDate]) AS [Month],
 	DATEPART(wk,[CreatedDate]) AS [Week],
-	IIF(UPPER([RecordedValue]) LIKE 'HARD-SHL-0016', 'old', 'new') AS [Key],
+	IIF(UPPER([RecordedValue]) LIKE '%HARD-SHL-0016%', 'old', 'new') AS [Key],
+	[RecordedValue],
 	1 AS Record,
 	[TicketString]
 INTO #lidlatch
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus]
-WHERE Tracker = 'RMA' AND (RecordedValue LIKE 'HARD-SHL-0016' OR RecordedValue LIKE 'FLM1-MAC-0367') AND ObjectName = 'Root Causes'
+WHERE Tracker = 'RMA' AND (RecordedValue LIKE '%HARD-SHL-0016%' OR RecordedValue LIKE '%FLM1-MAC-0367%') AND ObjectName = 'Root Causes'
 
 SELECT 
 	[TicketId],
@@ -54,6 +55,7 @@ INTO #master
 FROM #failures F
 
 SELECT 
+	[SerialNo],
 	ISNULL(YEAR([Date]), 2015) AS [Year],
 	ISNULL(MONTH([Date]), 3) AS [Month],
 	ISNULL(DATEPART(ww, [Date]), DATEPART(ww, CONVERT(DATETIME, '2015-03-31'))) AS [Week],
