@@ -176,6 +176,23 @@ complaintCI.count <- rbind(countComplaint.all, countCI.all)
 myPalCount <- createPaletteOfVariableLength(complaintCI.count, 'Key')
 p.complaintCI <- ggplot(complaintCI.count, aes(x=DateGroup, y=Record, group=1, fill=Key)) + geom_bar(stat="identity") + scale_fill_manual(values=myPalCount, name='') + geom_text(aes(label=Record), vjust=1.5, color="white",position="stack", fontface="bold") + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Total Count of Complaints and CIs by Month', x='Date(Year-Month)', y='Count of Complaints and CIs')
 
+# Pouches shipped for last 30 days and last 365 days
+l30d <- subset(productShipped.df, Last30Days == 1)
+l30d$Key <- 'Last 30 Days'
+pouches.shipped <- rbind(subset(productShipped.df, select = c('Version', 'Key', 'Record')), subset(l30d, select = c('Version', 'Key', 'Record')))
+pouches.shipped$Total <- 'Total'
+l30d$Total <- l30d$Version
+productShipped.df$Total <- productShipped.df$Version
+pouches.total <- rbind(pouches.shipped, subset(productShipped.df, select = c('Version', 'Key', 'Total', 'Record')), subset(l30d, select = c('Version', 'Key', 'Total', 'Record')))
+labels <- c()
+versions <- as.character(unique(pouches.total$Total))
+for(i in 1:length(versions)) {
+  temp <- pouches.total[pouches.total[, 'Total'] == versions[i],]
+  temp2 <- data.frame(Version = versions[i], Key = c('Last 365 Days', 'Last 30 Days'), Record = c(sum(temp[temp[,'Key'] == 'Last 365 Days', 'Record']), sum(temp[temp[,'Key'] == 'Last 30 Days', 'Record'])))
+  labels <- rbind(labels, temp2)
+}
+p.PouchesShipped <- ggplot(pouches.total, aes(x=Total, y=Record, fill = Version)) + geom_bar(stat='identity') + facet_wrap(~Key, scales = 'free_y', ncol=1) + labs(title='Pouches Shipped', x='Panel', y='Pouches Shipped') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='none') + scale_fill_manual(values=createPaletteOfVariableLength(pouches.shipped, 'Version')) + scale_y_continuous(label=comma) + geom_text(data = labels, inherit.aes = FALSE, aes(x=Version, y=Record, label=Record), vjust= -0.5, fontface='bold')
+
 # export images for web hub
 setwd(imgDir)
 plots <- ls()[grep('^p\\.', ls())]
