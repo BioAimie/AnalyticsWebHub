@@ -40,7 +40,7 @@ SELECT
 	DATEPART(ww,D.[CreatedDate]) AS [Week],
 	ISNULL(A.[Key],'Raw Material') AS [Version],
 	D.[Key],
-	REPLACE([RecordedValue],'Instrument ','') AS [RecordedValue],
+	REPLACE(REPLACE([RecordedValue],'Instrument ',''),',','-') AS [RecordedValue],
 	[Record]
 INTO #D
 FROM
