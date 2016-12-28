@@ -1,11 +1,22 @@
 SET NOCOUNT ON
+
 SELECT
-	YEAR([ShipDate]) AS [Year]
-	,DATEPART(wk,[ShipDate]) AS [Week]
-	,[Panel] AS [Version]
-	,'Shipped' AS [Note]
-	,SUM(IIF([QtyShipped] < 0, -1*[QtyShipped],[QtyShipped])) AS [Record]	
-FROM [PMS1].[dbo].[vPouchShipmentsWithAnnotations_IOID]
-WHERE ShipDate > GETDATE()-735
-	GROUP BY YEAR([ShipDate]),DATEPART(wk,[ShipDate]),[Panel]
-	ORDER BY [Year],[Week]
+	CAST([ShipDate] AS DATE) AS [ShipDate],
+	[Panel] AS [Version],
+	'CustPouchShip' AS [Key],
+	IIF([SalesTerritoryID] LIKE 'International', [SalesTerritoryID], 'Domestic') AS [RecordedValue],
+	IIF([TranType] NOT LIKE 'SH',-1*[QtyShipped],[QtyShipped]) AS [Record]
+INTO #AllPouches
+FROM [PMS1].[dbo].[vPouchShipmentsWithAnnotations_IOID] WITH(NOLOCK)
+WHERE [ProductClass] LIKE 'IVD' AND [CustID] NOT LIKE 'IDATEC'
+
+SELECT 
+	[Version],
+	'Last 365 Days' AS [Key],
+	IIF([ShipDate] >= CAST(GETDATE()-30 AS DATE), 1, 0) AS [Last30Days],
+	[Record] 
+FROM #AllPouches
+WHERE [ShipDate] >= CAST(GETDATE()-365 AS DATE) 
+ORDER BY [ShipDate]
+
+DROP TABLE #AllPouches
