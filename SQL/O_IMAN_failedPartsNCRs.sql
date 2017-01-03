@@ -8,17 +8,16 @@ INTO #TicketsA
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 WHERE [PropertyName] LIKE 'NCR Type' AND [RecordedValue] LIKE '%Instrument%'
 
-SELECT *
-INTO #MasClass
-FROM [PMS1].[dbo].[vTracker_MAS_ItemClass] WITH(NOLOCK)
-WHERE [ItemClassID] LIKE 'I-%'
+SELECT DISTINCT [ComponentItemID]
+INTO #bomParts
+FROM [PMS1].[dbo].[vInstrumentBillOfMaterials]
 
 SELECT  
 	[TicketId],
 	[TicketString]
 INTO #MasClassParts
-FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] N WITH(NOLOCK) INNER JOIN #MasClass M
-	ON N.[RecordedValue] = M.[ItemID]
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] N WITH(NOLOCK) INNER JOIN #bomParts B
+	ON N.[RecordedValue] = B.[ComponentItemID]
 WHERE [ObjectName] LIKE 'Parts Affected' AND [PropertyName] LIKE 'Part Affected'
 
 SELECT 
@@ -66,4 +65,4 @@ SELECT
 FROM #Fail f 
 ORDER BY [TicketString]
 
-DROP TABLE #TicketsA, #MasClass, #MasClassParts, #TicketsB, #Raw, #Tickets, #Fail
+DROP TABLE #TicketsA, #MasClassParts, #TicketsB, #Raw, #Tickets, #Fail, #bomParts
