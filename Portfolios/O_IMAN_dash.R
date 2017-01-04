@@ -104,11 +104,8 @@ p.Instr.Trans.year <- ggplot(subset(transferred, as.character(DateGroup) >= beg)
 
 #------------------------------------------------------------------------------------------------------------------------------------------
 #last 3 months
-m.df <- tail(calendar.month, n=1L)
-
-mon <- ifelse(m.df[1,3]-2 < 10, 
-              paste(m.df[1,2], paste('0', m.df[[1,3]]-2, sep=''), sep='-'),
-              paste(m.df[1,2], m.df[[1,3]]-2, sep='-'))
+months.all <- sort(as.character(unique(calendar.month$DateGroup)))
+mon <- months.all[length(months.all)-2]
 
 ncr.df$DateGroup <- ifelse(ncr.df$Month < 10,
                            paste(ncr.df$Year, paste('0',ncr.df$Month, sep=''), sep='-'),
