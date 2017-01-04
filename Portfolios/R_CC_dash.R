@@ -31,7 +31,7 @@ validateDate <- '2015-50'
 startYear <- year(Sys.Date()) - 3
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
 startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
-threeyr <- findStartDate(calendar.df, 'Week', 159, 4)
+threeyr <- findStartDate(calendar.df, 'Week', 156, 4)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
