@@ -1,6 +1,6 @@
 # Checks the last time that charts were generated for each portfolio on the Web Hub. 
 # If the charts haven't been refreshed on schedule, this script should generate an email 
-# to the data science developers (just Aimie for now, but capability to be changed to Amber/Hope in the future) so that the developer can start working on the bug.
+# to the data science developers so that the developer can start working on the bug.
 
 library(sendmailR)
 
@@ -43,7 +43,7 @@ if(length(itemsNotUpdated) != 0) {
   }
   
   from <- "amber.kiser@biofiredx.com"
-  to <- "Aimie.Faucett@biofiredx.com"
+  to <- c("amber.kiser@biofiredx.com", "Aimie.Faucett@biofiredx.com")
   subject <- "WebHub Charts Did Not Update"
   body <- paste("Hello, The following WebHub charts did not update on schedule: ", emailList)                     
   mailControl=list(smtpServer="webmail.biofiredx.com")
