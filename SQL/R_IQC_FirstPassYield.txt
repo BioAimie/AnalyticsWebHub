@@ -4,6 +4,7 @@ SELECT ROW_NUMBER() OVER(PARTITION BY [Instrument] ORDER BY [Date]) AS [RunNo],
 	[Instrument],
 	[Date],
 	CASE
+		WHEN [PouchResult] <> 'Pass' AND [PCR1]  = 'Pass' AND [PCR2]  = 'Pass' AND [RNA] = 'Pass' AND [60TmRange] = 'Pass' AND [60DFMed] = 'Pass' AND [Noise] = 'Pass' THEN 'Pass'
 		WHEN [PouchResult] <> 'Pass' AND [PCR1]  <> 'Pass' AND [PCR2]  <> 'Pass' AND [RNA] <> 'Pass' AND [60TmRange] <> 'Pass' AND [60DFMed] <> 'Pass' AND [Noise] <> 'Pass' THEN 'Pouch-All Metrics'
 		WHEN [PouchResult] <> 'Pass' AND [PCR1]  <> 'Pass' AND [PCR2]  <> 'Pass' AND [RNA] <> 'Pass' AND [60TmRange] <> 'Pass' AND [60DFMed] <> 'Pass' THEN 'Pouch-Controls, MP'
 		WHEN [PouchResult] <> 'Pass' AND [PCR1]  <> 'Pass' AND [PCR2]  <> 'Pass' AND [RNA] <> 'Pass' AND [60TmRange] <> 'Pass' THEN 'Pouch-Controls, MP Tm'
@@ -26,13 +27,13 @@ SELECT ROW_NUMBER() OVER(PARTITION BY [Instrument] ORDER BY [Date]) AS [RunNo],
 	AS [Result]
 INTO #qcBuild
 FROM [PMS1].[dbo].[tIQC_Overview] WITH(NOLOCK)
-WHERE [SampId] LIKE '%NewBuild%'
-
+WHERE [SampId] LIKE '%NewBuild%' AND [Date] > GETDATE() - 400
 
 SELECT ROW_NUMBER() OVER(PARTITION BY [Instrument] ORDER BY [Date]) AS [RunNo],
 	[Instrument],
 	[Date],
 	CASE
+		WHEN [PouchResult] <> 'Pass' AND [PCR1]  = 'Pass' AND [PCR2]  = 'Pass' AND [RNA] = 'Pass' AND [60TmRange] = 'Pass' AND [60DFMed] = 'Pass' AND [Noise] = 'Pass' THEN 'Pass'
 		WHEN [PouchResult] <> 'Pass' AND [PCR1]  <> 'Pass' AND [PCR2]  <> 'Pass' AND [RNA] <> 'Pass' AND [60TmRange] <> 'Pass' AND [60DFMed] <> 'Pass' AND [Noise] <> 'Pass' THEN 'Pouch-All Metrics'
 		WHEN [PouchResult] <> 'Pass' AND [PCR1]  <> 'Pass' AND [PCR2]  <> 'Pass' AND [RNA] <> 'Pass' AND [60TmRange] <> 'Pass' AND [60DFMed] <> 'Pass' THEN 'Pouch-Controls, MP'
 		WHEN [PouchResult] <> 'Pass' AND [PCR1]  <> 'Pass' AND [PCR2]  <> 'Pass' AND [RNA] <> 'Pass' AND [60TmRange] <> 'Pass' THEN 'Pouch-Controls, MP Tm'
@@ -55,7 +56,7 @@ SELECT ROW_NUMBER() OVER(PARTITION BY [Instrument] ORDER BY [Date]) AS [RunNo],
 	AS [Result]
 INTO #qcRepair
 FROM [PMS1].[dbo].[tIQC_Overview] WITH(NOLOCK)
-WHERE [SampId] LIKE '%PostRepair%'
+WHERE [SampId] LIKE '%PostRepair%' AND [Date] > GETDATE() - 400
 
 SELECT 
 	R.[InstrumentSerialNumber] AS [Instrument],
@@ -193,14 +194,14 @@ SELECT
 	UPPER(REPLACE(REPLACE(REPLACE(REPLACE([RecordedValue],' ',''),'.',''),'-',''),'_','')) AS [Instrument]
 INTO #rmas
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Lot/Serial Number' AND [CreatedDate] > GETDATE() - 490
+WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Lot/Serial Number' AND [CreatedDate] > GETDATE() - 430
 
 SELECT 
 	[TicketId],
 	MAX([RecordedValue]) AS [RecordedValue]
 INTO #qcs
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Qc Date' AND [CreatedDate] > GETDATE() - 490
+WHERE [PropertyName] LIKE 'Qc Date' AND [CreatedDate] > GETDATE() - 430
 GROUP BY [TicketId]
 
 SELECT
@@ -221,7 +222,7 @@ SELECT
 		SELECT 
 			MAX([QcDate]) AS [LastQC]
 		FROM #rmaQC S2
-		WHERE S2.[Instrument] = S1.[Instrument] AND S2.[QcDate] BETWEEN (S1.[Date]-7) AND (S1.[Date] + 7)
+		WHERE S2.[Instrument] = S1.[Instrument] AND S2.[QcDate] BETWEEN (S1.[Date]-14) AND (S1.[Date] + 14)
 		GROUP BY [Instrument]
 	) AS [NearQcDate]
 INTO #serviceMany
@@ -230,6 +231,7 @@ FROM #service S1
 SELECT 
 	YEAR([Date]) AS [Year],
 	DATEPART(ww, [Date]) AS [Week],
+	[TestNo],
 	[Key],
 	[Result],
 	SUM([Record]) AS [Record]
@@ -238,6 +240,7 @@ FROM
 	SELECT 
 		[Instrument],
 		CAST([Date] AS DATE) AS [Date],
+		[TestNo],
 		'Service' AS [Key],
 		[Result],
 		1 AS [Record]
@@ -250,25 +253,27 @@ FROM
 			[Result]
 		FROM #serviceMany
 	) T
-	WHERE [TestNo] = 1
+	WHERE [NearQcDate] IS NOT NULL
 	UNION ALL
 	SELECT 
 		[Instrument],
 		CAST([Date] AS DATE) AS [Date],
+		[TestNo],
 		'Production' AS [Key],
 		[Result],
 		1 AS [Record]
 	FROM #production
-	WHERE [TestNo] = 1
 ) T
 GROUP BY
 	YEAR([Date]),
 	DATEPART(ww, [Date]),
+	[TestNo],
 	[Key],
 	[Result]
 ORDER BY
 	YEAR([Date]),
 	DATEPART(ww, [Date]),
+	[TestNo],
 	[Key],
 	[Result]
 
