@@ -52,18 +52,9 @@ service.ship.df$State <- 'Shipped'
 
 service.all.df <- Reduce(function(x, y) merge(x, y, all=TRUE), list(service.to.df, service.rec.df, service.thru.df, service.open.df, service.ship.df))
 
-prevWeekSql <- subset(calendar.week, Date == Sys.Date())[,'Week']-1
-prevYearSql <- ifelse(prevWeekSql == 1,
-                      year(Sys.Date())-1,
-                      year(Sys.Date()))
 
-ww <- ifelse(prevWeekSql < 10, 
-             paste(prevYearSql, paste('0',prevWeekSql,sep=''), sep='-'),
-             paste(prevYearSql, prevWeekSql, sep='-'))
-
-BioFirePrevWeek <- ifelse(prevWeekSql-1 < 10, 
-                  paste(prevYearSql, paste('0',prevWeekSql-1,sep=''), sep='-'),
-                  paste(prevYearSql, prevWeekSql-1, sep='-'))
+weeks <- as.character(unique(calendar.week$DateGroup))
+ww <- weeks[length(weeks)-1]
 
 fillOrder <- c('Other Laptop','Other Torch','Other FA2.0','Other FA1.5','BFDx Laptop','BFDx Torch','BFDx FA2.0','BFDx FA1.5','Refurbish Laptop','Refurbish Torch','Refurbish FA2.0','Refurbish FA1.5','Customer Laptop','Customer Torch','Customer FA2.0','Customer FA1.5')
 fillColors <- c('#cccccc','#be29ec','#d896ff','#efbbff','#a3a3a3','#A9D18E','#70AD47','#59873A','#5C5C5C','#F4B183','#ED7D31','#C46829','#0d0d0d','#9DC3E6','#5B9BD5','#4576A3')
@@ -78,28 +69,16 @@ service.all.df<- service.all.df[with(service.all.df, order(State)), ]
 p.Service.PrevWk <- ggplot(subset(service.all.df, as.character(DateGroup) == ww), aes(x=State, y=Record, fill=Key)) + 
   geom_bar(stat="identity", position="stack") + xlab('State') + ylab('Instruments') + theme(text=element_text(size=20, face='bold'), 
   axis.text.x=element_text(color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle(paste('Instrument Movement Through Service\nFor Previous Week: ',BioFirePrevWeek)) + 
+  ggtitle(paste('Instrument Movement Through Service\nFor Previous Week: ',ww)) + 
   scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
 #-----------------------------------------Instruments Thru Service During Current Week ----------------------------------------------------------------------
-
-currWeekSql <- subset(calendar.week, Date == Sys.Date())[,'Week']
-currYearSql <- ifelse(currWeekSql == 1,
-                      year(Sys.Date())-1,
-                      year(Sys.Date()))
-
-curr <- ifelse(currWeekSql < 10, 
-             paste(currYearSql, paste('0',currWeekSql,sep=''), sep='-'),
-             paste(currYearSql, currWeekSql, sep='-'))
-
-BioFireCurrWeek <- ifelse(currWeekSql-1 < 10, 
-                          paste(currYearSql, paste('0',currWeekSql-1,sep=''), sep='-'),
-                          paste(currYearSql, currWeekSql-1, sep='-'))
+curr <- weeks[length(weeks)]
 
 p.Service.CurrWk <- ggplot(subset(service.all.df, as.character(DateGroup) == curr), aes(x=State, y=Record, fill=Key)) + 
   geom_bar(stat="identity", position="stack") + xlab('State') + ylab('Instruments') + theme(text=element_text(size=20, face='bold'), 
   axis.text.x=element_text(color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle(paste('Instrument Movement Through Service\nFor Current Week:', BioFireCurrWeek)) + 
+  ggtitle(paste('Instrument Movement Through Service\nFor Current Week:', curr)) + 
   scale_fill_manual(values=fillColors, name=' ') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
 #-----------------------------------Service Output Thru QC by week ---------------------------------------------------------------------
