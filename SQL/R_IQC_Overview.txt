@@ -1,7 +1,7 @@
 SET NOCOUNT ON
 
 SELECT 
-	CAST([Date] AS DATETIME) AS [Date],
+	CAST([Date] AS DATE) AS [Date],
 	[SerialNo],
 	[Year],
 	[Month],
@@ -43,7 +43,7 @@ FROM
 		YEAR([Date]) AS [Year],
 		MONTH([Date]) AS [Month],
 		DATEPART(ww,[Date]) AS [Week],
-		[PouchResult],
+		IIF([PouchResult] <> 'Pass' AND [PCR1]  = 'Pass' AND [PCR2]  = 'Pass' AND [RNA] = 'Pass' AND [60TmRange] = 'Pass' AND [60DFMed] = 'Pass' AND [Noise] = 'Pass', 'Pass', [PouchResult]) AS [PouchResult],
 		[RNACpMean] AS [Cp_RNA],
 		[RNATmMean] AS [Tm_RNA],
 		[RNA],
@@ -76,7 +76,7 @@ FROM
 		YEAR([Date]) AS [Year],
 		MONTH([Date]) AS [Month],
 		DATEPART(ww,[Date]) AS [Week],
-		[PouchResult],
+				IIF([PouchResult] <> 'Pass' AND [PCR1]  = 'Pass' AND [PCR2]  = 'Pass' AND [RNA] = 'Pass' AND [60TmRange] = 'Pass' AND [60DFMed] = 'Pass' AND [Noise] = 'Pass', 'Pass', [PouchResult]) AS [PouchResult],
 		[RNACpMean] AS [Cp_RNA],
 		[RNATmMean] AS [Tm_RNA],
 		[RNA],
@@ -109,7 +109,7 @@ FROM
 		YEAR([Date]) AS [Year],
 		MONTH([Date]) AS [Month],
 		DATEPART(ww,[Date]) AS [Week],
-		[PouchResult],
+				IIF([PouchResult] <> 'Pass' AND [PCR1]  = 'Pass' AND [PCR2]  = 'Pass' AND [RNA] = 'Pass' AND [60TmRange] = 'Pass' AND [60DFMed] = 'Pass' AND [Noise] = 'Pass', 'Pass', [PouchResult]) AS [PouchResult],
 		[RNACpMean] AS [Cp_RNA],
 		[RNATmMean] AS [Tm_RNA],
 		[RNA],
