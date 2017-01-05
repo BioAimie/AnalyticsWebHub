@@ -323,13 +323,13 @@ barMTBF <- with(failures.clean, aggregate(MTBF~YearMonth, FUN=mean))
 barMTBF <- barMTBF[barMTBF[,'YearMonth'] != exclude, ]
 p <- ggplot(barMTBF, aes(x=YearMonth, y=MTBF)) + geom_bar(stat='identity', fill='dodgerblue') + geom_line(aes(x=YearMonth, y=MTBF_cum, group=1), color='blue', data = avgMTBF) + geom_point(aes(x=YearMonth, y=MTBF_cum), color='blue', data = avgMTBF)
 p <- p + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',size=fontSize,face=fontFace), legend.position='bottom') + scale_x_discrete(breaks=qtrBreaks)
-p.mtbf <- p + labs(title='Average Hours Run Between Failures:\nCummulative Field Population', x='Date', y='Average Hours Between Failures')
+p.mtbf <- p + labs(title='Average Hours Run Between Failures:\nCumulative Field Population', x='Date', y='Average Hours Between Failures')
 # stripped version
 barMTBF.strip <- with(failures.clean[failures.clean$MTBF > 100,], aggregate(MTBF~YearMonth, FUN=mean))
 barMTBF.strip <- barMTBF.strip[barMTBF.strip[,'YearMonth'] != exclude, ]
 pstripped <- ggplot(barMTBF.strip, aes(x=YearMonth, y=MTBF)) + geom_bar(stat='identity', fill='dodgerblue') + geom_line(aes(x=YearMonth, y=MTBF_cum, group=1), color='blue', data = avgMTBF.strip) + geom_point(aes(x=YearMonth, y=MTBF_cum), color='blue', data = avgMTBF.strip)
 pstripped <- pstripped + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',size=fontSize,face=fontFace), legend.position='bottom') + scale_x_discrete(breaks=qtrBreaks)
-p.mtbf.stripped <- pstripped + labs(title='Average Hours Run Between Failures:\nCummulative Field Population with Early Failures Removed', x='Date', y='Average Hours Between Failures')
+p.mtbf.stripped <- pstripped + labs(title='Average Hours Run Between Failures:\nCumulative Field Population with Early Failures Removed', x='Date', y='Average Hours Between Failures')
 
 # make the denominator charts
 instShip.ver.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instShip.df, c('Version','Key'), startDate, 'Record', 'sum', 0)
