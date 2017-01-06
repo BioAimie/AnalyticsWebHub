@@ -3,16 +3,16 @@ library(RODBC)
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS_PROD")
 
-queryText <- scan("SQL/O_ISERV_InstrumentsThruService.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_ISERV_InstrumentsThruService.sql")
+query <- paste(queryText,collapse="\n")
 service.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/O_ISERV_ConversionsbyQCDate.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_ISERV_ConversionsbyQCDate.sql")
+query <- paste(queryText,collapse="\n")
 conversion.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/O_ISERV_StockLevels.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_ISERV_StockLevels.sql")
+query <- paste(queryText,collapse="\n")
 stockInv.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)

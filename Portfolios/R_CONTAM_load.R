@@ -8,50 +8,50 @@ library(RODBC)
 PMScxn <- odbcConnect("PMS_PROD")
 
 #master assay list for RP palette
-query.charVec = scan("SQL/R_CONTAM_masterAssaypalette.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_masterAssaypalette.sql")
+query = paste(query.charVec,collapse="\n")
 faAssayPal.df = sqlQuery(PMScxn,query)
 
 #Rates
 #swabs from FilmArray Database for Enviro
-query.charVec = scan("SQL/R_CONTAM_Enviro.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_Enviro.sql")
+query = paste(query.charVec,collapse="\n")
 faEnviro.df = sqlQuery(PMScxn,query)
 
 #swabs from FilmArray Database for Personnel
-query.charVec = scan("SQL/R_CONTAM_Personnel.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_Personnel.sql")
+query = paste(query.charVec,collapse="\n")
 faPersonnel.df = sqlQuery(PMScxn,query)
 
 #swabs from FilmArray Database for Pools
-query.charVec = scan("SQL/R_CONTAM_Pool.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_Pool.sql")
+query = paste(query.charVec,collapse="\n")
 faPool.df = sqlQuery(PMScxn,query)
 
 #Counts
 #swabs from FilmArray Database for Enviro Count
-query.charVec = scan("SQL/R_CONTAM_EnviroCount.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_EnviroCount.sql")
+query = paste(query.charVec,collapse="\n")
 faEnviroCount.df = sqlQuery(PMScxn,query)
 
 #swabs from FilmArray Database for Personnel Count
-query.charVec = scan("SQL/R_CONTAM_PersonnelCount.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_PersonnelCount.sql")
+query = paste(query.charVec,collapse="\n")
 faPersonnelCount.df = sqlQuery(PMScxn,query)
 
 #swabs from FilmArray Database for Personnel Pouch Count
-query.charVec = scan("SQL/R_CONTAM_PersonnelCountPouch.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_PersonnelCountPouch.sql")
+query = paste(query.charVec,collapse="\n")
 faPersonnelCountPouch.df = sqlQuery(PMScxn,query)
 
 #swabs from FilmArray Database for Pools Pouch Count
-query.charVec = scan("SQL/R_CONTAM_PoolCountPouch.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_PoolCountPouch.sql")
+query = paste(query.charVec,collapse="\n")
 faPoolCountPouch.df = sqlQuery(PMScxn,query)
 
 #swabs from FilmArray Database for Pools
-query.charVec = scan("SQL/R_CONTAM_PoolCount.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_PoolCount.sql")
+query = paste(query.charVec,collapse="\n")
 faPoolCount.df = sqlQuery(PMScxn,query)
 
 # close remote connection
@@ -59,7 +59,7 @@ close(PMScxn)
 
 #vpYesBar
 BFDXcxn = odbcConnect("Datamart")
-query.charVec = scan("SQL/R_CONTAM_vpAppYesBar_QA.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_CONTAM_vpAppYesBar_QA.sql")
+query = paste(query.charVec,collapse="\n")
 vpAppYesBar.df = sqlQuery(BFDXcxn,query)
 close(BFDXcxn)

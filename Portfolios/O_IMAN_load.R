@@ -3,28 +3,28 @@ library(RODBC)
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS_PROD")
 
-queryText <- scan("SQL/O_IMAN_partNames.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_IMAN_partNames.sql")
+query <- paste(queryText,collapse="\n")
 partNames.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/O_IMAN_InstShipments.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_IMAN_InstShipments.sql")
+query <- paste(queryText,collapse="\n")
 shipments.inst <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/O_IMAN_newInstTrans.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_IMAN_newInstTrans.sql")
+query <- paste(queryText,collapse="\n")
 transferred.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/O_IMAN_InstrumentNCRBreakdown.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_IMAN_InstrumentNCRBreakdown.sql")
+query <- paste(queryText,collapse="\n")
 ncr.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/O_IMAN_failedPartsNCRs.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_IMAN_failedPartsNCRs.sql")
+query <- paste(queryText,collapse="\n")
 failedParts.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/O_IMAN_refurbConv.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_IMAN_refurbConv.sql")
+query <- paste(queryText,collapse="\n")
 refurbConv.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)

@@ -3,12 +3,12 @@ library(RODBC)
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS_PROD")
 
-queryText <- scan("SQL/O_PMG_MeqParts.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_PMG_MeqParts.sql")
+query <- paste(queryText,collapse="\n")
 Meq.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/O_PMG_NCRperPart.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/O_PMG_NCRperPart.sql")
+query <- paste(queryText,collapse="\n")
 NCR.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)
