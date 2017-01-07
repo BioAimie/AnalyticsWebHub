@@ -3,12 +3,12 @@ library(RODBC)
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS_PROD")
 
-queryText <- scan("SQL/R_BNCR_PouchNCRs_WPFS.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/R_BNCR_PouchNCRs_WPFS.sql")
+query <- paste(queryText,collapse="\n")
 pouchWPFS <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/R_BNCR_PouchProductsProduced.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/R_BNCR_PouchProductsProduced.sql")
+query <- paste(queryText,collapse="\n")
 pouchProd <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)
