@@ -33,7 +33,7 @@ INSERT INTO @bugs
 SELECT 
 	[RunDataId],
 	[ResultType],
-	[Interpretation]
+	IIF([Interpretation] = 'Influenza A (no subtype detected)', 'Influenza A', [Interpretation]) AS [Interpretation]
 FROM [FADataWarehouse].[dbo].[SummarizedPositiveAssayResults] WITH(NOLOCK)
 WHERE [RunDataId] IN (SELECT [RunDataId] FROM @runs) AND [ResultType] NOT LIKE 'Control'
 
