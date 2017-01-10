@@ -67,6 +67,7 @@ INTO #complaints
 FROM
 (
 	SELECT 
+		[TicketString] AS [ComplaintNo],
 		[SerialNo],
 		[RMA],
 		IIF([Index] > 0, 1, 0) AS [ReturnedToService],
@@ -165,7 +166,8 @@ FROM
 WHERE [Config] IS NOT NULL
 
 SELECT
-	REPLACE(REPLACE(REPLACE(IIF(L.[LotNumber] LIKE 'KTMF%', SUBSTRING(L.[LotNumber], 2, 12), L.[LotNumber]), '.',''),'_',''),'-','') AS [SerialNo],
+	P.[PartNumber],
+	REPLACE(REPLACE(REPLACE(IIF(L.[LotNumber] LIKE 'KTM%', SUBSTRING(L.[LotNumber], 2, 12), L.[LotNumber]), '.',''),'_',''),'-','') AS [SerialNo],
 	UPPP.[LotNumber] AS [SubLotNumber],
 	IIF(CHARINDEX(':', UPPPP.[LotNumber], 1) <> 0 , SUBSTRING(UPPPP.[LotNumber], 1, CHARINDEX(':', UPPPP.[LotNumber], 1)-1), UPPPP.[LotNumber]) AS [LotNumber]
 INTO #birthLots
@@ -180,9 +182,9 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 								ON ULLL.[LotNumberId] = UPPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLLL WITH(NOLOCK)
 									ON UPPP.[LotNumber] = ULLLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPPP WITH(NOLOCK)
 										ON ULLLL.[LotNumberId] = UPPPP.[LotNumberId]
-WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%') AND (UP.[PartNumber] LIKE 'FLM%-SUB-0013' OR UP.[PartNumber] LIKE 'HTFA-SUB-0108')
-		AND (UPP.[PartNumber] LIKE 'FLM2-SUB-0082' OR UPP.[PartNumber] LIKE 'FLM1-SUB-0080' OR UPP.[PartNumber] LIKE 'FLM%-SUB-0037' OR UPP.[PartNumber] LIKE 'FLM2-SUB-0066' OR UPP.[PartNumber] LIKE 'FLM1-SUB-0076' OR UPP.[PartNumber] LIKE 'HTFA-SUB-0001')
-		AND (UPPP.[PartNumber] LIKE 'FLM1-SUB-0006' OR UPPP.[PartNumber] LIKE 'HTFA-SUB-0006') AND UPPPP.[PartNumber] LIKE 'MOTR-DCM-0006' AND UPPPP.[Quantity] > 0
+WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%') 
+	AND UPPPP.[PartNumber] LIKE 'MOTR-DCM-0006' AND UPPPP.[Quantity] > 0
+ORDER BY L.[LotNumber], P.[PartNumber] DESC
 
 SELECT *
 INTO #Lots
@@ -195,7 +197,8 @@ FROM
 		ON P.[PartNumberId] = L.[PartNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
 			ON L.[LotNumberId] = U.[LotNumberId] LEFT JOIN [ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
 				ON U.[LotNumber] = UL.[LotNumber]
-	WHERE U.[PartNumber] LIKE 'MOTR-DCM-0006' AND U.[Quantity] > 0
+	WHERE U.[PartNumber] LIKE 'MOTR-DCM-0006' AND U.[Quantity] > 0 
+		AND UL.[LotNumber] IS NOT NULL
 	GROUP BY 
 		L.[LotNumber], 
 		UL.[LotNumber]
@@ -217,12 +220,14 @@ SELECT
 	[SerialNo],
 	[CreatedDate],
 	SUBSTRING([TicketString], 5, 10) AS [RMA],
+	SUBSTRING([PriorRMA], 5, 10) AS [PriorRMA],
 	IIF([PriorHours] IS NULL OR [PriorHours] > [HoursRun], [HoursRun], [HoursRun] - [PriorHours]) AS [HoursRun],
 	IIF([LotRemoved] IS NULL, [BirthLot], [LotRemoved]) AS [LotRemovedInService]
 INTO #servicedInstHistory
 FROM
 (
 	SELECT *,
+		LAG([TicketString],1) OVER(PARTITION BY [SerialNo] ORDER BY [TicketString]) AS [PriorRMA],
 		LAG([LotAdded], 1) OVER(PARTITION BY [SerialNo] ORDER BY [TicketString]) AS [LotRemoved],
 		LAG([HoursRun]) OVER(PARTITION BY [SerialNo] ORDER BY [TicketString]) AS [PriorHours]
 	FROM
@@ -278,6 +283,8 @@ SELECT
 	REPLACE(S.[SerialNo], ' ','') AS [SerialNo],
 	S.[CreatedDate],
 	S.[RMA],
+	S.[PriorRMA], 
+	C.[ComplaintNo], 
 	S.[HoursRun],
 	S.[LotRemovedInService],
 	ISNULL(C.[FailCount],0) AS [ExcitationErrorReported]
@@ -289,6 +296,7 @@ SELECT
 	REPLACE(C.[SerialNo],' ','') AS [SerialNo],
 	P.[CreatedDate],
 	C.[RMA],
+	C.[ComplaintNo],
 	[HoursRun],
 	ISNULL(B.[LotNumber],'071709') AS [LotToBeRemovedInService],
 	C.[FailCount] AS [ExcitationErrorReported]
@@ -299,10 +307,12 @@ FROM #complaints C LEFT JOIN #birthLots B
 			ON P.[TicketId] = H.[TicketId]
 WHERE C.[RMA] NOT IN (SELECT [RMA] FROM #servicedWithAnnotations) AND LEFT(C.[SerialNo] ,2) IN ('2F','FA','HT','TM')
 
-SELECT
+SELECT 
 	ISNULL(S.[SerialNo], O.[SerialNo]) AS [SerialNo],
 	ISNULL(S.[CreatedDate], O.[CreatedDate]) AS [CreatedDate],
 	ISNULL(S.[RMA], O.[RMA]) AS [RMA],
+	S.[PriorRMA], 
+	ISNULL(S.[ComplaintNo], O.[ComplaintNo]) AS [ComplaintNo],
 	ISNULL(S.[HoursRun], O.[HoursRun]) AS [HoursRun],
 	ISNULL(S.[LotRemovedInService], O.[LotToBeRemovedInService]) AS [BeadBeaterLot],
 	ISNULL(S.[ExcitationErrorReported], O.[ExcitationErrorReported]) AS [ExcitationErrorReported],

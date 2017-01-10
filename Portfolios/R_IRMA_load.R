@@ -7,81 +7,81 @@ library(RODBC)
 PMScxn = odbcConnect("PMS_PROD")
 
 # get pouches shipped
-query.charVec = scan("SQL/R_IRMA_PouchesShipped.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_PouchesShipped.sql")
+query = paste(query.charVec,collapse="\n")
 pouches.df = sqlQuery(PMScxn,query)
 
 # get complaint rmas
-query.charVec = scan("SQL/R_IRMA_ComplaintRMAs.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_ComplaintRMAs.sql")
+query = paste(query.charVec,collapse="\n")
 complaints.df = sqlQuery(PMScxn,query)
 
 # get parts used excluding preventative maintenance
-query.charVec = scan("SQL/R_IRMA_PartsUsedExcludingPreventativeMaintenance.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_PartsUsedExcludingPreventativeMaintenance.sql")
+query = paste(query.charVec,collapse="\n")
 parts.df = sqlQuery(PMScxn,query)
 
 # get service codes used
-query.charVec = scan("SQL/R_IRMA_ServiceCodes.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_ServiceCodes.sql")
+query = paste(query.charVec,collapse="\n")
 codes.df = sqlQuery(PMScxn,query)
 
 # service code categories and descriptions
 codeDescript.df <- read.csv('SQL/serviceCodeDescriptions.csv', header=TRUE, sep = ',')
 
 # get service instruments shipped
-query.charVec = scan("SQL/R_IRMA_RMAsShippedByInstrumentVersion.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql")
+query = paste(query.charVec,collapse="\n")
 rmasShip.df = sqlQuery(PMScxn,query)
 
 # get customer-reported early failures
-query.charVec = scan("SQL/R_IRMA_CustEarlyFailByVersion.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_CustEarlyFailByVersion.sql")
+query = paste(query.charVec,collapse="\n")
 failures.df = sqlQuery(PMScxn,query)
 
 # get new instruments shipped
-query.charVec = scan("SQL/R_IRMA_NewInstShipByVersion.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_NewInstShipByVersion.sql")
+query = paste(query.charVec,collapse="\n")
 instShip.df = sqlQuery(PMScxn,query)
 
 # get the root cause of failure for 30/90 days
-query.charVec = scan("SQL/R_IRMA_RootCauseFailedPart3090.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_RootCauseFailedPart3090.sql")
+query = paste(query.charVec,collapse="\n")
 rootCause.df = sqlQuery(PMScxn,query)
  
 # get the hours run at failure
-query.charVec <- scan('SQL/R_IRMA_HoursAtFailures.txt',what=character(),quote="")
-query <- paste(query.charVec,collapse=" ")
+query.charVec <- readLines('SQL/R_IRMA_HoursAtFailures.sql')
+query <- paste(query.charVec,collapse="\n")
 hours.df <- sqlQuery(PMScxn,query)
 
 # get earliest early life failure indicator
-query.charVec <- scan('SQL/R_IRMA_EarlyFailuresByCodeFromFeild.txt',what=character(),quote="")
-query <- paste(query.charVec,collapse=" ")
+query.charVec <- readLines('SQL/R_IRMA_EarlyFailuresByCodeFromField.sql')
+query <- paste(query.charVec,collapse="\n")
 leadingEF.df <- sqlQuery(PMScxn,query)
 
 # get earliest early life failure indicator and trace to manufacturing date
-query.charVec <- scan('SQL/R_IRMA_LeadingIndicatorEarlyFailureByManfDate.txt',what=character(),quote="")
-query <- paste(query.charVec,collapse=" ")
+query.charVec <- readLines('SQL/R_IRMA_LeadingIndicatorEarlyFailureByManfDate.sql')
+query <- paste(query.charVec,collapse="\n")
 leadEFmanf.df <- sqlQuery(PMScxn,query)
 
 # get instruments built by date of manufature
-query.charVec <- scan('SQL/R_INCR_InstrumentsProduced_denom.txt',what=character(),quote="")
-query <- paste(query.charVec,collapse=" ")
+query.charVec <- readLines('SQL/R_INCR_InstrumentsProduced_denom.sql')
+query <- paste(query.charVec,collapse="\n")
 instBuilt.df <- sqlQuery(PMScxn,query)
 
 # get instruments through QC date
-query.charVec <- scan('SQL/R_IRMA_InstrumentsQCDate_denom.txt',what=character(),quote="")
-query <- paste(query.charVec,collapse=" ")
+query.charVec <- readLines('SQL/R_IRMA_InstrumentsQCDate_denom.sql')
+query <- paste(query.charVec,collapse="\n")
 instQCDate.df <- sqlQuery(PMScxn,query)
 
 # get early life failure indicator and trace to service date
-query.charVec <- scan('SQL/R_IRMA_LeadingIndicatorEarlyFailureByServDate.txt',what=character(),quote="")
-query <- paste(query.charVec,collapse=" ")
+query.charVec <- readLines('SQL/R_IRMA_LeadingIndicatorEarlyFailureByServDate.sql')
+query <- paste(query.charVec,collapse="\n")
 leadEFserv.df <- sqlQuery(PMScxn,query)
 
 # get the data from the Prod server
-query.charVec <- scan('SQL/R_IRMA_serialShipAndReturnByDate.txt',what=character(),quote="")
-query <- paste(query.charVec,collapse=" ")
+query.charVec <- readLines('SQL/R_IRMA_serialShipAndReturnByDate.sql')
+query <- paste(query.charVec,collapse="\n")
 track.df <- sqlQuery(PMScxn,query)
 
 # close remote connection
