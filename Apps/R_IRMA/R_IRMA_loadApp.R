@@ -8,28 +8,28 @@ library(RODBC)
 PMScxn = odbcConnect("PMS_PROD")
 
 # # run the query to get all distinct RMAs shipped by date
-# query.charVec = scan("SQL/R_IRMA_RMAsShippedByInstrumentVersion.txt", what=character(),quote="")
-# query = paste(query.charVec,collapse=" ")
+# query.charVec = readLines("SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql")
+# query = paste(query.charVec,collapse="\n")
 # rmasShipped.df = sqlQuery(PMScxn,query)
 # 
 # # run the query to find all the parts replaced as recorded in the RMA tracker
-# query.charVec = scan("SQL/R_IRMA_PartsUsedExcludingPreventativeMaintenance.txt", what=character(),quote="")
-# query = paste(query.charVec,collapse=" ")
+# query.charVec = readLines("SQL/R_IRMA_PartsUsedExcludingPreventativeMaintenance.sql")
+# query = paste(query.charVec,collapse="\n")
 # partsReplaced.df = sqlQuery(PMScxn,query)
 # 
 # # run the query to get the service codes recorded in RMA tracker
-# query.charVec = scan("SQL/R_IRMA_ServiceCodes.txt", what=character(),quote="")
-# query = paste(query.charVec,collapse=" ")
+# query.charVec = readLines("SQL/R_IRMA_ServiceCodes.sql")
+# query = paste(query.charVec,collapse="\n")
 # serviceCodes.df = sqlQuery(PMScxn,query)
 #
 # # run the query to get a calendar with all year, month, week since 2012-01-01
-# query.charVec = scan("SQL/Calendar.txt", what=character(),quote="")
-# query = paste(query.charVec,collapse=" ")
+# query.charVec = readLines("SQL/Calendar.sql")
+# query = paste(query.charVec,collapse="\n")
 # calendar.df = sqlQuery(PMScxn,query)
 
 # run the query to get root cause data
-query.charVec = scan("SQL/R_IRMA_rootCause.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_IRMA_rootCause.sql")
+query = paste(query.charVec,collapse="\n")
 rootCause.df = sqlQuery(PMScxn,query)
 
 # close remote connection
