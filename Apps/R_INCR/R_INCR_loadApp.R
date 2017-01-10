@@ -8,8 +8,8 @@ library(RODBC)
 PMScxn = odbcConnect("PMS_PROD")
 
 # run the query to get root cause data
-query.charVec = scan("SQL/R_INCR_wpfs_app.txt", what=character(),quote="")
-query = paste(query.charVec,collapse=" ")
+query.charVec = readLines("SQL/R_INCR_wpfs_app.sql")
+query = paste(query.charVec,collapse="\n")
 rootCause.df = sqlQuery(PMScxn,query)
 
 # close remote connection

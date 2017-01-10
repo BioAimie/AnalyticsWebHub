@@ -6,20 +6,20 @@ library(shiny)
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS_PROD")
 
-queryText <- scan("SQL/RMA_History.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/RMA_History.sql")
+query <- paste(queryText,collapse="\n")
 CustHx.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/RMA_CustomerNames.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/RMA_CustomerNames.sql")
+query <- paste(queryText,collapse="\n")
 CustNames.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/RMA_MfgDate.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/RMA_MfgDate.sql")
+query <- paste(queryText,collapse="\n")
 MfgDate.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/RMA_PartNames.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/RMA_PartNames.sql")
+query <- paste(queryText,collapse="\n")
 PartNames.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)
