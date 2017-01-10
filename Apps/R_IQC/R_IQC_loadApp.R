@@ -3,8 +3,8 @@ library(RODBC)
 #--------------------------------------DATA GRABBING AND UPDATING -------------------------------------#
 PMScxn = odbcConnect("PMS_PROD")
 
-queryGrabIQC.charVec = scan("SQL/R_IQC_App_Overview.txt",what=character(),quote="")
-queryGrabIQC = paste(queryGrabIQC.charVec,collapse=" ")
+queryGrabIQC.charVec = readLines("SQL/R_IQC_App_Overview.sql")
+queryGrabIQC = paste(queryGrabIQC.charVec,collapse="\n")
 IQC.df = sqlQuery(PMScxn,queryGrabIQC)
 
 close(PMScxn)
