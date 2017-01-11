@@ -13,7 +13,8 @@ SELECT DISTINCT
 	[TicketId] 
 INTO #Tickets
 FROM #allcodes
-WHERE [Code] LIKE '20'
+WHERE [Code] LIKE '20' 
+	AND [TicketId] IN (SELECT [TicketId] FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK) WHERE [PropertyName] LIKE 'Assigned Service Center' AND [RecordedValue] LIKE 'Salt Lake')
 
 SELECT
 	[TicketId],
