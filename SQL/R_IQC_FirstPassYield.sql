@@ -207,7 +207,7 @@ GROUP BY [TicketId]
 SELECT
 	R.[Instrument],
 	R.[TicketId],
-	Q.[RecordedValue] AS [QcDate]
+	CAST(Q.[RecordedValue] AS DATE) AS [QcDate]
 INTO #rmaQC
 FROM #rmas R INNER JOIN #qcs Q
 	ON R.[TicketId] = Q.[TicketId]
