@@ -27,7 +27,7 @@ SELECT
 	[RecordedValue]
 INTO #freePropPrePiv
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] IN ('RMA Title', 'RMA Type', 'Complaint Number', 'Hours Run')
+WHERE [PropertyName] IN ('RMA Title', 'RMA Type', 'Complaint Number', 'Hours Run') AND [Tracker] = 'RMA'
 
 SELECT
 	[TicketId],
@@ -36,7 +36,7 @@ SELECT
 	[RecordedValue]
 INTO #partInfoPrePiv
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information'
+WHERE [ObjectName] = 'Part Information' AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
@@ -45,19 +45,19 @@ SELECT
 	[RecordedValue]
 INTO #partsUsedPrePiv
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Parts Used'
+WHERE [ObjectName] = 'Parts Used' AND [Tracker] = 'RMA'
 
 SELECT DISTINCT
 	[TicketId]
 INTO #servCodeIndicatesFailure
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Service Codes' AND [RecordedValue] IN ('53','55','50','54','56','51','52')
+WHERE [ObjectName] = 'Service Codes' AND [RecordedValue] IN ('53','55','50','54','56','51','52') AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId]
 INTO #rootCauseIndicatesFailure
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Root Causes' AND [PropertyName] LIKE 'Part Number' AND [RecordedValue] LIKE 'FLM1-SUB-0044'
+WHERE [ObjectName] = 'Root Causes' AND [PropertyName] = 'Part Number' AND [RecordedValue] = 'FLM1-SUB-0044' AND [Tracker] = 'RMA'
  
 SELECT 
 	[TicketId],
@@ -118,7 +118,7 @@ PIVOT
 		[Lot/Serial Number]
 	)
 ) PIV
-WHERE REPLACE([Part Used],' ','') LIKE 'FLM1-SUB-0044'
+WHERE REPLACE([Part Used],' ','') = 'FLM1-SUB-0044'
 
 SELECT 
 	[SerialNo],
@@ -179,7 +179,7 @@ SELECT
 	[RecordedValue]
 INTO #complaints
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'BFDX Part Number' AND [PropertyName] IN ('Lot/Serial Number','Failure Mode')
+WHERE [ObjectName] = 'BFDX Part Number' AND [PropertyName] IN ('Lot/Serial Number','Failure Mode') AND [Tracker] = 'COMPLAINT'
 
 SELECT 
 	[TicketId],
@@ -206,7 +206,7 @@ SELECT
 	[RecordedValue]
 INTO #relatedRMA
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Related RMAs' AND [TicketId] IN (SELECT [TicketId] FROM #relatedComplaints)
+WHERE [ObjectName] = 'Related RMAs' AND [TicketId] IN (SELECT [TicketId] FROM #relatedComplaints) AND [Tracker] = 'COMPLAINT'
 
 SELECT
 	[TicketId],

@@ -10,14 +10,14 @@ SELECT
 	[RecordedValue]
 INTO #root
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Root Causes'
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'Root Causes'
 
 SELECT 
 	[TicketId],
 	[RecordedValue] AS [FailType]
 INTO #fail
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Early Failure Type'
+WHERE [Tracker] = 'RMA' AND [PropertyName] = 'Early Failure Type'
 
 SELECT 
 	[TicketId],
@@ -53,7 +53,7 @@ PIVOT
 		[Sub-failure Category]
 	)
 ) PIV
-WHERE [Where Found] IS NOT NULL AND [Where Found] NOT LIKE 'N/A' AND [Where Found] NOT LIKE 'No failure complaint'
+WHERE [Where Found] IS NOT NULL AND [Where Found] <> 'N/A' AND [Where Found] <> 'No failure complaint'
 
 SELECT 
 	--[TicketString],

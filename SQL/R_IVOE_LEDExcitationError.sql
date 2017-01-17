@@ -9,7 +9,7 @@ SELECT
 	[RecordedValue]
 INTO #failureMode
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'BFDX Part Number' AND [PropertyName] IN ('Failure Mode', 'Lot/Serial Number')
+WHERE [ObjectName] = 'BFDX Part Number' AND [PropertyName] IN ('Failure Mode', 'Lot/Serial Number') AND [Tracker] = 'COMPLAINT'
 
 SELECT
 	[TicketId],
@@ -20,7 +20,7 @@ SELECT
 	[RecordedValue]
 INTO #relatedRMA
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Related RMAs'
+WHERE [ObjectName] = 'Related RMAs' AND [Tracker] = 'COMPLAINT'
 
 SELECT
 	F.[TicketString],
@@ -44,7 +44,7 @@ FROM
 			[Failure Mode]
 		)
 	) PIV
-	WHERE [Failure Mode] LIKE '7003 Failed Excitation Check-1-0'
+	WHERE [Failure Mode] = '7003 Failed Excitation Check-1-0'
 ) F LEFT JOIN 
 (
 	SELECT *
@@ -81,7 +81,7 @@ SELECT
 	[RecordedValue] AS [Disposition]
 INTO #disposition
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Part Disposition'
+WHERE [PropertyName] = 'Part Disposition' AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
@@ -90,7 +90,7 @@ SELECT
 	[RecordedValue] AS [SerialNo]
 INTO #partInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Lot/Serial Number'
+WHERE [ObjectName] = 'Part Information' AND [PropertyName] = 'Lot/Serial Number' AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
@@ -98,7 +98,7 @@ SELECT
 	[RecordedValue] AS [HoursRun]
 INTO #hoursRun
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Hours Run' AND [RecordedValue] NOT LIKE '' AND [RecordedValue] NOT LIKE '%n%a%' 
+WHERE [PropertyName] = 'Hours Run' AND [RecordedValue] <> '' AND [RecordedValue] NOT LIKE '%n%a%'  AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
@@ -123,7 +123,7 @@ SELECT
 	[RecordedValue]
 INTO #partsUsed
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Parts Used' AND [TicketId] IN (SELECT [TicketId] FROM #partInfoAll)
+WHERE [ObjectName] = 'Parts Used' AND [TicketId] IN (SELECT [TicketId] FROM #partInfoAll) AND [Tracker] = 'RMA'
 
 SELECT
 	[CreatedDate],
@@ -184,7 +184,6 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 										ON ULLLL.[LotNumberId] = UPPPP.[LotNumberId]
 WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%') 
 	AND UPPPP.[PartNumber] LIKE 'MOTR-DCM-0006' AND UPPPP.[Quantity] > 0
-ORDER BY L.[LotNumber], P.[PartNumber] DESC
 
 SELECT *
 INTO #Lots

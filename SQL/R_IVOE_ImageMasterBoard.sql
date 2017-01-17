@@ -14,7 +14,7 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 				     ON UP.[LotNumber] = ULL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPP WITH(NOLOCK)
 					     ON ULL.[LotNumberId] = UPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLL WITH(NOLOCK)
 						     ON UPP.[LotNumber] = ULLL.[LotNumber]
-WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003')
+WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','FLM2-ASY-0001R','HTFA-ASY-0003R','HTFA-SUB-0103','HTFA-SUB-0103R')
 	AND UPP.[PartNumber] = 'PCBA-SUB-0839' AND UPP.[Quantity] > 0 AND ULLL.[LotNumber] NOT LIKE 'N/A'
 
 SELECT DISTINCT
@@ -23,7 +23,7 @@ SELECT DISTINCT
 INTO #pcbaLots
 FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
 	ON P.[PartNumberId] = L.[PartNumberId]
-WHERE P.[PartNumber] LIKE 'PCBA-SUB-0839'
+WHERE P.[PartNumber] = 'PCBA-SUB-0839'
 
 SELECT 
 	[TicketId],
@@ -34,7 +34,7 @@ SELECT
 	[RecordedValue]
 INTO #rawNCR
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE Tracker = 'NCR' AND [ObjectName] LIKE 'Parts Affected' AND [PropertyName] IN ('Part Affected', 'Lot or Serial Number', 'Quantity Affected', 'Disposition')
+WHERE Tracker = 'NCR' AND [ObjectName] = 'Parts Affected' AND [PropertyName] IN ('Part Affected', 'Lot or Serial Number', 'Quantity Affected', 'Disposition')
 
 SELECT 
 	[TicketId],
@@ -45,7 +45,7 @@ SELECT
 	[RecordedValue]
 INTO #partInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE Tracker = 'RMA' AND [ObjectName] LIKE 'Part Information'
+WHERE Tracker = 'RMA' AND [ObjectName] = 'Part Information'
 
 SELECT 
 	[TicketId],
@@ -143,7 +143,7 @@ FROM
 			[Disposition]
 		)
 	) PIV
-	WHERE [Part Affected] LIKE 'PCBA-SUB-0839'
+	WHERE [Part Affected] = 'PCBA-SUB-0839'
 ) T
 GROUP BY [LotNumber]
 

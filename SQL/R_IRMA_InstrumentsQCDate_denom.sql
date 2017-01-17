@@ -7,8 +7,8 @@ SELECT
 	UPPER([RecordedValue]) AS [PartNo]
 INTO #PartInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] LIKE 'RMA' AND [ObjectName] LIKE 'Part Information'
-	AND [PropertyName] LIKE 'Part Number' AND ([RecordedValue] LIKE 'FLM%-ASY-0001%' OR [RecordedValue] LIKE 'HTFA-ASY-000%' OR [RecordedValue] LIKE 'HTFA-SUB-0103%')
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'Part Information'
+	AND [PropertyName] = 'Part Number' AND ([RecordedValue] LIKE 'FLM%-ASY-0001%' OR [RecordedValue] LIKE 'HTFA-ASY-000%' OR [RecordedValue] LIKE 'HTFA-SUB-0103%')
 
 SELECT 
 	[TicketId], 
@@ -17,7 +17,7 @@ SELECT
 	[RecordedValue]
 INTO #QCcheck
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] o WITH(NOLOCK) 
-WHERE [ObjectName] LIKE 'QC Check' AND [TicketId] IN (SELECT [TicketId] FROM #PartInfo)
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'QC Check' AND [TicketId] IN (SELECT [TicketId] FROM #PartInfo)
 
 SELECT 
 	[TicketId],

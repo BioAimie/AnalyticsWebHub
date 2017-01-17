@@ -4,7 +4,7 @@ SELECT
 	[TicketId]
 INTO #consider
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] LIKE 'RMA' AND [Status] IN ('Closed','Accounting','Shipping','SalesOrderGeneration','Closure','InstrumentQCandDHR')
+WHERE [Tracker] = 'RMA' AND [Status] IN ('Closed','Accounting','Shipping','SalesOrderGeneration','Closure','InstrumentQCandDHR')
 
 SELECT 
 	[TicketId],
@@ -15,7 +15,7 @@ SELECT
 	[RecordedValue]
 INTO #partinfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information'
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'Part Information'
 
 SELECT 
 	[TicketId],
@@ -23,7 +23,7 @@ SELECT
 	[RecordedValue]
 INTO #workflow
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'RMA Workflow'
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'RMA Workflow'
 
 SELECT 
 	[TicketId],
@@ -128,7 +128,7 @@ FROM
 	WHERE [PropertyName] LIKE 'Service' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
 ) W
 	ON I.[TicketId] = W.[TicketId]
-WHERE (LEFT([SerialNo],2) IN ('FA','2F','HT','TM') OR [Part Number] LIKE 'HTFA-%') AND [ServiceReq] LIKE 'true' 
+WHERE (LEFT([SerialNo],2) IN ('FA','2F','HT','TM') OR [Part Number] LIKE 'HTFA-%') AND [ServiceReq] = 1
 
 SELECT 
 	[TicketId]
@@ -140,7 +140,7 @@ SELECT
 	F.[TicketId],
 	F.[TicketString],
 	F.[CreatedDate],
-	CAST(F.[ServiceDate] AS DATETIME) AS [ServiceDate],
+	CAST(F.[ServiceDate] AS DATE) AS [ServiceDate],
 	F.[PartNo],
 	IIF(LEFT(F.[SerialNo],2) LIKE 'FA', SUBSTRING(F.[SerialNo], 1, 6), [SerialNo]) AS [SerialNo],
 	F.[HoursRun],
@@ -152,6 +152,7 @@ SELECT
 INTO #bestSet
 FROM #flagged F LEFT JOIN #complaintsReal C
 	ON F.[TicketId] = C.[TicketId]
+WHERE F.[ServiceDate] IS NOT NULL
 
 SELECT ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [TicketId]) AS [VisitNo],
 	UPPER([PartNo]) AS [PartNo],

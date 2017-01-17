@@ -7,14 +7,14 @@ SELECT
 	[RecordedValue] AS [Title]
 INTO #complaint
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Complaint Title'
+WHERE [Tracker] = 'COMPLAINT' AND [PropertyName] = 'Complaint Title'
 
 SELECT 
 	[TicketId],
 	[RecordedValue] AS [FailureMode]
 INTO #failure
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'BFDX Part Number' AND [PropertyName] LIKE 'Failure Mode'
+WHERE [Tracker] = 'COMPLAINT' AND [ObjectName] = 'BFDX Part Number' AND [PropertyName] = 'Failure Mode'
 
 SELECT 
 	[TicketId],
@@ -23,7 +23,7 @@ SELECT
 	[RecordedValue]
 INTO #relatedRMA
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Related RMAs'
+WHERE [Tracker] = 'COMPLAINT' AND [ObjectName] = 'Related RMAs'
 
 SELECT 
 	SUBSTRING(C.[TicketString],CHARINDEX('-',C.[TicketString],1)+1,6) AS [Complaint],
@@ -72,7 +72,7 @@ WHERE [FailureMode] LIKE '%-1-%' OR [Title] LIKE '% V0% Err%' OR [Title] LIKE '%
 SELECT *
 INTO #rmaAll
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] O WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [Tracker] LIKE 'RMA'
+WHERE [ObjectName] = 'Part Information' AND [Tracker] = 'RMA'
 
 SELECT 
 	SUBSTRING(S.[TicketString], CHARINDEX('-',S.[TicketString],1)+1,6) AS [RMA],
@@ -91,7 +91,7 @@ FROM
 		REPLACE(REPLACE(REPLACE(O.[RecordedValue],' ',''),'_',''),'-','') AS [SerialNo]
 	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] P WITH(NOLOCK) INNER JOIN #rmaAll O WITH(NOLOCK)
 		ON P.[TicketId] = O.[TicketId]
-	WHERE O.[ObjectName] LIKE 'Part Information' AND O.[PropertyName] LIKE 'Lot/Serial Number' AND P.[PropertyName] LIKE 'Complaint Number'
+	WHERE O.[ObjectName] = 'Part Information' AND O.[PropertyName] = 'Lot/Serial Number' AND P.[PropertyName] = 'Complaint Number'  AND O.[Tracker] = 'RMA'
 ) S LEFT JOIN 
 (
 	SELECT 
@@ -99,7 +99,7 @@ FROM
 		[ObjectId],
 		[RecordedValue] AS [PartNo]
 	FROM #rmaAll WITH(NOLOCK)
-	WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Part Number'
+	WHERE  [Tracker] = 'RMA' AND [ObjectName] = 'Part Information' AND [PropertyName] = 'Part Number'
 ) P 
 	ON S.[TicketId] = P.[TicketId] AND S.[ObjectId] = P.[ObjectId] LEFT JOIN
 (
@@ -108,7 +108,7 @@ FROM
 		[ObjectId],
 		[RecordedValue] AS [FailureType]
 	FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-	WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Early Failure Type'
+	WHERE [ObjectName] = 'Part Information' AND [PropertyName] = 'Early Failure Type' AND [Tracker] = 'RMA'
 ) F
 	ON P.[TicketId] = F.[TicketId] AND P.[ObjectId] = F.[ObjectId]
 

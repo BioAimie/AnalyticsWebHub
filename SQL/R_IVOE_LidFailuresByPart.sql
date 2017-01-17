@@ -19,7 +19,7 @@ SELECT
 	UPPER(REPLACE(REPLACE(REPLACE(REPLACE([RecordedValue],' ',''),'.',''),'-',''),'_','')) AS [SerialNo]
 INTO #rmaSerial
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Lot/Serial Number' AND [TicketId] IN (SELECT [TicketId] FROM #lidlatch)
+WHERE [ObjectName] = 'Part Information' AND [PropertyName] = 'Lot/Serial Number' AND [TicketId] IN (SELECT [TicketId] FROM #lidlatch)
 
 SELECT 
 	S.[SerialNo],
@@ -39,7 +39,7 @@ SELECT
 	[TranDate]
 INTO #shipments
 FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
-WHERE [TranType] LIKE 'SH' OR ([TranType] IN ('SA','IS') AND [DistQty] = -1)
+WHERE [TranType] = 'SH' OR ([TranType] IN ('SA','IS') AND [DistQty] = -1)
 
 SELECT 
 	[SerialNo],

@@ -8,7 +8,7 @@ SELECT
 	[RecordedValue]
 INTO #lotSerial
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Lot/Serial Number'
+WHERE [ObjectName] = 'Part Information' AND [PropertyName] = 'Lot/Serial Number' AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
@@ -17,7 +17,7 @@ SELECT
 	[RecordedValue]
 INTO #partsUsed
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Parts Used' AND [PropertyName] IN ('Lot/Serial Number','Part Used')
+WHERE [ObjectName] = 'Parts Used' AND [PropertyName] IN ('Lot/Serial Number','Part Used') AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
@@ -25,7 +25,7 @@ SELECT
 	[RecordedValue] AS [ServiceCode]
 INTO #codes
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Service Codes' AND [PropertyName] LIKE 'Service Code'
+WHERE [ObjectName] = 'Service Codes' AND [PropertyName] = 'Service Code' AND [Tracker] = 'RMA'
 
 SELECT 
 	S.[TicketId],
@@ -79,9 +79,8 @@ INTO #partPutIn
 FROM #plungerServiced
 WHERE (LEFT([SerialNo],2) LIKE 'FA' AND LEN([SerialNo]) = 6) OR (LEFT([SerialNo],2) LIKE '2F' AND LEN([SerialNo]) >= 8)
 
-
 SELECT
-	IIF(L.[LotNumber] LIKE '2FA_00061', '2FA00061', L.[LotNumber]) AS [SerialNo],
+	REPLACE(REPLACE(REPLACE(L.[LotNumber], ' ',''),'.',''),'_','') AS [SerialNo],
 	L.[DateOfManufacturing] AS [InstManfDate],
 	UPPP.[LotNumber] AS [PlungerLot],
 	ULLLL.[DateOfManufacturing] AS [PlungerDOM],
@@ -98,10 +97,10 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 								ON ULLL.[LotNumberId] = UPPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLLL WITH(NOLOCK)
 									ON UPPP.[LotNumber] = ULLLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPPP WITH(NOLOCK)
 										ON ULLLL.[LotNumberId] = UPPPP.[LotNumberId]
-WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-SUB-0103') AND UPPPP.[PartNumber] IN ('FLM1-GAS-0009','FLM1-GAS-0018')
+WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-SUB-0103','FLM2-ASY-0001R','HTFA-ASY-0003R') AND UPPPP.[PartNumber] IN ('FLM1-GAS-0009','FLM1-GAS-0018') AND 
+	UPPPP.[Quantity] > 0
 
-
-SELECT 
+SELECT
 	S.[SerialNo],
 	S.[TicketString],
 	S.[CreatedDate],
