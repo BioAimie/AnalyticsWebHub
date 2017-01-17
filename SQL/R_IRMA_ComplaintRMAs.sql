@@ -9,21 +9,21 @@ SELECT
 	[RecordedValue] AS [ComplaintId]
 INTO #C
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK) 
-WHERE [PropertyName] LIKE 'Complaint Number' AND [CreatedDate] >= (GETDATE() - 400)
+WHERE [PropertyName] = 'Complaint Number' AND [CreatedDate] >= (GETDATE() - 400)  AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
 	[RecordedValue]
 INTO #D
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK) 
-WHERE [PropertyName] LIKE 'Part Disposition' AND [CreatedDate] >= (GETDATE() - 400)
+WHERE [PropertyName] = 'Part Disposition' AND [CreatedDate] >= (GETDATE() - 400) AND [Tracker] = 'RMA'
 
 SELECT
 	[TicketId],
 	[RecordedValue]
 INTO #I
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Part Number'
+WHERE [ObjectName] = 'Part Information' AND [PropertyName] = 'Part Number' AND [Tracker] = 'RMA'
 
 SELECT
 	[Year],

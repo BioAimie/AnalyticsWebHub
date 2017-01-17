@@ -9,7 +9,7 @@ SELECT
 	[RecordedValue]
 INTO #partInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information'
+WHERE  [Tracker] = 'RMA' AND [ObjectName] = 'Part Information'
 
 SELECT 
 	YEAR([CreatedDate]) AS [Year],
