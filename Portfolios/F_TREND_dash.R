@@ -484,8 +484,8 @@ ili.nat.roll <- data.frame(YearWeek = with(ili.df, ifelse(Week < 10, paste(Year,
 rp.overlay <- merge(subset(rp.runs.norm.nat, as.character(YearWeek) >= start.week.rp), subset(ili.nat.roll, as.character(YearWeek) >= start.week.rp), by='YearWeek', all.x=TRUE)
 rp.overlay <- merge(rp.prev.wrap[,c('YearWeek','ShortName','Prevalence')], rp.overlay[,c('YearWeek','RateILI','NormalizedBurn')], by='YearWeek')
 
-bacterias <- c('B. pertussis','C. pneumoniae','M. pneumo')
-rhino <- 'HRV/Entero'
+bacterias <- c('B. per','C. pne','M. pne')
+rhino <- 'HRV/EV'
 fluAs <- as.character(unique(rp.overlay[grep('Flu A|FluA', rp.overlay$ShortName),'ShortName']))
 fluBs <- 'FluB'
 rsv <- 'RSV'

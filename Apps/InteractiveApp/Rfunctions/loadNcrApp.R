@@ -10,16 +10,16 @@ library(scales)
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS_PROD")
 
-queryText <- scan("SQL/NCR_parts.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/NCR_parts.sql")
+query <- paste(queryText,collapse="\n")
 NCRParts.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/NCR_FailSubFail.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/NCR_FailSubFail.sql")
+query <- paste(queryText,collapse="\n")
 NCRFail.df <- sqlQuery(PMScxn,query)
 
-queryText <- scan("SQL/NCR_WhereProblem.txt",what=character(),quote="")
-query <- paste(queryText,collapse=" ")
+queryText <- readLines("SQL/NCR_WhereProblem.sql")
+query <- paste(queryText,collapse="\n")
 NCRWhereProblem.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)

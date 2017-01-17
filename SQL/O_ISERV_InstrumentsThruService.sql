@@ -41,6 +41,7 @@ FROM
 	) PIV
 ) S
 WHERE ([Part Number] LIKE 'FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-%' OR [Part Number] LIKE 'COMP-%')
+	AND [TicketId] IN (SELECT [TicketId] FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK) WHERE [PropertyName] LIKE 'Assigned Service Center' AND [RecordedValue] LIKE 'Salt Lake')
 
 SELECT 
 	[Year],
