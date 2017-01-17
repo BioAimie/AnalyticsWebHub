@@ -34,7 +34,7 @@ SELECT
 	[RecordedValue]
 INTO #rawNCR
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE Tracker = 'NCR' AND [ObjectName] LIKE 'Parts Affected' AND [PropertyName] IN ('Part Affected', 'Lot or Serial Number', 'Quantity Affected', 'Disposition')
+WHERE Tracker = 'NCR' AND [ObjectName] = 'Parts Affected' AND [PropertyName] IN ('Part Affected', 'Lot or Serial Number', 'Quantity Affected', 'Disposition')
 
 SELECT 
 	[TicketId],
@@ -45,7 +45,7 @@ SELECT
 	[RecordedValue]
 INTO #partInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE Tracker = 'RMA' AND [ObjectName] LIKE 'Part Information'
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'Part Information'
 
 SELECT 
 	[TicketId],
@@ -55,7 +55,7 @@ SELECT
 	[RecordedValue]
 INTO #freePropPivrops
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE Tracker = 'RMA' AND [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title') 
+WHERE [Tracker] = 'RMA' AND [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title') 
 
 SELECT 
 	[TicketId],
@@ -65,7 +65,7 @@ SELECT
 	[RecordedValue]
 INTO #partsUsed
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE Tracker = 'RMA' AND [ObjectName] = 'Parts Used'
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'Parts Used'
 
 SELECT 
 	[TicketId],

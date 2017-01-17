@@ -3,10 +3,10 @@ SET NOCOUNT ON
 SELECT 
 	[TicketId],
 	[TicketString],
-	MAX([RecordedValue]) AS [QcDate]
+	MAX(CAST([RecordedValue] AS DATE)) AS [QcDate]
 INTO #qcDate
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'QC Check' AND [PropertyName] LIKE 'QC Date'
+WHERE [ObjectName] = 'QC Check' AND [PropertyName] = 'QC Date' AND [Tracker] = 'RMA'
 GROUP BY [TicketId], [TicketString]
 
 SELECT
@@ -14,7 +14,7 @@ SELECT
 	[RecordedValue] AS [PartNo]
 INTO #partNo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Part Number'
+WHERE [ObjectName] = 'Part Information' AND [PropertyName] = 'Part Number'
 
 SELECT 
 	YEAR(Q.[QcDate]) AS [Year],

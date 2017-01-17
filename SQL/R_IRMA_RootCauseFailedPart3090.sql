@@ -6,7 +6,7 @@ SELECT
 	[RecordedValue]
 INTO #date
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Service Completed' AND [RecordedValue] IS NOT NULL
+WHERE [Tracker] = 'RMA' AND [PropertyName] = 'Service Completed' AND [RecordedValue] IS NOT NULL
 
 SELECT
 	[ComponentItemID],
@@ -21,11 +21,11 @@ SELECT
 INTO #fail
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] P WITH(NOLOCK) INNER JOIN #bom B
 	ON P.[RecordedValue] = B.[ComponentItemID]
-WHERE [ObjectName] LIKE 'Root Causes' AND [PropertyName] LIKE 'Part Number' AND [RecordedValue] IS NOT NULL
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'Root Causes' AND [PropertyName] = 'Part Number' AND [RecordedValue] IS NOT NULL
 
 
 SELECT *,
-	CAST([RecordedValue] AS DATETIME) AS [ServiceDate]
+	CAST([RecordedValue] AS DATE) AS [ServiceDate]
 INTO #date2
 FROM #date
 	

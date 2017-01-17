@@ -23,7 +23,7 @@ FROM
 		IIF(ISNUMERIC(O.[RecordedValue])=1, 1, NULL) AS [NumericCode]
 	FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] O WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] P WITH(NOLOCK)
 		ON O.[TicketId] = P.[TicketId]
-	WHERE O.[PropertyName] LIKE 'Service Code' AND P.[PropertyName] LIKE 'Service Completed' AND P.[RecordedValue] IS NOT NULL
+	WHERE O.[Tracker] = 'RMA' AND O.[PropertyName] = 'Service Code' AND P.[PropertyName] = 'Service Completed' AND P.[RecordedValue] IS NOT NULL
 ) D
 
 SELECT 
@@ -35,14 +35,14 @@ SELECT
 	1 AS [Record]
 INTO #Z
 FROM #T 
-WHERE [NumericCode] IS NOT NULL AND [Key] < '999' AND [ServiceDate] >= GETDATE() - 400
+WHERE [NumericCode] IS NOT NULL AND [Key] < '999' AND CAST([ServiceDate] AS DATE) >= GETDATE() - 400
 
 SELECT 
 	[TicketId],
 	[RecordedValue] AS [PartNo]
 INTO #P
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Part Number'
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'Part Information' AND [PropertyName] = 'Part Number'
 
 SELECT
 	[Year],
