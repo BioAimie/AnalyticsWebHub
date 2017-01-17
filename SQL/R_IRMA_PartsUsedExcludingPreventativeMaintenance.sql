@@ -65,6 +65,7 @@ PIVOT
 ) PIV
 WHERE [Part Used] IS NOT NULL AND [Part Used] NOT LIKE 'N%A' AND ISNUMERIC([Quantity]) = 1
 
+
 SELECT 
 	P.[TicketId],
 	P.[PartNumber],
@@ -111,8 +112,8 @@ SELECT
 	MAX([RecordedValue]) AS [HoursRun]
 INTO #hours
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] = 'RMA' AND [PropertyName] = 'Hours Run'
-GROUP BY [TicketId] 
+WHERE [Tracker] = 'RMA' AND [PropertyName] = 'Hours Run' AND [RecordedValue] IS NOT NULL
+GROUP BY [TicketId]
 
 SELECT 
 	D.[TicketId], 
@@ -203,4 +204,4 @@ FROM #partsReplaced p LEFT JOIN #visitOrdered v
 ORDER BY [SerialNo], [VisitNo]
 
 DROP TABLE #date, #parts, #codes, #codeParts, #pivParts, #remove, #partInfo, #partInfoPiv, #partsReplaced, #hours,
-	#visitOrdered, #tickets 
+	#visitOrdered, #tickets

@@ -3,7 +3,7 @@
 # load remote data base connection package
 #*note: to set DB paths go to Control Panel/Systems & Security/Administrative Tools/Data Sources (ODBC)
 library(RODBC)
-# open database connection 
+# open database connection
 PMScxn = odbcConnect("PMS_PROD")
 
 # get pouches shipped
