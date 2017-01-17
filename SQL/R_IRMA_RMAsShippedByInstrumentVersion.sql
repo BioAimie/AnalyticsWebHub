@@ -6,7 +6,7 @@ SELECT
 	MAX([RecordedValue]) AS [QcDate]
 INTO #qcDate
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] = 'RMA' AND [ObjectName] = 'QC Check' AND [PropertyName] = 'QC Date'
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'QC Check' AND [PropertyName] = 'QC Date' AND [RecordedValue] IS NOT NULL
 GROUP BY [TicketId], [TicketString]
 
 SELECT
