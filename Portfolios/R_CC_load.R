@@ -22,6 +22,11 @@ query.charVec = readLines("SQL/R_CC_FieldInstallBase.sql")
 query = paste(query.charVec,collapse="\n")
 installed.df = sqlQuery(PMScxn,query)
 
+# run the query to get count of complaints
+query.charVec = readLines("SQL/R_CC_CountComplaints.sql")
+query = paste(query.charVec,collapse="\n")
+complaintsCount.df = sqlQuery(PMScxn,query)
+
 # run the query to get BioThreat Failures
 query.charVec = readLines("SQL/R_CC_BioThreatFailures.sql")
 query = paste(query.charVec,collapse="\n")
