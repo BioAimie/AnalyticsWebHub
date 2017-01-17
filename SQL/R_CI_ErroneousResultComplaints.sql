@@ -89,7 +89,7 @@ FROM #ciInfo C LEFT JOIN #pre P
 	) N
 		ON C.[TicketId] = N.[TicketId] LEFT JOIN #ciLink L
 			ON C.[TicketId] = L.[TicketId]
-WHERE [preCriteria] LIKE 'Erroneous Result%' AND [ciIssued] LIKE 'True'
+WHERE [preCriteria] LIKE 'Erroneous Result%' AND [ciIssued] = 1
 
 SELECT DISTINCT 
 	[ItemID],

@@ -243,6 +243,12 @@ p.BioThreat.pareto <- ggplot(biothreat.df, aes(x=RecordedValue, y=Record, fill=Y
 p.denom.pouches <- ggplot(pouches.panel[with(pouches.panel, order(Version, decreasing = TRUE)), ], aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.panel, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pouches Shipped', x='Date', y='Pouches Shipped')
 p.denom.installed <- ggplot(subset(install.base.count, DateGroup >= startDate), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(install.base.count, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instruments in Install Base', x='Date', y='Install Base Size')
 
+# Count of complaints chart
+calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
+complaints.count.agg <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', complaintsCount.df, 'Key', '2014-01', 'Record', 'sum', 0)
+dateBreak.mon <- as.character(unique(calendar.month[calendar.month[,'DateGroup'] >= '2014-01','DateGroup']))[order(as.character(unique(calendar.month[calendar.month[,'DateGroup'] >= '2014-01','DateGroup'])))][seq(1,length(as.character(unique(calendar.month[calendar.month[,'DateGroup'] >= '2014-01','DateGroup']))), 3)]
+p.complaints.count <- ggplot(complaints.count.agg, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat = 'identity') + scale_fill_manual(values=createPaletteOfVariableLength(complaints.count.agg, 'Key'), guide = FALSE) + scale_x_discrete(breaks=dateBreak.mon) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, vjust=0.5)) + labs(title='Customer Complaints', x='Date\n(Year-Month)', y='Count of Complaints') + geom_text(aes(label=Record), fontface = 'bold', vjust = -0.5, size=6)
+
 # Create images for the Web Hub
 setwd(imgDir)
 plots <- ls()[grep('^p\\.', ls())]
