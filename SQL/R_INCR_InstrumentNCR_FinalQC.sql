@@ -45,7 +45,7 @@ SELECT
 	COUNT(V.[TicketId]) AS [Record]
 FROM #version V LEFT JOIN #ProbArea P
 	ON V.[TicketId] = P.[TicketId]
-WHERE [RecordedValue] IS NOT NULL AND [Version] NOT LIKE 'Other'
+WHERE [RecordedValue] IS NOT NULL AND [Version] NOT LIKE 'Other' AND [RecordedValue] <> 'Cannot Duplicate - 60 Melt Probe Tm' AND [RecordedValue] <> 'Instrument QC Pouch'
 GROUP BY
 	YEAR([CreatedDate]),
 	DATEPART(ww,[CreatedDate]),
