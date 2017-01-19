@@ -1,0 +1,173 @@
+
+#mainPanel{
+
+	margin-left:-60px;
+
+}
+
+
+#cpErrorMessage{
+
+	color:black;
+	font-weight:bold;	
+
+
+}
+
+#plotlink{
+	padding-top: 5px;
+	padding-bottom: 5px;
+	padding-right: 3px;
+	padding-left: 3px;
+	color:#CA2818 ;
+	background-color:black;
+	font-weight: bold;
+	
+
+}
+
+#directions{
+	
+	font-weight:bold;
+
+}
+
+hr{
+
+	border: 1px solid #D0493B;
+
+}
+
+#mainTitle {
+
+
+	font-family: "Lucida Console";
+	text-decoration: underline;
+	
+}
+
+#inputOptions{
+
+
+	font-family: "Lucida Console";
+	
+}
+
+
+h1{
+
+	font-size:18pt;
+	font-weight: bold;
+	
+
+}
+
+h2 {
+
+	font-family: "Lucida Console";
+	text-decoration: underline;
+	font-size: 18pt;
+	font-weight: bold;	
+}
+
+#sideb{
+
+
+	/* background-color: #E9553C; */
+	background-color:#D0493B;
+	width:390px;
+
+
+}
+
+.loadingButton{
+
+	background-color:black;
+	color:white;
+	border-color:black;
+	font-size:17px;
+	font-weight: bold;
+
+}
+
+.loadingButton:hover{
+
+
+	background-color: black;
+	color:white;
+	border-color:black;
+	font-size:17px;
+	font-weight: bold;
+
+}
+
+
+.loadingButton:active{
+
+
+	background-color: black;
+	color:white;
+	border-color:black;
+	font-size:17px;
+	font-weight: bold;
+
+}
+
+
+.loadingButton:focus{
+
+	background-color: black;
+	color:white;
+	border-color:black;
+	font-size:17px;
+	font-weight: bold;
+	
+}
+
+
+
+body{
+	
+	background-color: #D7D7D7;
+	font-size: 15px;
+	font-family: "Lucida Console";
+	
+}
+
+#errorMessage{
+	
+	margin-top: 50px;
+	color:black;
+	font-weight:bold;
+	font-size:16px;
+	
+}
+
+#rateTableTitle{
+
+	font-size:16pt;
+	margin-top: -40px;
+	margin-bottom: 50px;
+	/* color:#D5290B;*/
+	color:#C11200;
+	font-weight: bold;
+	text-decoration: underline;
+
+
+}
+
+
+#overTitle{
+	
+	margin-bottom: 30px;
+
+}
+
+
+#raidoTest:checked ~ label{
+
+	color:red;
+
+}
+
+
