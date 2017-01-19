@@ -33,7 +33,7 @@ SELECT
 	[PartNumber],
 	SUBSTRING([RecordedValue], LEN([RecordedValue]) - 2, 1) AS [Key],
 	[RecordedValue],
-	[Record]
+	IIF(ISNUMERIC([Record])=1,REPLACE([Record],',',''),1) AS [Record]
 INTO #cat
 FROM #awareDate D INNER JOIN 
 (
@@ -61,7 +61,7 @@ FROM #awareDate D INNER JOIN
 ) F 
 	ON D.[TicketId] = F.[TicketId] LEFT JOIN #cust C
 		ON F.[TicketId] = C.[TicketId]
-WHERE ISNUMERIC([Record]) = 1
+--WHERE ISNUMERIC([Record]) = 1
 
 SELECT
 	[CustID],
@@ -95,7 +95,7 @@ SELECT
 	IIF([CustType] LIKE 'International','International','Domestic') AS [Version],
 	[KeyByString] AS [Key],
 	IIF(ISNUMERIC(RIGHT([RecordedValue],1))=1, SUBSTRING([RecordedValue],1,LEN([RecordedValue])-4), [RecordedValue]) AS [RecordedValue],
-	[Record]
+	IIF([KeyByString]='Instrument',1,[Record]) AS [Record]
 FROM #agg
 ORDER BY [TicketString]
 
