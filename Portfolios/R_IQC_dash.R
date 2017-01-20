@@ -237,7 +237,7 @@ for(i in 1:length(plots)) {
   
   png(file=imgName, width=1200, height=800, units='px')
   print(eval(parse(text = plots[i])))
-  makeTimeStamp(timeStamp = Sys.time(), author='Post Market Surveillance')
+  makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
   dev.off()
 }
 

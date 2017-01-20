@@ -368,7 +368,7 @@ mtext("Failures/Shipments, Returned/Total", side=4, line=3, col='black', font=2)
 
 title(main='Return and Failure Percentage by Shipment Month of Instrument')
 legend("top",legend=c('Shipments','Failures/Instrument','Percent Returned'), text.col=c('black','black','black'), pch=c(16,15,14), col=c('dodgerblue','black','blue'), cex=0.8)
-makeTimeStamp(timeStamp = Sys.time(), author='Post Market Surveillance')
+makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
 dev.off()
 
 # export images for web hub
@@ -380,7 +380,7 @@ for(i in 1:length(plots)) {
 
   png(file=imgName, width=1200, height=800, units='px')
   print(eval(parse(text = plots[i])))
-  makeTimeStamp(timeStamp = Sys.time(), author='Post Market Surveillance')
+  makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
   dev.off()
 }
 
