@@ -79,10 +79,17 @@ LEFT JOIN
 (
 	SELECT 
 		[TicketId],
-		CAST(MAX([RecordedValue]) AS DATE) AS [ServiceDate]
-	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-	WHERE [PropertyName] LIKE 'Service Completed'
-	GROUP BY [TicketId]
+		[ServiceDate] 
+	FROM 
+	(
+		SELECT
+			ROW_NUMBER() OVER(PARTITION BY [TicketId] ORDER BY [RecordedValue] DESC) AS [Row], 
+			[TicketId],
+			CAST([RecordedValue] AS DATE) AS [ServiceDate]
+		FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
+		WHERE [PropertyName] LIKE 'Service Completed'
+	) A 
+	WHERE [Row] = 1 
 ) B
 	ON A.[TicketId] = B.[TicketId]
 
@@ -193,7 +200,6 @@ FROM
 	FROM #ServiceLagged
 ) T4	
 	ON T1.[TicketId] = T4.[TicketId]
-
 
 SELECT 
 	F.[Complaint],

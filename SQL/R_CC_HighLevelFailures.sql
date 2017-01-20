@@ -32,7 +32,7 @@ SELECT
 	[PartNumber],
 	SUBSTRING([RecordedValue], LEN([RecordedValue]) - 2, 1) AS [Key],
 	[RecordedValue],
-	REPLACE([Record],',','') AS [Record]
+	IIF(ISNUMERIC([Record])=1,REPLACE([Record],',',''),1) AS [Record]
 INTO #cat
 FROM #aware A INNER JOIN  
 (
@@ -59,8 +59,8 @@ FROM #aware A INNER JOIN
 		)
 	) PIV 
 ) D
-	ON A.[TicketId] = D.[TicketId]
-WHERE ISNUMERIC([Record]) = 1
+ON A.[TicketId] = D.[TicketId]
+ORDER BY DATE
 
 SELECT 
 	[TicketString],
@@ -98,7 +98,7 @@ SELECT
 	[VersionByPart] AS [Version],
 	[KeyByString] AS [Key],
 	IIF(ISNUMERIC(RIGHT([RecordedValue],1))=1, SUBSTRING([RecordedValue],1,LEN([RecordedValue])-4), [RecordedValue]) AS [RecordedValue],
-	[Record]
+	IIF([KeyByString]='Instrument',1,[Record]) AS [Record]
 INTO #final
 FROM #agg
 
