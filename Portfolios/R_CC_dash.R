@@ -265,13 +265,13 @@ for(i in 1:length(plots.alt)) {
     plot2 <- paste(plot1, 'hist', sep='.') 
     png(file=imgName, width=1200, height=800, units='px')
     eval(parse(text = paste('grid.arrange(',plot1,',',plot2,', ncol=2, nrow=1, widths=c(4,1.4), heights=c(4))', sep='')))
-    makeTimeStamp(timeStamp = Sys.time(), author='Post Market Surveillance')
+    makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
     dev.off()
   } else {
     
     png(file=imgName, width=1200, height=800, units='px')
     print(eval(parse(text = plots.alt[i])))
-    makeTimeStamp(timeStamp = Sys.time(), author='Post Market Surveillance')
+    makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
     dev.off()
   }
 }
