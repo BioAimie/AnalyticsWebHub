@@ -13,7 +13,7 @@ FROM
 		CAST([CreatedDate] AS DATE) AS [Date],
 		YEAR([CreatedDate]) AS [Year],
 		MONTH([CreatedDate]) AS [Month]
-	FROM [dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
+	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
 	WHERE [Tracker] LIKE 'Complaint'
 	GROUP BY [TicketString], [TicketId], [CreatedDate]
 ) A 
