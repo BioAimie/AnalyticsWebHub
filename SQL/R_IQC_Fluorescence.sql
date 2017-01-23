@@ -122,6 +122,21 @@ FROM
 ) D
 
 SELECT 
+	[LotNumber],
+	MAX([PartNumber]) AS [PartNumber] 
+INTO #lots
+FROM 
+(
+	SELECT 
+		[PartNumber],
+		IIF(REPLACE(REPLACE([LotNumber],'_',''),'.','') LIKE '%R', SUBSTRING(REPLACE(REPLACE([LotNumber],'_',''),'.',''), 1, LEN(REPLACE(REPLACE([LotNumber],'_',''),'.',''))-1) , REPLACE(REPLACE([LotNumber],'_',''),'.','')) AS [LotNumber] 
+	FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+		ON P.[PartNumberId] = L.[PartNumberId]
+	WHERE [PartNumber] LIKE 'FLM%-ASY-0001%'
+) A
+GROUP BY [LotNumber]
+
+SELECT 
 	[dbKey],
 	[PouchVersion],
 	[Department],
@@ -134,9 +149,25 @@ SELECT
 	[Week],
 	[BaselineFluorArray],
 	[MaximumFluorArray]
+INTO #final
 FROM #master M LEFT JOIN #protocolNo P
 	ON M.[SerialNo] = P.[SerialNo]
 WHERE LEFT([Instrument],2) IN ('FA','2F','HT','TM') AND [Protocol] IS NOT NULL
 ORDER BY [Year], [Week]
 
-DROP TABLE #base15, #oneFive, #twoOh, #fluor15, #master, #protocolNo
+SELECT
+	[dbKey],
+	[PouchVersion],
+	[Department],
+	[Instrument],
+	IIF([PartNumber] LIKE 'FLM1%', 'FA1.5',
+		IIF([PartNumber] LIKE 'FLM2%', 'FA2.0', [InstVersion])) AS [InstVersion],
+	[LotNo],
+	[Year],
+	[Week],
+	[BaselineFluorArray],
+	[MaximumFluorArray]
+FROM #final F LEFT JOIN #lots L
+	ON F.[Instrument] = L.[LotNumber]
+
+DROP TABLE #base15, #oneFive, #twoOh, #fluor15, #master, #protocolNo, #lots, #final
