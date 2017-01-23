@@ -9,7 +9,6 @@ setwd('~/WebHub/AnalyticsWebHub/Apps/InteractiveApp')
 file.remove(list.files("internalInstrumentApp\\www", full.names=TRUE)[which(grepl(".jpg", list.files("internalInstrumentApp\\www")))])
 
 
-
 # load in the data to be displayed
 source("Rfunctions\\loadInternalInstrumentApp.R")
 

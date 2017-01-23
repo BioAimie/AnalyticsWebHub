@@ -6,8 +6,7 @@ library(shinythemes)
 library(DT)
 
 #source("G:\\Departments\\PostMarket\\DataScienceGroup\\Data Science Products\\InProcess\\Anna\\20161229_InternalInstrumentPerformanceMonitoring\\Rfunctions\\loadInternalInstrumentApp.R")
-setwd("G:\\Departments\\PostMarket\\DataScienceGroup\\Data Science Products\\InProcess\\Anna\\20161229_InternalInstrumentPerformanceMonitoring\\internalInstrumentApp")
-
+setwd('~/WebHub/AnalyticsWebHub/Apps/InteractiveApp')
 error.message.list = list("pouchqc"="PouchQC", "validation"="Validation", "dungeon"= "the Dungeon", "7"="7", "30"="30", "90"="90", "360"="year")
 
 shinyServer(function(input, output, session){
@@ -70,7 +69,10 @@ shinyServer(function(input, output, session){
 			 	  actionButton(class="orderButton","order.by.software", "Software Fail"),
 			 		tags$hr(id="orderButtonSpace"),
 			 		actionButton(class="orderButton","order.by.pouchleak", "Pouch Leak"),
-			 	  actionButton(class="orderButton","order.by.controlfail", "Control Fail")
+			 	  actionButton(class="orderButton","order.by.pcr1", "PCR1"),
+			 		tags$hr(id="orderButtonSpace"),
+			 	  actionButton(class="orderButton","order.by.pcr2", "PCR2"),
+			 	  actionButton(class="orderButton","order.by.yeast", "yeastRNA")
 			 )
 				
 			 
@@ -111,20 +113,48 @@ shinyServer(function(input, output, session){
 			
 			## wait for a user to click one of the sort rows buttons 
 			
-			observeEvent(input$order.by.controlfail, {
-				
-					
+			observeEvent(input$order.by.pcr1, {
+				  
 					if(length(isolate(input$protocol.choice)) == 1 ){
-							row.order <- order(as.numeric(gsub("%", "", unlist(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][,"Control Failure Rate"]))), decreasing=TRUE)
+							row.order <- order(as.numeric(gsub("%", "", unlist(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][,"PCR1 Negative Rate"]))), decreasing=TRUE)
 					    output$rate.table <- renderDataTable({rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][row.order, ]}, selection="single")
 					}else{
 						
-							row.order <- order(as.numeric(gsub("%", "", unlist(combined.rate.table[,"Control Failure Rate"]))), decreasing=TRUE)
+							row.order <- order(as.numeric(gsub("%", "", unlist(combined.rate.table[,"PCR1 Negative Rate"]))), decreasing=TRUE)
 					    output$rate.table <- renderDataTable({combined.rate.table[row.order, ]}, selection="single")
 						
 					}
 					
 			}) 
+			
+			observeEvent(input$order.by.pcr2, {
+				  
+					if(length(isolate(input$protocol.choice)) == 1 ){
+							row.order <- order(as.numeric(gsub("%", "", unlist(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][,"PCR2 Negative Rate"]))), decreasing=TRUE)
+					    output$rate.table <- renderDataTable({rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][row.order, ]}, selection="single")
+					}else{
+						
+							row.order <- order(as.numeric(gsub("%", "", unlist(combined.rate.table[,"PCR2 Negative Rate"]))), decreasing=TRUE)
+					    output$rate.table <- renderDataTable({combined.rate.table[row.order, ]}, selection="single")
+						
+					}
+					
+			}) 
+			
+		  observeEvent(input$order.by.yeast, {
+				  
+					if(length(isolate(input$protocol.choice)) == 1 ){
+							row.order <- order(as.numeric(gsub("%", "", unlist(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][,"yeastRNA Negative Rate"]))), decreasing=TRUE)
+					    output$rate.table <- renderDataTable({rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][row.order, ]}, selection="single")
+					}else{
+						
+							row.order <- order(as.numeric(gsub("%", "", unlist(combined.rate.table[,"yeastRNA Negative Rate"]))), decreasing=TRUE)
+					    output$rate.table <- renderDataTable({combined.rate.table[row.order, ]}, selection="single")
+						
+					}
+					
+			}) 
+				
 			observeEvent(input$order.by.pouchleak, {
 				
 					if(length(isolate(input$protocol.choice)) == 1 ){
@@ -137,12 +167,9 @@ shinyServer(function(input, output, session){
 						
 					}
 					
-					
-				
 				
 			}) 
 			observeEvent(input$order.by.instrument, {
-				
 					
 					if(length(isolate(input$protocol.choice)) == 1 ){
 							row.order <- order(as.numeric(gsub("%", "", unlist(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][,"Instrument Failure Rate"]))), decreasing=TRUE)
@@ -156,6 +183,7 @@ shinyServer(function(input, output, session){
 					
 			}) 
 			observeEvent(input$order.by.software, {
+				  
 				
 					if(length(isolate(input$protocol.choice)) == 1 ){
 							row.order <- order(as.numeric(gsub("%", "", unlist(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][,"Software Failure Rate"]))), decreasing=TRUE)
@@ -234,8 +262,12 @@ shinyServer(function(input, output, session){
 			
 			### wait for a user to click the "Load Data" button, then upload the data table
 		  observeEvent(input$load.data.table, { 
+		     
+		  	 ## display error message if user does not select a protocol option 
 		  	
 		  if(length(isolate(input$protocol.choice)) > 1){ # if the user selected multiple protocol types 
+		  	
+
 		  	  combined.rate.table <<- data.frame()
 		  	  
 		  	  # row bind all the data frames together 
@@ -254,7 +286,7 @@ shinyServer(function(input, output, session){
 		  		hide("plotLink")
 		  		if(	length(combined.rate.table) != 0){ # if there is data for the given location/date range 
 		  	
-						output$rate.table <- renderDataTable({datatable(combined.rate.table, rownames=FALSE)}, selection="single")
+						output$rate.table <- renderDataTable({datatable(combined.rate.table, rownames=FALSE, selection="single")})
 						showElement("rate.table")
 						output$error.message <- renderText("")
 						output$data.Frame.Title <- renderText(paste0( title.string, " Runs in ", error.message.list[[isolate(input$location.choice)]] , " Over the Last ", isolate(input$date.range.choice), " days"))
