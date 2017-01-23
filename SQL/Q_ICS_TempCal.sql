@@ -104,7 +104,7 @@ SELECT
 		IIF([lastUpdate] > CONVERT(DATETIME, '2016-11-29'), CAST([DateCalibrated] AS DATE), CAST('1900-01-01' AS DATE)))) AS [DateCalibratedInt]
 INTO #byLastUpdate
 FROM #tempCalRaw
-WHERE [DateCalibrated] IS NOT NULL
+WHERE [DateCalibrated] IS NOT NULL AND [DateCalibrated] NOT LIKE '16/08/31'
 
 SELECT *,
 	IIF([DateCalibratedInt] = CONVERT(DATE, '1900-01-01') AND CAST(SUBSTRING([DateStrip], 1, 1) AS INT) > 1, CAST(SUBSTRING([DateStrip], 1, 1) AS INT), CAST(SUBSTRING([DateStrip], 1, 2) AS INT)) AS [Month],
