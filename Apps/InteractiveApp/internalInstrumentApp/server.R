@@ -5,7 +5,6 @@ library(shinyBS)
 library(shinythemes)
 library(DT)
 
-#source("G:\\Departments\\PostMarket\\DataScienceGroup\\Data Science Products\\InProcess\\Anna\\20161229_InternalInstrumentPerformanceMonitoring\\Rfunctions\\loadInternalInstrumentApp.R")
 setwd('~/WebHub/AnalyticsWebHub/Apps/InteractiveApp')
 error.message.list = list("pouchqc"="PouchQC", "validation"="Validation", "dungeon"= "the Dungeon", "7"="7", "30"="30", "90"="90", "360"="year")
 
@@ -215,21 +214,21 @@ shinyServer(function(input, output, session){
 				    #lines(cp.data[2, ], cp.data[1, ],lwd=1.7 )
 				 	  if(length(x.labels) <= 9){
 				 	  	  
-				 	  		jpeg(paste0("www/", plotTitle), width=1000, height=600)
+				 	  		jpeg(paste0("\\\\biofirestation/WebHub/WebHub/new_tab_charts/" , plotTitle), width=1000, height=600)
 				 	      
 				 	  		main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
 				 	  		par(mar=c(14,5,4.1,2.1));
 				 	  		barplot(cp.data[1, ], main=main.title, xlab="", xlim=c(0, 20), ylim=c(0,30), width=1.5, cex.main=1.6, cex.lab=1.4, cex.names=1.3, cex.lab=1.5, ylab="Average Cp - yeastRNA", names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
 				 	      
 				 	  }else if(length(x.labels) <= 35){
-				 	  		jpeg(paste0("www/", plotTitle), width=1000, height=600)
+				 	  		jpeg(paste0("\\\\biofirestation/WebHub/WebHub/new_tab_charts/", plotTitle), width=1000, height=600)
 				 	  
 				 	  		main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
 				 	  		par(mar=c(14,5,4.1,2.1));
 				 	  	
 				 	  		barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.6, cex.lab=1.4, cex.names=1.3, cex.lab=1.5, ylab="Average Cp - yeastRNA", ylim=c(0, 30), names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
 				 	  }else{
-				 	  		jpeg(paste0("www/", plotTitle), width=1800, height=600)
+				 	  		jpeg(paste0("\\\\biofirestation/WebHub/WebHub/new_tab_charts/", plotTitle), width=1800, height=600)
 				 	  
 				 	  		main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
 				 	  		par(mar=c(14,5,4.1,2.1));
@@ -241,11 +240,11 @@ shinyServer(function(input, output, session){
 				    mtext("Run Start Time", side=1, line=13, cex=1.5)
 				    dev.off()
 				    hide("cpError")
-				    showElement("plotLink")
+				    show("plotLink")
 				    # open the plot in another window 
 				    output$plotLink <- renderUI(
 				
-							tags$a(id="plotlink", href=plotTitle, "Click Here to View Plot for Selected Row", rel="external", target="_blank")
+							tags$a(id="plotlink", href=paste0("\\\\biofirestation/WebHub/WebHub/new_tab_charts/", plotTitle), "Click Here to View Plot for Selected Row", rel="external", target="_blank")
 				
 						)
 				    
@@ -256,7 +255,7 @@ shinyServer(function(input, output, session){
 				 	 		tags$div( id="cpErrorMessage", renderText(paste0("No Plot Available - there were no runs on ", serial.num, " with a yeastRNA control"))) 
 				 	 )
 				 	 
-				 	 showElement("cpError")
+				 	 show("cpError")
 				 }
 			})
 			
@@ -287,10 +286,10 @@ shinyServer(function(input, output, session){
 		  		if(	length(combined.rate.table) != 0){ # if there is data for the given location/date range 
 		  	
 						output$rate.table <- renderDataTable({datatable(combined.rate.table, rownames=FALSE, selection="single")})
-						showElement("rate.table")
+						show("rate.table")
 						output$error.message <- renderText("")
 						output$data.Frame.Title <- renderText(paste0( title.string, " Runs in ", error.message.list[[isolate(input$location.choice)]] , " Over the Last ", isolate(input$date.range.choice), " days"))
-			  		showElement("data.Frame.Title")
+			  		show("data.Frame.Title")
 			  
 			  
       		}else{ # if the data table for that location/time period is empty 
@@ -309,10 +308,10 @@ shinyServer(function(input, output, session){
 		  	if(	length(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]]) != 0){ # if there is data for the given location/date range 
 		  	
 					output$rate.table <- renderDataTable({rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]]}, selection="single")
-					showElement("rate.table")
+					show("rate.table")
 					output$error.message <- renderText("")
 					output$data.Frame.Title <- renderText(paste0( isolate(input$protocol.choice), " Runs in ", error.message.list[[isolate(input$location.choice)]] , " Over the Last ", isolate(input$date.range.choice), " days"))
-			  	showElement("data.Frame.Title")
+			  	show("data.Frame.Title")
 			  
 			  
       	}else{ # if the data table for that location/time period is empty 
