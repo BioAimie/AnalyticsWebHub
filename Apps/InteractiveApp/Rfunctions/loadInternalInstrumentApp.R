@@ -1,5 +1,4 @@
 
-setwd("G:\\Departments\\PostMarket\\DataScienceGroup\\Data Science Products\\InProcess\\Anna\\20161229_InternalInstrumentPerformanceMonitoring")
 
 library(rJava)
 library(xlsx)
@@ -11,7 +10,8 @@ library(RODBC)
 
 
 ### get the dungeon instrument serial numbers 
-FA.Instruments <- read.xlsx("G:\\Departments\\BioChem\\BioChem1_Shared\\Lab Management\\Instruments\\FA Instruments.xlsx", 1)
+
+FA.Instruments <- read.xlsx("\\\\Filer01/Data/Departments\\BioChem\\BioChem1_Shared\\Lab Management\\Instruments\\FA Instruments.xlsx", 1)
 dungeon.instrument.serial.numbers <- as.vector(FA.Instruments$Instrument[which(FA.Instruments$Owner == "IDATEC")])
 dungeon.instrument.serial.numbers <- paste(dungeon.instrument.serial.numbers, collapse="', '")
 dungeon.instrument.serial.numbers <- paste0("( '", dungeon.instrument.serial.numbers, "') ")
@@ -19,7 +19,7 @@ dungeon.instrument.serial.numbers <- paste0("( '", dungeon.instrument.serial.num
 ### scan in the SQL queries 
 dungeon.query <- gsub('serialnumbervector', dungeon.instrument.serial.numbers, paste(scan("SQL\\dungeon_instruments.txt",what=character(),quote=""), collapse=' '))   
 pouch.qc.query <- paste(scan("SQL\\pouch_qc_instruments.txt",what=character(),quote=""), collapse=" ")
-#validation.query <- paste(scan("SQL\\validation_instruments.txt",what=character(),quote=""), collapse=" ")
+
 
 # initialize the list that will hold the query results 
 location.frames <<- vector(mode="list")
@@ -31,7 +31,6 @@ PMScxn <- odbcConnect("PMS_PROD")
 
 location.frames[["dungeon"]] <- sqlQuery(PMScxn, dungeon.query)
 location.frames[["pouchqc"]] <- sqlQuery(PMScxn, pouch.qc.query)
-#location.frames[["validation"]] <- sqlQuery(PMScxn, validation.query)
 
 
 odbcClose(PMScxn)
