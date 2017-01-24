@@ -16,19 +16,20 @@ shinyUI(
 		sidebarPanel( id="sideb",
    		uiOutput("input.options"),
 			uiOutput("space")
-			#uiOutput("directionsText")
+			
 			),
 		 
 		## create the panel that holds the data table (or error message)
 		mainPanel(id="mainPanel",
-			uiOutput("plotLink"),
+			#uiOutput("modalTrigger"),
+			actionButton("triggerId","Click Here to View Plot"), 
 			uiOutput("cpError"),
 		  uiOutput("errorMessage"),
 			uiOutput("dataFrameTitle"),
 			dataTableOutput("rate.table"),
-			plotOutput("cpPlot")
+			plotOutput("cpPlot"),
+			bsModal(id="modalObject", "This is the Title", trigger="triggerId", size="large", plotOutput("modalPlot"))
 		
-			
 			
 		), # main panel 
 	  
