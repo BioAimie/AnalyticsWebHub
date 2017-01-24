@@ -77,25 +77,31 @@ faivLine.df[,'Date'] <- as.Date(faivLine.df[,'DateOpened'], tz='MST')
 faivLineWater.df[,'Date'] <- as.Date(faivLineWater.df[,'DateOpened'], tz='MST')
 
 ltd.burst <- unique(burst.df[,'Date'])[order(unique(burst.df[,'Date']), decreasing = TRUE)][1:30]
-burst.imr.ltd <- subset(burst.df, Date %in% ltd.burst)
-burst.imr.ltd <- analyzeOrderIMR(burst.imr.ltd, 'Result', 'DateOpened', length(burst.imr.ltd[,'Date']), 3, 'GroupName', byEquipment = FALSE)
+points.ltd.burst <- nrow(burst.df[burst.df$Date %in% ltd.burst, ])
+burst.imr.ltd <- analyzeOrderIMR(burst.df, 'Result', 'DateOpened', points.ltd.burst, 3, 'GroupName', byEquipment = FALSE)
+# burst.imr.ltd <- subset(burst.df, Date %in% ltd.burst)
+# burst.imr.ltd <- analyzeOrderIMR(burst.imr.ltd, 'Result', 'DateOpened', length(burst.imr.ltd[,'Date']), 3, 'GroupName', byEquipment = FALSE)
 
-hydra.imr.ltd <- subset(hydration.df, Date %in% ltd.burst)
-hydra.imr.wsw.ltd <- analyzeOrderIMR(hydra.imr.ltd, 'WaterSideWeight', 'DateOpened', length(hydra.imr.ltd[,'Date']), 3, 'GroupName', byEquipment = FALSE)
-hydra.imr.ssw.ltd <- analyzeOrderIMR(hydra.imr.ltd, 'SampleSideWeight', 'DateOpened', length(hydra.imr.ltd[,'Date']), 3, 'GroupName', byEquipment = FALSE)
+ltd.hydra <- unique(hydration.df[,'Date'])[order(unique(hydration.df[,'Date']), decreasing = TRUE)][1:30]
+points.ltd.hydra <- nrow(hydration.df[hydration.df$Date %in% ltd.hydra, ])
+hydra.imr.wsw.ltd <- analyzeOrderIMR(hydration.df, 'WaterSideWeight', 'DateOpened', points.ltd.hydra, 3, 'GroupName', byEquipment = FALSE)
+hydra.imr.ssw.ltd <- analyzeOrderIMR(hydration.df, 'SampleSideWeight', 'DateOpened', points.ltd.hydra, 3, 'GroupName', byEquipment = FALSE)
 
 ltd.faivLine <- unique(faivLine.df[,'Date'])[order(unique(faivLine.df[,'Date']), decreasing = TRUE)][1:30]
-faivLine.df.ltd <- subset(faivLine.df, Date %in% ltd.faivLine)
-faivLine.imr.ltd <- analyzeOrderIMR(faivLine.df.ltd, 'Result', 'DateOpened', length(faivLine.df.ltd[,'Date']), 3, 'GroupName', byEquipment = FALSE)
+points.ltd.faiv <- nrow(faivLine.df[faivLine.df$Date %in% ltd.faivLine, ])
+faivLine.imr.ltd <- analyzeOrderIMR(faivLine.df, 'Result', 'DateOpened', points.ltd.faiv, 3, 'GroupName', byEquipment = FALSE)
 # for cannula pull strength, the group wants IMR charts to show +5sd rather than 3, so do that instead
-cannula.mean.ltd <- mean(faivLine.df.ltd[faivLine.df.ltd$Result <= 100 & faivLine.df.ltd$Result >= 0, 'Result'])
-cannula.sd.ltd <- sd(faivLine.df.ltd[faivLine.df.ltd$Result <= 100 & faivLine.df.ltd$Result >= 0, 'Result'])
+# cannula.mean.ltd <- mean(faivLine.df.ltd[faivLine.df.ltd$Result <= 100 & faivLine.df.ltd$Result >= 0, 'Result'])
+cannula.mean.ltd <- mean(faivLine.df[faivLine.df$Result <= 100 & faivLine.df$Result >= 0 , 'Result'])
+# cannula.sd.ltd <- sd(faivLine.df.ltd[faivLine.df.ltd$Result <= 100 & faivLine.df.ltd$Result >= 0, 'Result'])
+cannula.sd.ltd <- sd(faivLine.df[faivLine.df$Result <= 100 & faivLine.df$Result >= 0, 'Result'])
 faivLine.imr.ltd$LCL <- cannula.mean.ltd - 5*cannula.sd.ltd
 faivLine.imr.ltd$UCL <- cannula.mean.ltd + 5*cannula.sd.ltd
 
 ltd.faivLineWater <- unique(faivLineWater.df[,'Date'])[order(unique(faivLineWater.df[,'Date']), decreasing = TRUE)][1:30]
-faivLineWater.imr.ltd <- subset(faivLineWater.df, Date %in% ltd.faivLineWater)
-faivLineWater.imr.ltd <- analyzeOrderIMR(faivLineWater.imr.ltd, 'Result', 'DateOpened', length(faivLineWater.imr.ltd[,'Date']), 3, 'GroupName', byEquipment = FALSE)
+points.ltd.faivWater <- nrow(faivLineWater.df[faivLineWater.df$Date %in% ltd.faivLineWater, ])
+# faivLineWater.imr.ltd <- subset(faivLineWater.df, Date %in% ltd.faivLineWater)
+faivLineWater.imr.ltd <- analyzeOrderIMR(faivLineWater.df, 'Result', 'DateOpened', points.ltd.faivWater, 3, 'GroupName', byEquipment = FALSE)
 
 p.burst.ltd <- ggplot(burst.imr.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Burst Testing\n (Last 30 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
 p.hydra.wsw.ltd <- ggplot(hydra.imr.wsw.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Hydration Water Side Weight Testing\n (Last 30 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
@@ -105,32 +111,33 @@ p.faivLineWater.ltd <- ggplot(faivLineWater.imr.ltd, aes(x=Observation, y=Result
 
 # ------- LAST 7 DAYS (is differentiated by line) ADD FAIV LINE
 lsd.burst <- unique(burst.df[,'Date'])[order(unique(burst.df[,'Date']), decreasing = TRUE)][1:7]
-burst.imr.lsd <- subset(burst.df, Date %in% lsd.burst)
-burst.imr.lsd <- analyzeOrderIMR(burst.imr.lsd, 'Result', 'DateOpened', length(burst.imr.lsd[,'Date']), 3, 'GroupName', byEquipment = TRUE)
+points.lsd.burst <- nrow(burst.df[burst.df$Date %in% lsd.burst, ])
+burst.imr.lsd <- analyzeOrderIMR(burst.df, 'Result', 'DateOpened', points.lsd.burst, 3, 'GroupName', byEquipment = TRUE)
 burst.imr.lsd[,'LineKey'] <- as.numeric(substring(as.character(burst.imr.lsd[,'Equipment']), 12, 12))
 
 lines <- unique(as.character(burst.imr.lsd[,'Equipment']))[order(unique(as.character(burst.imr.lsd[,'Equipment'])))]
 lines <- as.numeric(substring(lines, 12, 12))
 line.breaks <- lines[seq(2, length(lines), 2)]
 
-hydration.imr.lsd <- subset(hydration.df, Date %in% lsd.burst)
-hydration.imr.lsd.wsw <- analyzeOrderIMR(hydration.imr.lsd, 'WaterSideWeight', 'DateOpened', length(hydration.imr.lsd[,'Date']), 3, 'GroupName', byEquipment = TRUE)
-hydration.imr.lsd.ssw <- analyzeOrderIMR(hydration.imr.lsd, 'SampleSideWeight', 'DateOpened', length(hydration.imr.lsd[,'Date']), 3, 'GroupName', byEquipment = TRUE)
+lsd.hydra <- unique(hydration.df[,'Date'])[order(unique(hydration.df[,'Date']), decreasing = TRUE)][1:7]
+points.lsd.hydra <- nrow(hydration.df[hydration.df$Date %in% lsd.hydra, ])
+hydration.imr.lsd.wsw <- analyzeOrderIMR(hydration.df, 'WaterSideWeight', 'DateOpened', points.lsd.hydra, 3, 'GroupName', byEquipment = TRUE)
+hydration.imr.lsd.ssw <- analyzeOrderIMR(hydration.df, 'SampleSideWeight', 'DateOpened', points.lsd.hydra, 3, 'GroupName', byEquipment = TRUE)
 
 lsd.faivLine <- unique(faivLine.df[,'Date'])[order(unique(faivLine.df[,'Date']), decreasing = TRUE)][1:7]
-faivLine.df.lsd <- subset(faivLine.df, Date %in% lsd.faivLine)
-faivLine.imr.lsd <- analyzeOrderIMR(faivLine.df.lsd, 'Result', 'DateOpened', length(faivLine.df.lsd[,'Date']), 3, 'GroupName', byEquipment = TRUE)
+points.lsd.faivLine <- nrow(faivLine.df[faivLine.df$Date %in% lsd.faivLine, ])
+faivLine.imr.lsd <- analyzeOrderIMR(faivLine.df, 'Result', 'DateOpened', points.lsd.faivLine, 3, 'GroupName', byEquipment = TRUE)
 # for cannula pull strength, the group wants IMR charts to show +5sd rather than 3, so do that instead
-cannula.mean.lsd <- with(faivLine.df.lsd[faivLine.df.lsd$Result <= 100 & faivLine.df.lsd$Result >= 0, ], aggregate(Result~GroupName, FUN=mean))
-cannula.sd.lsd <- with(faivLine.df.lsd[faivLine.df.lsd$Result <= 100 & faivLine.df.lsd$Result >= 0, ], aggregate(Result~GroupName, FUN=sd))
+cannula.mean.lsd <- with(faivLine.df[faivLine.df$Result <= 100 & faivLine.df$Result >= 0, ], aggregate(Result~GroupName, FUN=mean))
+cannula.sd.lsd <- with(faivLine.df[faivLine.df$Result <= 100 & faivLine.df$Result >= 0, ], aggregate(Result~GroupName, FUN=sd))
 faivLine.imr.lsd <- merge(merge(faivLine.imr.lsd, cannula.mean.lsd, by.x='Equipment', by.y='GroupName'), cannula.sd.lsd, by.x='Equipment', by.y='GroupName')
 colnames(faivLine.imr.lsd) <- c('Equipment','LotNumber','TestNumber','DateOpened','Observation','Result','Key','Average','LCL','UCL','HistMean','HistSD')
 faivLine.imr.lsd$LCL <- with(faivLine.imr.lsd, HistMean - 5*HistSD)
 faivLine.imr.lsd$UCL <- with(faivLine.imr.lsd, HistMean + 5*HistSD)
 
 lsd.faivLineWater <- unique(faivLineWater.df[,'Date'])[order(unique(faivLineWater.df[,'Date']), decreasing = TRUE)][1:7]
-faivLineWater.imr.lsd <- subset(faivLineWater.df, Date %in% lsd.faivLineWater)
-faivLineWater.imr.lsd <- analyzeOrderIMR(faivLineWater.imr.lsd, 'Result', 'DateOpened', length(faivLineWater.imr.lsd[,'Date']), 3, 'GroupName', byEquipment = TRUE)
+points.lsd.faivWater <- nrow(faivLineWater.df[faivLineWater.df$Date %in% lsd.faivLineWater, ])
+faivLineWater.imr.lsd <- analyzeOrderIMR(faivLineWater.df, 'Result', 'DateOpened', points.lsd.faivWater, 3, 'GroupName', byEquipment = TRUE)
 
 p.burst.lsd.one <- ggplot(subset(burst.imr.lsd, LineKey <= line.breaks[1]), aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Burst Testing by Line\n (Last 7 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
 p.burst.lsd.two <- ggplot(subset(burst.imr.lsd, LineKey <= line.breaks[2] & LineKey > line.breaks[1]), aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Burst Testing by Line\n (Last 7 Days of Manufacturing)', y='Result (FYI limits include all historical data)')

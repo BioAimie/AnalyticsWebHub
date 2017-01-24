@@ -15,8 +15,8 @@ shinyUI(
 		uiOutput("over.title"),
 		sidebarPanel( id="sideb",
    		uiOutput("input.options"),
-			uiOutput("space"),
-			uiOutput("directionsText")
+			uiOutput("space")
+			#uiOutput("directionsText")
 			),
 		 
 		## create the panel that holds the data table (or error message)
