@@ -254,7 +254,7 @@ shinyServer(function(input, output, session){
 						#)
 				    
 				    hide("cpError")
-				    showElement("triggerId")
+				    show("triggerId")
 				    # open the plot in another window 
 				   
 				    
@@ -265,7 +265,7 @@ shinyServer(function(input, output, session){
 				 	 		tags$div( id="cpErrorMessage", renderText(paste0("No Plot Available - there were no runs on ", serial.num, " with a yeastRNA control"))) 
 				 	 )
 				 	 
-				 	 showElement("cpError")
+				 	 show("cpError")
 				 }
 			})
 			
