@@ -5,9 +5,6 @@ library(shiny)
 # set the working directory 
 setwd('~/WebHub/AnalyticsWebHub/Apps/InteractiveApp')
 
-# remove all the plots from the www/ folder 
-file.remove(list.files("\\\\biofirestation/WebHub/WebHub/new_tab_charts/", full.names=TRUE)[which(grepl(".jpg", list.files("\\\\biofirestation/WebHub/WebHub/new_tab_charts/")))])
-
 
 # load in the data to be displayed
 source("Rfunctions\\loadInternalInstrumentApp.R")
