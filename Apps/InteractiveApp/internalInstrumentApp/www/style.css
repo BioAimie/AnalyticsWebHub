@@ -56,11 +56,36 @@ hr{
 
 h1{
 
-	font-size:18pt;
-	font-weight: bold;
+	font-size:12pt;
+	font-weight:bold;
+	
 	
 
 }
+
+.orderButton{
+
+
+	height:30px;
+	width:150px;
+	background-color:#B6B6B6;
+	border-color:black;
+	border-width:2px;
+
+
+}
+
+#orderButtonSpace{
+
+
+	margin-top:2px;
+	margin-bottom:2px;
+	
+	
+	
+}
+
+
 
 h2 {
 
