@@ -142,6 +142,15 @@ pouches.all.3yr <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df
 instrument.all.3yr <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('Key'), threeyr, 'Record', 'sum', 0)
 instrument.all.3yr.rate <- mergeCalSparseFrames(instrument.all.3yr, pouches.all.3yr, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
 p.instrument.all.3yr <- ggplot(instrument.all.3yr.rate, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point() + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Pouches Shipped', subtitle = 'Over Three Years', x='Date', y='4 Week Rolling Average')
+
+
+instrument.all.version.3y <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), threeyr, 'Record', 'sum', 0)
+instrument.all.version.rate.3y <- mergeCalSparseFrames(instrument.all.version.3y, pouches.all.3yr, c('DateGroup'),c('DateGroup'), 'Record', 'Record', 0, periods)
+instrument.all.version.lims.3y <- addStatsToSparseHandledData(instrument.all.version.rate.3y, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.0005)
+pressure.error.rows.pouches <- instrument.all.version.lims.3y[which(instrument.all.version.lims.3y$RecordedValue == "Pressure Error"), ]
+p.pressure.errors.pouches <- ggplot(pressure.error.rows.pouches, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color="black") + geom_point() + scale_color_manual(values=c("black", "black"), guide=FALSE) + geom_hline(aes(yintercept=UL), color="blue", lty=2) +  scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pressure Errors per Pouches Shipped', x='Date', y='4 Week Rolling Average')
+
+
 instrument.all.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), startDate, 'Record', 'sum', 0)
 instrument.all.version.count <- instrument.all.version[instrument.all.version[,'DateGroup'] >= startDate.16, ]
 instrument.all.version.count[,'Period'] <- with(instrument.all.version.count, ifelse(DateGroup < startDate.8, '16 Weeks', '8 Weeks'))
@@ -184,6 +193,12 @@ p.instrument.all.installed.3yr <- ggplot(instrument.all.installed.3yr.rate, aes(
 instrument.all.version.installed.rate <- mergeCalSparseFrames(instrument.all.version, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
 instrument.all.version.installed.lims <- addStatsToSparseHandledData(instrument.all.version.installed.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0)
 p.instrument.version.installed <- ggplot(instrument.all.version.installed.lims, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instrument Complaints By Type per Instruments Installed', x='Date', y='4 Week Rolling Average')
+
+instrument.all.version.installed.3y <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), threeyr, 'Record', 'sum', 0)
+instrument.all.version.installed.rate.3y <- mergeCalSparseFrames(instrument.all.version.installed.3y, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
+instrument.all.version.installed.lims.3y <- addStatsToSparseHandledData(instrument.all.version.installed.rate.3y, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0)
+pressure.errors.installed.3y <- instrument.all.version.installed.lims.3y[which(instrument.all.version.installed.lims.3y$RecordedValue == "Pressure Error"), ]
+p.pressure.errors.installed <- ggplot(pressure.errors.installed.3y, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr)  + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pressure Errors per Instruments Installed', x='Date', y='4 Week Rolling Average')
 
 # ------------------------------------------------- SOFTWARE COMPLAINTS ---------------------------------------------------------------------
 software.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Software'), c('Key'), startDate, 'Record', 'sum', 0)
