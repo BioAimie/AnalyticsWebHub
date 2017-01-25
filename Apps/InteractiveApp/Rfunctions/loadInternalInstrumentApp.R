@@ -1,5 +1,4 @@
 
-setwd("G:\\Departments\\PostMarket\\DataScienceGroup\\Data Science Products\\InProcess\\Anna\\20161229_InternalInstrumentPerformanceMonitoring")
 
 library(rJava)
 library(xlsx)
@@ -11,7 +10,8 @@ library(RODBC)
 
 
 ### get the dungeon instrument serial numbers 
-FA.Instruments <- read.xlsx("G:\\Departments\\BioChem\\BioChem1_Shared\\Lab Management\\Instruments\\FA Instruments.xlsx", 1)
+
+FA.Instruments <- read.xlsx("\\\\Filer01/Data/Departments\\BioChem\\BioChem1_Shared\\Lab Management\\Instruments\\FA Instruments.xlsx", 1)
 dungeon.instrument.serial.numbers <- as.vector(FA.Instruments$Instrument[which(FA.Instruments$Owner == "IDATEC")])
 dungeon.instrument.serial.numbers <- paste(dungeon.instrument.serial.numbers, collapse="', '")
 dungeon.instrument.serial.numbers <- paste0("( '", dungeon.instrument.serial.numbers, "') ")
@@ -19,7 +19,7 @@ dungeon.instrument.serial.numbers <- paste0("( '", dungeon.instrument.serial.num
 ### scan in the SQL queries 
 dungeon.query <- gsub('serialnumbervector', dungeon.instrument.serial.numbers, paste(scan("SQL\\dungeon_instruments.txt",what=character(),quote=""), collapse=' '))   
 pouch.qc.query <- paste(scan("SQL\\pouch_qc_instruments.txt",what=character(),quote=""), collapse=" ")
-#validation.query <- paste(scan("SQL\\validation_instruments.txt",what=character(),quote=""), collapse=" ")
+
 
 # initialize the list that will hold the query results 
 location.frames <<- vector(mode="list")
@@ -31,7 +31,6 @@ PMScxn <- odbcConnect("PMS_PROD")
 
 location.frames[["dungeon"]] <- sqlQuery(PMScxn, dungeon.query)
 location.frames[["pouchqc"]] <- sqlQuery(PMScxn, pouch.qc.query)
-#location.frames[["validation"]] <- sqlQuery(PMScxn, validation.query)
 
 
 odbcClose(PMScxn)
@@ -94,30 +93,34 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 
 	instrument.rate <- round((sum(location.frames[[l]][ x.row.numbers, "InstrumentError"])/length(location.frames[[l]][ x.row.numbers, "InstrumentError"]))*100, 2)
 	software.rate <- round((sum(location.frames[[l]][ x.row.numbers, "SoftwareError"])/length(location.frames[[l]][ x.row.numbers, "SoftwareError"]))*100, 2)
-	control.rate <- round((sum(location.frames[[l]][ x.row.numbers, "ControlFail"])/length(location.frames[[l]][ x.row.numbers, "ControlFail"]))*100, 2)
+	pcr2.rate <- round((sum(location.frames[[l]][ x.row.numbers, "PCR2"])/length(location.frames[[l]][ x.row.numbers, "PCR2"]))*100, 2)
+	pcr1.rate <- round((sum(location.frames[[l]][ x.row.numbers, "PCR1"])/length(location.frames[[l]][ x.row.numbers, "PCR1"]))*100, 2)
+	yeast.rate <- round((sum(location.frames[[l]][ x.row.numbers, "yeastRNA"])/length(location.frames[[l]][ x.row.numbers, "yeastRNA"]))*100, 2)
 	pouchleak.rate <-round((sum(location.frames[[l]][ x.row.numbers, "PouchLeak"])/length(location.frames[[l]][ x.row.numbers, "PouchLeak"]))*100, 2) 
 	
 	#total.rate <-  round(sum(instrument.rate, software.rate, control.rate, pouchleak.rate, na.rm=TRUE), 2)
-	total.rate.numerator <- sum(unlist(lapply(x.row.numbers, function(k)if(sum(location.frames[[l]][k, c("InstrumentError", "SoftwareError", "PouchLeak", "ControlFail")]) > 0){return(1)}else{return(0)})))
+	total.rate.numerator <- sum(unlist(lapply(x.row.numbers, function(k)if(sum(location.frames[[l]][k, c("InstrumentError", "SoftwareError", "PouchLeak", "PCR1", "PCR2", "yeastRNA")]) > 0){return(1)}else{return(0)})))
 	total.rate <- round((total.rate.numerator/length(x.row.numbers))*100, 2)
 	# convert them into strings 
 	instrument.rate <- paste0(as.character(instrument.rate), "%")
   software.rate <- paste0(as.character(software.rate), "%")
-	control.rate <- paste0(as.character(control.rate), "%")
+	pcr1.rate <- paste0(as.character(pcr1.rate), "%")
+	pcr2.rate <- paste0(as.character(pcr2.rate), "%")
+	yeast.rate <- paste0(as.character(yeast.rate), "%")
 	pouchleak.rate <- paste0(as.character(pouchleak.rate), "%")
 	
 	# add the rates to rate.tables 
 	rate.tables[[l]][[p]][[d]] <<- rbind(rate.tables[[l]][[p]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "% of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
-		"Software Failure Rate"=software.rate, "Control Failure Rate"=control.rate, "Pouch Leak Rate"=pouchleak.rate))
+		"Software Failure Rate"=software.rate,"PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeastRNA Negative Rate" =yeast.rate , "Pouch Leak Rate"=pouchleak.rate))
 	
 	# add the rates to the "All" protocol category in rate.tables
 	if(p != "Custom"){
 		rate.tables[[l]][["All Except Custom"]][[d]] <<- rbind(rate.tables[[l]][["All Except Custom"]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "% of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
-			"Software Failure Rate"=software.rate, "Control Failure Rate"=control.rate, "Pouch Leak Rate"=pouchleak.rate))
+			"Software Failure Rate"=software.rate, "PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeastRNA Negative Rate" =yeast.rate, "Pouch Leak Rate"=pouchleak.rate))
 	}
 		
 	rate.tables[[l]][["All"]][[d]] <<- rbind(rate.tables[[l]][["All"]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "% of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
-		"Software Failure Rate"=software.rate, "Control Failure Rate"=control.rate, "Pouch Leak Rate"=pouchleak.rate))
+		"Software Failure Rate"=software.rate, "PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeastRNA Negative Rate" =yeast.rate, "Pouch Leak Rate"=pouchleak.rate))
 			
 
 	## now return the CP data
@@ -131,21 +134,6 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
   
 			
 }
-
-#getCPvalues <- function(x, all.row.Numbers, l, p, d){
-		## input: a serial number, a list of the corresponding row numbers in location.frames, the location, protocol and date
-	  ## output: a 2 X length(all.row.Number) matrix that holds the Cp values in the top row and the date in the bottom row 
-		
-#		x.row.numbers <- all.row.Numbers[which(location.frames[[l]]$SerialNo[all.row.Numbers] == x)]
-#		output <- matrix(ncol=length(x.row.numbers), nrow=2)
-#		output[1, ] <- location.frames[[l]][x.row.numbers, "Cp"] 
-#		output[2, ] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
-		
-#		output[which(output == 40)] <- NA
-		
-#		return(output)
-#}
-
 
 ## fill up the output data structure 
 for( location in c("dungeon", "pouchqc")){

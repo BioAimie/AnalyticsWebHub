@@ -1,43 +1,59 @@
 
 SET NOCOUNT ON
 
-SELECT DISTINCT
+
+SELECT
        R.[StartTime] AS [Date],
-	   R.[PouchSerialNumber] AS [PouchSerialNumber],
-       R.[InstrumentSerialNumber] AS [SerialNo],
-	   R.[SampleType] AS [Protocol],
-       IIF(TR.[Result] LIKE 'Pass', 0, 1) AS [Value], 
-	   'ControlFail' AS [FailureType]
+       R.[PouchSerialNumber] AS [PouchSerialNumber],
+       R.[SampleType] AS [Protocol],
+       T.[Name] AS [ControlName],
+       IIF(TR.[Result] LIKE 'Pass', 0 , 1) AS [Result]
 INTO #allcontrols
-FROM [FILMARRAYDB].[FilmArray2].[dbo].[TargetResult] TR WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] A WITH(NOLOCK)
-          ON TR.[analysis_id] = A.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK)
-                 ON A.[experiment_id] = R.[Id]
+FROM [FILMARRAYDB].[FilmArray2].[dbo].[Target_Assay] TA WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[Target] T WITH(NOLOCK)
+       ON TA.[target_id] = T.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[TargetResult] TR WITH(NOLOCK)
+             ON T.[Id] = TR.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] A WITH(NOLOCK)
+                    ON TR.[analysis_id] = A.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK)
+                           ON A.[experiment_id] = R.[Id]
 WHERE TR.[TypeCode] = 'control' AND 
-	(
-		 R.[SampleId] LIKE 'QC_RP%' OR 
-		 R.[SampleId] LIKE 'QC_BCID%' OR 
-		 R.[SampleId] LIKE 'QC_GI%' OR
-		 R.[SampleId] LIKE 'QC_ME%' OR
-		 R.[SampleId] LIKE '%PouchQC%'
-	)	 AND R.[StartTime] >= GETDATE() - 400 AND 
-	(
+(
+       R.[SampleId] LIKE 'QC_RP%' OR 
+       R.[SampleId] LIKE 'QC_BCID%' OR 
+       R.[SampleId] LIKE 'QC_GI%' OR
+       R.[SampleId] LIKE 'QC_ME%' OR 
+	   R.[SampleId] LIKE '%PouchQc%'
+) AND R.[StartTime] >= GETDATE() - 370 AND 
 
-		 R.[SampleId] NOT LIKE '%NewBuild%' AND
-		 R.[SampleId] NOT LIKE '%PostRepair%' AND
-		 R.[SampleId] NOT LIKE '%service%'
+(
 
-	)
+		R.[SampleId] NOT LIKE '%NewBuild%' AND
+		R.[SampleId] NOT LIKE '%PostRepair%' AND
+		R.[SampleId] NOT LIKE '%service%'
+)
+
 
 SELECT 
-	[Date],
-	[SerialNo],
+	[Date], 
 	[PouchSerialNumber],
-	[Protocol],
-	IIF(SUM([Value]) > 0 , 1, 0) AS [Value], 
-	[FailureType]
+	[Protocol], 
+	[PCR2 Control] AS [PCR2], 
+	[PCR1 Control] AS [PCR1],
+	[RNA Process Control] AS [yeastRNA]
 INTO #controls
-FROM #allcontrols
-GROUP BY [Date], [SerialNo], [PouchSerialNumber], [Protocol], [FailureType]
+FROM
+(
+	SELECT *
+	FROM #allcontrols
+) P
+PIVOT(
+	MAX([Result])
+	FOR [ControlName] 
+	IN
+	(
+		[PCR2 Control],
+		[RNA Process Control],
+		[PCR1 Control]
+	)
+) PIV
 
 
 SELECT 
@@ -71,14 +87,12 @@ WHERE
 	)
 
 
-
 SELECT 
 	[Date], 
 	[SerialNo], 
 	[PouchSerialNumber],
 	[Protocol],
-	IIF([ExperimentStatus] LIKE 'Instrument% Error', 1, 0) AS [Value], 
-	'InstrumentError' AS [FailureType] 
+	IIF([ExperimentStatus] LIKE 'Instrument% Error', 1, 0) AS [Value]
 INTO #instrumentErrors
 FROM #experimentStatus
 
@@ -88,8 +102,7 @@ SELECT
 	[SerialNo], 
 	[PouchSerialNumber],
 	[Protocol],
-	IIF([ExperimentStatus] LIKE 'Software Error', 1, 0) AS [Value], 
-	'SoftwareError' AS [FailureType] 
+	IIF([ExperimentStatus] LIKE 'Software Error', 1, 0) AS [Value]
 INTO #softwareErrors
 FROM #experimentStatus
 
@@ -99,8 +112,7 @@ SELECT
        R.[InstrumentSerialNumber] AS [SerialNo],
 	   R.[PouchSerialNumber] AS [PouchSerialNumber],
 	   R.[SampleType] AS [Protocol],
-	   ISNULL(P.[PouchLeak], 0 ) AS [Value],
-	   'PouchLeak' AS [FailureType]
+	   ISNULL(P.[PouchLeak], 0 ) AS [Value]
 INTO #pouchLeaks
 FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK) INNER JOIN [PouchTracker].[dbo].[PostRunPouchObservations] P WITH(NOLOCK) 
 		ON P.[SerialNumber] = R.[PouchSerialNumber] 
@@ -145,7 +157,9 @@ SELECT
 	ISNULL(ie.[Value], 0) AS [InstrumentError],
 	ISNULL(se.[Value], 0) AS [SoftwareError], 
 	ISNULL(pl.[Value],0 ) AS [PouchLeak], 
-	ISNULL(c.[Value], 0) AS [ControlFail],
+	ISNULL(c.[PCR2], 0) AS [PCR2],
+	ISNULL(c.[PCR1], 0) AS [PCR1],
+	ISNULL(c.[yeastRNA], 0) AS [yeastRNA],
 	FORMAT(AVG(ISNULL(cpv.[Cp], 40)), 'N2') AS [Cp]
 INTO #fa2
 FROM #instrumentErrors ie LEFT JOIN #softwareErrors se 
@@ -153,48 +167,62 @@ FROM #instrumentErrors ie LEFT JOIN #softwareErrors se
 		ON ie.[PouchSerialNumber] = pl.[PouchSerialNumber] LEFT JOIN #controls c
 			ON ie.[PouchSerialNumber] = c.[PouchSerialNumber] LEFT JOIN #cpValues cpv
 				ON ie.[PouchSerialNumber] = cpv.[PouchSerialNumber]
-GROUP BY ie.[Date], ie.[SerialNo], ie.[Protocol], ie.[Value], se.[Value], pl.[Value], c.[Value]
+GROUP BY ie.[Date], ie.[SerialNo], ie.[Protocol], ie.[Value], se.[Value], pl.[Value], c.[PCR1], c.[PCR2], c.[yeastRNA]
 
 
 
 SELECT
        R1.[StartTime] AS [Date],
-       R1.[InstrumentSerialNumber] AS [SerialNo],
-	   R1.[PouchSerialNumber] AS [PouchSerialNumber], 
-	   R1.[SampleType] AS [Protocol],
-       IIF(TR1.[Result] LIKE 'Pass', 0, 1) AS [Value], 
-	   'ControlFail' AS [FailureType]
+       R1.[PouchSerialNumber] AS [PouchSerialNumber],
+       R1.[SampleType] AS [Protocol],
+       T1.[Name] AS [ControlName],
+       IIF(TR1.[Result] LIKE 'Pass', 0 , 1) AS [Result]
 INTO #allcontrols1
-FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[TargetResult] TR1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] A1 WITH(NOLOCK)
-          ON TR1.[analysis_id] = A1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R1 WITH(NOLOCK)
-                 ON A1.[experiment_id] = R1.[Id]
+FROM [FILMARRAYDB].[FilmArray2].[dbo].[Target_Assay] TA1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[Target] T1 WITH(NOLOCK)
+       ON TA1.[target_id] = T1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[TargetResult] TR1 WITH(NOLOCK)
+             ON T1.[Id] = TR1.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] A1 WITH(NOLOCK)
+                    ON TR1.[analysis_id] = A1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R1 WITH(NOLOCK)
+                           ON A1.[experiment_id] = R1.[Id]
 WHERE TR1.[TypeCode] = 'control' AND 
-	(
-		R1.[SampleId] LIKE 'QC_RP%' OR 
-		R1.[SampleId] LIKE 'QC_BCID%' OR 
-		R1.[SampleId] LIKE 'QC_GI%' OR
-		R1.[SampleId] LIKE 'QC_ME%' OR
-		R1.[SampleId] LIKE '%PouchQC%'
-	)  AND R1.[StartTime] >= GETDATE() - 400 AND 
-	(
+(
+       R1.[SampleId] LIKE 'QC_RP%' OR 
+       R1.[SampleId] LIKE 'QC_BCID%' OR 
+       R1.[SampleId] LIKE 'QC_GI%' OR
+       R1.[SampleId] LIKE 'QC_ME%' OR 
+	   R1.[SampleId] LIKE '%PouchQc%'
+) AND R1.[StartTime] >= GETDATE() - 370 AND 
+
+(
 
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-
-	)
+)
 
 
 SELECT 
-	[Date],
-	[SerialNo],
+	[Date], 
 	[PouchSerialNumber],
-	[Protocol],
-	IIF(SUM([Value]) > 0 , 1, 0) AS [Value],
-	[FailureType]
+	[Protocol], 
+	[PCR2 Control] AS [PCR2], 
+	[PCR1 Control] AS [PCR1],
+	[RNA Process Control] AS [yeastRNA]
 INTO #controls1
-FROM #allcontrols1
-GROUP BY [Date], [SerialNo], [PouchSerialNumber], [Protocol], [FailureType]
+FROM
+(
+	SELECT *
+	FROM #allcontrols1
+) P
+PIVOT(
+	MAX([Result])
+	FOR [ControlName] 
+	IN
+	(
+		[PCR2 Control],
+		[RNA Process Control],
+		[PCR1 Control]
+	)
+) PIV
 
 
 SELECT 
@@ -233,8 +261,7 @@ SELECT
 	[SerialNo], 
 	[PouchSerialNumber],
 	[Protocol],
-	IIF([ExperimentStatus] LIKE 'Instrument% Error', 1, 0) AS [Value], 
-	'InstrumentError' AS [FailureType] 
+	IIF([ExperimentStatus] LIKE 'Instrument% Error', 1, 0) AS [Value]
 INTO #instrumentErrors1
 FROM #experimentStatus1
 
@@ -244,10 +271,10 @@ SELECT
 	[SerialNo], 
 	[PouchSerialNumber],
 	[Protocol],
-	IIF([ExperimentStatus] LIKE 'Software Error', 1, 0) AS [Value], 
-	'SoftwareError' AS [FailureType] 
+	IIF([ExperimentStatus] LIKE 'Software Error', 1, 0) AS [Value]
 INTO #softwareErrors1
 FROM #experimentStatus1
+
 
 
 SELECT
@@ -255,8 +282,7 @@ SELECT
        R1.[InstrumentSerialNumber] AS [SerialNo],
 	   R1.[PouchSerialNumber] AS [PouchSerialNumber],
 	   R1.[SampleType] AS [Protocol],
-	   ISNULL(P1.[PouchLeak], 0 ) AS [Value],
-	   'PouchLeak' AS [FailureType]
+	   ISNULL(P1.[PouchLeak], 0 ) AS [Value]
 INTO #pouchLeaks1
 FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R1 WITH(NOLOCK) INNER JOIN [PouchTracker].[dbo].[PostRunPouchObservations] P1 WITH(NOLOCK) 
 		ON P1.[SerialNumber] = R1.[PouchSerialNumber] 
@@ -301,7 +327,9 @@ SELECT
 	ISNULL(ie1.[Value], 0 ) AS [InstrumentError],
 	ISNULL(se1.[Value], 0)  AS [SoftwareError], 
 	ISNULL(pl1.[Value], 0)  AS [PouchLeak], 
-	ISNULL(c1.[Value], 0) AS [ControlFail],
+	ISNULL(c1.[PCR2], 0) AS [PCR2],
+	ISNULL(c1.[PCR1], 0) AS [PCR1],
+	ISNULL(c1.[yeastRNA], 0) AS [yeastRNA],
 	FORMAT(AVG(ISNULL(cpv1.[Cp], 40)), 'N2') AS [Cp]
 INTO #fa1
 FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1 
@@ -309,7 +337,8 @@ FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1
 		ON ie1.[PouchSerialNumber] = pl1.[PouchSerialNumber] LEFT JOIN #controls1 c1
 			ON ie1.[PouchSerialNumber] = c1.[PouchSerialNumber] LEFT JOIN #cpValues1 cpv1
 				ON ie1.[PouchSerialNumber] = cpv1.[PouchSerialNumber]
-GROUP BY ie1.[Date], ie1.[SerialNo], ie1.[Protocol], ie1.[Value], se1.[Value], pl1.[Value], c1.[Value]
+GROUP BY ie1.[Date], ie1.[SerialNo], ie1.[Protocol], ie1.[Value], se1.[Value], pl1.[Value], c1.[PCR1], c1.[PCR2], c1.[yeastRNA]
+
 
 SELECT * 
 FROM 
@@ -320,6 +349,7 @@ FROM
 	    SELECT * 
 	    FROM #fa2
 	)aft
+
 
 
 DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cpValues, #cpValues1
