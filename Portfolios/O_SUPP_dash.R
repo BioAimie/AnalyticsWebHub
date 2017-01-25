@@ -14,9 +14,9 @@ library(dateManip)
 source('Portfolios/O_SUPP_load.R')
 
 source('Rfunctions/createPaletteOfVariableLength.R')
+source('Rfunctions/makeTimeStamp.R')
 
 calendar.week <- createCalendarLikeMicrosoft(2007, 'Week')
-
 
 #Find suppliers who have dropped below 90% acceptance rate in last 90 days (3 months)
 
@@ -96,7 +96,7 @@ if (length(vendors) < 10) {
 #x scale
 sub1 <- subset(b, VendName.x == vendors[1])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub1[,'DateGroup']))[order(as.character(unique(sub1[,'DateGroup'])))][seq(1,length(as.character(unique(sub1[,'DateGroup']))), 12)])
-chart.1 <- ggplot(sub1, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.1 <- ggplot(sub1, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
   axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -106,7 +106,7 @@ chart.1 <- ggplot(sub1, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub2 <- subset(b, VendName.x == vendors[2])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub2[,'DateGroup']))[order(as.character(unique(sub2[,'DateGroup'])))][seq(1,length(as.character(unique(sub2[,'DateGroup']))), 12)])
-chart.2 <- ggplot(sub2, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.2 <- ggplot(sub2, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -116,7 +116,7 @@ chart.2 <- ggplot(sub2, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub3 <- subset(b, VendName.x == vendors[3])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub3[,'DateGroup']))[order(as.character(unique(sub3[,'DateGroup'])))][seq(1,length(as.character(unique(sub3[,'DateGroup']))), 12)])
-chart.3 <- ggplot(sub3, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.3 <- ggplot(sub3, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -126,7 +126,7 @@ chart.3 <- ggplot(sub3, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub4 <- subset(b, VendName.x == vendors[4])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub4[,'DateGroup']))[order(as.character(unique(sub4[,'DateGroup'])))][seq(1,length(as.character(unique(sub4[,'DateGroup']))), 12)])
-chart.4 <- ggplot(sub4, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.4 <- ggplot(sub4, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -136,7 +136,7 @@ chart.4 <- ggplot(sub4, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub5 <- subset(b, VendName.x == vendors[5])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub5[,'DateGroup']))[order(as.character(unique(sub5[,'DateGroup'])))][seq(1,length(as.character(unique(sub5[,'DateGroup']))), 12)])
-chart.5 <- ggplot(sub5, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.5 <- ggplot(sub5, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -146,7 +146,7 @@ chart.5 <- ggplot(sub5, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub6 <- subset(b, VendName.x == vendors[6])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub6[,'DateGroup']))[order(as.character(unique(sub6[,'DateGroup'])))][seq(1,length(as.character(unique(sub6[,'DateGroup']))), 12)])
-chart.6 <- ggplot(sub6, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.6 <- ggplot(sub6, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -156,7 +156,7 @@ chart.6 <- ggplot(sub6, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub7 <- subset(b, VendName.x == vendors[7])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub7[,'DateGroup']))[order(as.character(unique(sub7[,'DateGroup'])))][seq(1,length(as.character(unique(sub7[,'DateGroup']))), 12)])
-chart.7 <- ggplot(sub7, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.7 <- ggplot(sub7, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -166,7 +166,7 @@ chart.7 <- ggplot(sub7, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub8 <- subset(b, VendName.x == vendors[8])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub8[,'DateGroup']))[order(as.character(unique(sub8[,'DateGroup'])))][seq(1,length(as.character(unique(sub8[,'DateGroup']))), 12)])
-chart.8 <- ggplot(sub8, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.8 <- ggplot(sub8, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -176,7 +176,7 @@ chart.8 <- ggplot(sub8, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub9 <- subset(b, VendName.x == vendors[9])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub9[,'DateGroup']))[order(as.character(unique(sub9[,'DateGroup'])))][seq(1,length(as.character(unique(sub9[,'DateGroup']))), 12)])
-chart.9 <- ggplot(sub9, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.9 <- ggplot(sub9, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5,color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -186,7 +186,7 @@ chart.9 <- ggplot(sub9, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
 
 sub10 <- subset(b, VendName.x == vendors[10])
 xScale <- scale_x_discrete(breaks=as.character(unique(sub10[,'DateGroup']))[order(as.character(unique(sub10[,'DateGroup'])))][seq(1,length(as.character(unique(sub10[,'DateGroup']))), 12)])
-chart.10 <- ggplot(sub10, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
+p.vendor.10 <- ggplot(sub10, aes(x=DateGroup, y=ARate, group=1, color=Review)) + 
   geom_line(color='black') + geom_point(size=1.5, color='black') + xlab('Date\n(Year-Week)') + ylab('Vendor Acceptance Rate') + 
   theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20),
         axis.text.y=element_text(hjust=1, color='black', size=20),legend.position='none') + 
@@ -195,53 +195,24 @@ chart.10 <- ggplot(sub10, aes(x=DateGroup, y=ARate, group=1, color=Review)) +
   geom_hline(yintercept=.9, linetype='dashed', color='blue') + xScale
 
 #-----------------------------------------------------------------------------------------------------------------------------
-
 # Export Images for the Web Hub
 setwd(imgDir)
-png(file="image0.png",width=1200,height=800,units='px')
-print(chart.1)
-dev.off()
-png(file="image1.png",width=1200,height=800,units='px')
-print(chart.2)
-dev.off()
-png(file="image2.png",width=1200,height=800,units='px')
-print(chart.3)
-dev.off()
-png(file="image3.png",width=1200,height=800,units='px')
-print(chart.4)
-dev.off()
-png(file="image4.png",width=1200,height=800,units='px')
-print(chart.5)
-dev.off()
-png(file="image5.png",width=1200,height=800,units='px')
-print(chart.6)
-dev.off()
-png(file="image6.png",width=1200,height=800,units='px')
-print(chart.7)
-dev.off()
-png(file="image7.png",width=1200,height=800,units='px')
-print(chart.8)
-dev.off()
-png(file="image8.png",width=1200,height=800,units='px')
-print(chart.9)
-dev.off()
-png(file="image9.png",width=1200,height=800,units='px')
-print(chart.10)
-dev.off()
+plots <- ls()[grep('^p\\.', ls())]
+for(i in 1:length(plots)) {
+  imgName <- paste(substring(plots[i],3),'.png',sep='')
+  
+  png(file=imgName, width=1200, height=800, units='px')
+  print(get(plots[i]))
+  makeTimeStamp(author='Data Science')
+  dev.off()
+}
 
 # Export PDF for the Web Hub
 setwd(pdfDir)
 pdf("SupplierReliability.pdf", width = 11, height = 8)
-print(chart.1)
-print(chart.2)
-print(chart.3)
-print(chart.4)
-print(chart.5)
-print(chart.6)
-print(chart.7)
-print(chart.8)
-print(chart.9)
-print(chart.10)
+for(i in 1:length(plots)) {
+  print(get(plots[i]))
+}
 dev.off()
 
 rm(list = ls())
