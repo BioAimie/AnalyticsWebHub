@@ -264,7 +264,7 @@ shinyServer(function(input, output, session){
 						#)
 				    
 				    #hide("cpError")
-				    showElement("triggerId")
+				    show("triggerId")
 				    # open the plot in another window 
 				   
 				    
@@ -306,10 +306,10 @@ shinyServer(function(input, output, session){
 		  		if(	length(combined.rate.table) != 0){ # if there is data for the given location/date range 
 		  	
 						output$rate.table <- renderDataTable({datatable(combined.rate.table, rownames=FALSE, selection="single")})
-						showElement("rate.table")
+						show("rate.table")
 						output$error.message <- renderText("")
 						output$data.Frame.Title <- renderText(paste0( title.string, " Runs in ", error.message.list[[isolate(input$location.choice)]] , " Over the Last ", isolate(input$date.range.choice), " days"))
-			  		showElement("data.Frame.Title")
+			  		show("data.Frame.Title")
 			  
 			  
       		}else{ # if the data table for that location/time period is empty 
@@ -328,10 +328,10 @@ shinyServer(function(input, output, session){
 		  	if(	length(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]]) != 0){ # if there is data for the given location/date range 
 		  	
 					output$rate.table <- renderDataTable({rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]]}, selection="single")
-					showElement("rate.table")
+					show("rate.table")
 					output$error.message <- renderText("")
 					output$data.Frame.Title <- renderText(paste0( isolate(input$protocol.choice), " Runs in ", error.message.list[[isolate(input$location.choice)]] , " Over the Last ", isolate(input$date.range.choice), " days"))
-			  	showElement("data.Frame.Title")
+			  	show("data.Frame.Title")
 			  
 			  
       	}else{ # if the data table for that location/time period is empty 
