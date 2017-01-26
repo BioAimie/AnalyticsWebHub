@@ -5,7 +5,6 @@ library(shiny)
 # set the working directory 
 setwd('~/WebHub/AnalyticsWebHub/Apps/InteractiveApp')
 
-
 # load in the data to be displayed
 source("Rfunctions\\loadInternalInstrumentApp.R")
 

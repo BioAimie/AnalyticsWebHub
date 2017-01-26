@@ -85,14 +85,14 @@ date.ranges[["360"]] <- c(seq(today, length=2, by="-1 year")[2], today)
 
 
 calculateRates <- function(x, all.row.Numbers, l, p, d){
-	## input: a serial number and a list of row numbers and the location, protocol, date range
-	## output: add a row to the rate.tables data structure, and return CP values for cp.tables 
+	  ## input: a serial number and a list of row numbers and the location, protocol, date range
+	  ## output: add a row to the rate.tables data structure, and return CP values for cp.tables 
 
-	# calculate the different types of failure rates 
-	x.row.numbers <- all.row.Numbers[which(location.frames[[l]]$SerialNo[all.row.Numbers] == x)]
+	  # calculate the different types of failure rates 
+	  x.row.numbers <- all.row.Numbers[which(location.frames[[l]]$SerialNo[all.row.Numbers] == x)]
 
-	instrument.rate <- round((sum(location.frames[[l]][ x.row.numbers, "InstrumentError"])/length(location.frames[[l]][ x.row.numbers, "InstrumentError"]))*100, 2)
-	software.rate <- round((sum(location.frames[[l]][ x.row.numbers, "SoftwareError"])/length(location.frames[[l]][ x.row.numbers, "SoftwareError"]))*100, 2)
+	  instrument.rate <- round((sum(location.frames[[l]][ x.row.numbers, "InstrumentError"])/length(location.frames[[l]][ x.row.numbers, "InstrumentError"]))*100, 2)
+	  software.rate <- round((sum(location.frames[[l]][ x.row.numbers, "SoftwareError"])/length(location.frames[[l]][ x.row.numbers, "SoftwareError"]))*100, 2)
 	pcr2.rate <- round((sum(location.frames[[l]][ x.row.numbers, "PCR2"])/length(location.frames[[l]][ x.row.numbers, "PCR2"]))*100, 2)
 	pcr1.rate <- round((sum(location.frames[[l]][ x.row.numbers, "PCR1"])/length(location.frames[[l]][ x.row.numbers, "PCR1"]))*100, 2)
 	yeast.rate <- round((sum(location.frames[[l]][ x.row.numbers, "yeastRNA"])/length(location.frames[[l]][ x.row.numbers, "yeastRNA"]))*100, 2)
