@@ -42,8 +42,8 @@ shinyServer(function(input, output, session){
 	 				),
 			
 				fluidRow(
-						selectizeInput("protocol.choice", label=h3("Protocol Option(s)"), selected=NULL,
-							choices=list("All Except Custom"="All Except Custom", "All"="All", "NPS" ="NPS", "Stool"="Stool", "BC"="BC", "CSF"="CSF", "QC"="QC", "BT"="BT", "LRTI"="LRTI", "NGDS"="NGDS", "BJI"="BJI", "Custom"="Custom", "Other"="Other"), multiple=TRUE, options=list(placeholder="Click to See Protocol Options"))
+						selectInput("protocol.choice", label=h3("Protocol Option(s)"),
+							choices=list("All Except Custom"="All Except Custom", "All"="All", "NPS" ="NPS", "Stool"="Stool", "BC"="BC", "CSF"="CSF", "QC"="QC", "BT"="BT", "LRTI"="LRTI", "NGDS"="NGDS", "BJI"="BJI", "Custom"="Custom", "Other"="Other"), multiple=TRUE, selected="All Except Custom")
 					),
 			
 			 fluidRow(
@@ -196,56 +196,66 @@ shinyServer(function(input, output, session){
 				 rate.table.rowNum <- as.numeric(input$rate.table_rows_selected)
 				 serial.num <- as.character(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][rate.table.rowNum, 1])
 				 
-				 # get the CP data associated with all the runs on that instrument in that location, protocol and timeframe 
+				  # get the CP data associated with all the runs on that instrument in that location, protocol and timeframe 
 				  cp.data <- cp.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][[serial.num]]
+				  
 					
-				 if(!all(is.na(cp.data[1, ]))){ ## if there are Cp runs to plot 
-				 	  # create the plot and store it in the www/ folder
-				 	  x.labels <- as.character(format(as.POSIXlt(cp.data[2, ], origin="1970-01-01"), format="%Y-%m-%d %H:%M:%S"))
-				 	  plotTitle <- paste0(isolate(input$location.choice), isolate(input$date.range.choice), isolate(input$protocol.choice), serial.num,".jpg")
+					output$modalTitle <- renderText({serial.num})
+					
+				 	if(!all(is.na(cp.data[1, ]))){ ## if there are Cp runs to plot 
+				    x.labels <- as.character(format(as.POSIXlt(cp.data[2, ], origin="1970-01-01"), format="%Y-%m-%d %H:%M:%S"))
 				 	  	
-				 	  
-				    #plot(cp.data[2, ], cp.data[1, ], main=main.title, col="#470898", cex.main=1.7, cex.lab=1.5,  cex=1.8, xaxt="n", xlab="", pch=15, ylab="Cp - yeastRNA", ylim=c(min(cp.data[1, ], na.rm=TRUE), max(cp.data[1, ], na.rm=TRUE)));
-				    #lines(cp.data[2, ], cp.data[1, ],lwd=1.7 )
 				 	  if(length(x.labels) <= 9){
-				 	  	  			
-								output$modalPlot <- renderPlot({
-				 	  				main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
-				 	  				par(mar=c(14,5,4.1,2.1));
-				 	  				barplot(cp.data[1, ], main=main.title, xlab="", xlim=c(0, 20), ylim=c(0,30), width=1.5, cex.main=1.6, cex.lab=1.4, cex.names=1.3, cex.lab=1.5, ylab="Average Cp - yeastRNA", names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
-										mtext("Run Start Time", side=1, line=13, cex=1.5)
+				 	  		output$modalPlotCp <- renderPlot({
+								main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+				 	  		par(mar=c(14,5,4.1,2.1));
+				 	  		barplot(cp.data[1, ], main=main.title, xlab="", xlim=c(0, 20), ylim=c(0,30), width=1.5, cex.main=1.5, cex.lab=1.2, cex.names=1.2, ylab="Average Cp - yeastRNA", names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
+								mtext("Run Start Time", side=1, line=11, cex=1.2)
 								})
-								output$modalPlotErrors <- renderPlot({
-				 	      	
-				 	      		plot(1:10, 1:10)
-				 	      	
-				 	      })
+							
 				 	  }else if(length(x.labels) <= 35){
-				 	      output$modalPlot <- renderPlot({
-				 	  				main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
-				 	  				par(mar=c(14,5,4.1,2.1));
-				 	  				barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.6, cex.lab=1.4, cex.names=1.3, cex.lab=1.5, ylab="Average Cp - yeastRNA", ylim=c(0, 30), names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
-				 	      		mtext("Run Start Time", side=1, line=13, cex=1.5)
+				 	      output$modalPlotCp <- renderPlot({
+				 	      x.labels <- as.character(format(as.POSIXlt(cp.data[2, ], origin="1970-01-01"), format="%Y-%m-%d %H:%M:%S"))
+				 	  		main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+				 	  		par(mar=c(14,5,4.1,2.1));
+				 	  		barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.6, cex.lab=1.2, cex.names=1.3, cex.lab=1.2, ylab="Average Cp - yeastRNA", ylim=c(0, 30), names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
+				 	      mtext("Run Start Time", side=1, line=13, cex=1.2)
 				 	      })
-				 	      
-				 	      output$modalPlotErrors <- renderPlot({
-				 	      	
-				 	      		plot(1:10, 1:10)
-				 	      	
-				 	      })
+				 	     
 				 	  }else{
-				 	  		output$modalPlot <- renderPlot({
-				 	  				main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
-				 	  				par(mar=c(14,5,4.1,2.1));
-				 	  	  		barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.6, cex.lab=1.4, cex.names=1.3,cex.lab=1.5, ylab="Average Cp - yeastRNA", names.arg=x.labels, ylim=c(0,30), col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
-				 	  				mtext("Run Start Time", side=1, line=13, cex=1.5)
+								output$modalPlotCp <- renderPlot({
+				 	  	  x.labels <- as.character(format(as.POSIXlt(cp.data[2, ], origin="1970-01-01"), format="%Y-%m-%d %H:%M:%S"))
+				 	  		main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+				 	  		par(mar=c(14,5,4.1,2.1));
+				 	  	  barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.6, cex.lab=1.2, cex.names=1.3,cex.lab=1.2, ylab="Average Cp - yeastRNA", names.arg=x.labels, ylim=c(0,30), col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
+				 	  		mtext("Run Start Time", side=1, line=13, cex=1.2)
 				 	  		})
-				 	  		output$modalPlotErrors <- renderPlot({
-				 	      	
-				 	      		plot(1:10, 1:10)
-				 	      	
-				 	      })
 				 	  }
+				 	  
+				    
+				 } ## if there was Cp data 
+				    ## create the overall error plot regardless of weather or not there was Cp data 
+				    x.limit <- length(unique(format(location.frames[["dungeon"]]$Date, format="%Y-%W")))		
+				    output$modalPlotErrors <- renderPlot({
+				 	      	main.title.overall <- paste0("overall failure rate each week of the last 365 days for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num)
+									par(mar=c(6,5,4.1,2.1));
+				 	      	plot(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 2] , main=main.title.overall, ylab="% of runs with faiures", xlab="", cex.main=1.5, xaxt="n", ylim=c(0,100),xlim=c(1,x.limit) ,cex.lab=1.2,pch=19, col="#110FD1")
+				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 2], pch=19, lwd=2, col="#110FD1")
+									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 3] ,ylim=c(0,100), pch=19, col="#EF52ED")
+				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 3], pch=19, lwd=2, col="#EF52ED")
+									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 4] ,ylim=c(0,100), pch=19, col="#128901")
+				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 4], pch=19, lwd=2, col="#128901")
+									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 5] ,ylim=c(0,100), pch=19, col="#28E112")
+				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 5], pch=19, lwd=2, col="#28E112")
+									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 6] ,ylim=c(0,100), pch=19, col="#F09049")
+				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 6], pch=19, lwd=2, col="#F09049")
+									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 7] ,ylim=c(0,100), pch=19, col="#9E0000")
+				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 7], pch=19, lwd=2, col="#9E0000")
+									axis(1, at=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], labels=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$xlabels, las=2)  
+				 	      	mtext("Week Number", side=1, line=5, cex=1.2)
+				 	      	legend("topright",legend=c("Instrument Errors", "Software Errors","Pouch Leaks", "PCR1", "PCR2", "yeastRNA"), col=c("#110FD1", "#EF52ED", "#128901", "#28E112", "#F09049", "#9E0000"), lwd=3)
+				 	      })
+				 
 				 	  
 				    #output$modalTrigger <- renderUI(
 				
@@ -253,20 +263,20 @@ shinyServer(function(input, output, session){
 				
 						#)
 				    
-				    hide("cpError")
-				    show("triggerId")
+				    #hide("cpError")
+				    showElement("triggerId")
 				    # open the plot in another window 
 				   
 				    
 
-				 }else{ ## if there are no cp values to plot, display an message that says that in lieu of the plot link 
-				 	 hide("triggerId")
-				 	 output$cpError <- renderUI(
-				 	 		tags$div( id="cpErrorMessage", renderText(paste0("No Plot Available - there were no runs on ", serial.num, " with a yeastRNA control"))) 
-				 	 )
+				 #}else{ ## if there are no cp values to plot, display an message that says that in lieu of the plot link 
+				 	 #hide("triggerId")
+				 	 #output$cpError <- renderUI(
+				 	 #		tags$div( id="cpErrorMessage", renderText(paste0("No Plot Available - there were no runs on ", serial.num, " with a yeastRNA control"))) 
+				 	 #)
 				 	 
-				 	 show("cpError")
-				 }
+				 	 #showElement("cpError")
+				# }
 			})
 			
 			### wait for a user to click the "Load Data" button, then upload the data table
@@ -296,10 +306,10 @@ shinyServer(function(input, output, session){
 		  		if(	length(combined.rate.table) != 0){ # if there is data for the given location/date range 
 		  	
 						output$rate.table <- renderDataTable({datatable(combined.rate.table, rownames=FALSE, selection="single")})
-						show("rate.table")
+						showElement("rate.table")
 						output$error.message <- renderText("")
 						output$data.Frame.Title <- renderText(paste0( title.string, " Runs in ", error.message.list[[isolate(input$location.choice)]] , " Over the Last ", isolate(input$date.range.choice), " days"))
-			  		show("data.Frame.Title")
+			  		showElement("data.Frame.Title")
 			  
 			  
       		}else{ # if the data table for that location/time period is empty 
@@ -318,10 +328,10 @@ shinyServer(function(input, output, session){
 		  	if(	length(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]]) != 0){ # if there is data for the given location/date range 
 		  	
 					output$rate.table <- renderDataTable({rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]]}, selection="single")
-					show("rate.table")
+					showElement("rate.table")
 					output$error.message <- renderText("")
 					output$data.Frame.Title <- renderText(paste0( isolate(input$protocol.choice), " Runs in ", error.message.list[[isolate(input$location.choice)]] , " Over the Last ", isolate(input$date.range.choice), " days"))
-			  	show("data.Frame.Title")
+			  	showElement("data.Frame.Title")
 			  
 			  
       	}else{ # if the data table for that location/time period is empty 

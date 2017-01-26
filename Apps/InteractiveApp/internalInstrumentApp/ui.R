@@ -28,7 +28,7 @@ shinyUI(
 			uiOutput("dataFrameTitle"),
 			dataTableOutput("rate.table"),
 			plotOutput("cpPlot"),
-			bsModal(id="modalObject", "This is the Title", trigger="triggerId", size="large", plotOutput("modalPlot"))
+			bsModal(id="modalObject", textOutput("modalTitle"), trigger="triggerId", size="large", plotOutput("modalPlotCp"), plotOutput("modalPlotErrors"))
 		
 			
 		), # main panel 
