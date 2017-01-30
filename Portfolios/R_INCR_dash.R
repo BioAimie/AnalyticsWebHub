@@ -137,14 +137,14 @@ earlyfailures.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(e
 instBuilt.all.alt <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instBuilt.df, c('Key'), startDate.alt, 'Record', 'sum', 1)
 earlyfailures.rate <- mergeCalSparseFrames(earlyfailures.all, instBuilt.all.alt, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 earlyfailures.lims <- addStatsToSparseHandledData(earlyfailures.rate, c('Key'), lagPeriods, TRUE, 3, 'upper')
-x_pos <- c('2015-30','2015-40','2016-10')
-y_pos <- earlyfailures.lims[earlyfailures.lims$DateGroup %in% x_pos, 'Rate']
+x_pos <- c('2015-30','2015-40','2016-10', '2016-22', '2016-43')
+y_pos <- earlyfailures.lims[earlyfailures.lims$DateGroup %in% x_pos, 'Rate'] - .01 
 fail.annotations <- do.call(c, lapply(1:length(x_pos), function(x) paste(strsplit(as.character(annotations.df[annotations.df$DateGroup %in% x_pos, 'Annotation']),split = ',')[[x]], collapse='\n')))
 x1 <- as.character(unique(earlyfailures.lims[,'DateGroup']))[(length(as.character(unique(earlyfailures.lims[,'DateGroup'])))-ceiling(unname(quantile(earlyfailures.df$DeltaWeeks, probs=c(0.80)))))]
 x2 <- as.character(unique(earlyfailures.lims[,'DateGroup']))[(length(as.character(unique(earlyfailures.lims[,'DateGroup'])))-ceiling(unname(quantile(earlyfailures.df$DeltaWeeks, probs=c(0.20)))))]
 y1 <- 0
 y2 <- max(earlyfailures.lims[,'Rate'])
-p.earlyfailures <- ggplot(earlyfailures.lims) + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), color='cyan', fill='white', alpha=0.2) + geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + geom_point(aes(x=DateGroup, y=Rate)) + geom_hline(aes(yintercept=UL), color='blue', lty='dashed') + labs(title='Failures at <100hrs per Instruments Built (not released):\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + facet_wrap(~Key, scale='free_y', ncol=1) + scale_y_continuous(label=percent) + annotate("text",x=x_pos,y=y_pos,label=fail.annotations, size=4) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks.alt)
+p.earlyfailures <- ggplot(earlyfailures.lims) + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), color='cyan', fill='white', alpha=0.2) + geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + geom_point(aes(x=DateGroup, y=Rate)) + geom_hline(aes(yintercept=UL), color='blue', lty='dashed') + labs(title='Failures at <100hrs per Instruments Built (not released):\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + scale_y_continuous(label=percent) + annotate("text",x=x_pos,y=y_pos,label=fail.annotations, size=4) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks.alt)
 
 # make another chart that shows early failures, but instead of showing the rate per instruments built, show it as a rate of instruments in the shipment batch
 earlyfailures.batchsize <- merge(earlyfailures.df[,c('SerialNo','Record')], serialbatches.df[,c('SerialNo','Year','Week','Version','Shipments')], by=c('SerialNo'))
