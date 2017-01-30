@@ -202,7 +202,8 @@ shinyServer(function(input, output, session){
 					
 					output$modalTitle <- renderText({serial.num})
 					
-				 	if(!is.null(cp.data)){ ## if there are Cp runs to plot 
+				 	if(!is.null(cp.data) & !all(is.na(cp.data[1,]))){ ## if there are Cp runs to plot 
+				 		
 				 		show("triggerId")
 				    x.labels <- as.character(format(as.POSIXlt(cp.data[2, ], origin="1970-01-01"), format="%Y-%m-%d %H:%M:%S"))
 				 	  	
