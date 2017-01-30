@@ -4,7 +4,7 @@ library(shinyjs)
 library(shinyBS)
 library(shinythemes)
 library(DT)
-
+##
 setwd('~/WebHub/AnalyticsWebHub/Apps/InteractiveApp')
 error.message.list = list("pouchqc"="PouchQC", "validation"="Validation", "dungeon"= "the Dungeon", "7"="7", "30"="30", "90"="90", "360"="year")
 
@@ -202,7 +202,8 @@ shinyServer(function(input, output, session){
 					
 					output$modalTitle <- renderText({serial.num})
 					
-				 	if(!all(is.na(cp.data[1, ]))){ ## if there are Cp runs to plot 
+				 	if(!is.null(cp.data)){ ## if there are Cp runs to plot 
+				 		show("triggerId")
 				    x.labels <- as.character(format(as.POSIXlt(cp.data[2, ], origin="1970-01-01"), format="%Y-%m-%d %H:%M:%S"))
 				 	  	
 				 	  if(length(x.labels) <= 9){
@@ -233,28 +234,36 @@ shinyServer(function(input, output, session){
 				 	  }
 				 	  
 				    
-				 } ## if there was Cp data 
+				 }else{
+				 	
+				 		hide("triggerId")
+				 		output$cpError <- renderUI(
+				 	 			tags$div( id="cpErrorMessage", renderText(paste0("No Plot Available - there were no runs on ", serial.num, " with a yeastRNA control"))) 
+				 		)
+				 	  show("cpError")
+				 	}
+					
 				    ## create the overall error plot regardless of weather or not there was Cp data 
-				    x.limit <- length(unique(format(location.frames[["dungeon"]]$Date, format="%Y-%W")))		
-				    output$modalPlotErrors <- renderPlot({
-				 	      	main.title.overall <- paste0("overall failure rate each week of the last 365 days for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num)
-									par(mar=c(6,5,4.1,2.1));
-				 	      	plot(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 2] , main=main.title.overall, ylab="% of runs with faiures", xlab="", cex.main=1.5, xaxt="n", ylim=c(0,100),xlim=c(1,x.limit) ,cex.lab=1.2,pch=19, col="#110FD1")
-				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 2], pch=19, lwd=2, col="#110FD1")
-									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 3] ,ylim=c(0,100), pch=19, col="#EF52ED")
-				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 3], pch=19, lwd=2, col="#EF52ED")
-									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 4] ,ylim=c(0,100), pch=19, col="#128901")
-				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 4], pch=19, lwd=2, col="#128901")
-									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 5] ,ylim=c(0,100), pch=19, col="#28E112")
-				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 5], pch=19, lwd=2, col="#28E112")
-									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 6] ,ylim=c(0,100), pch=19, col="#F09049")
-				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 6], pch=19, lwd=2, col="#F09049")
-									points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 7] ,ylim=c(0,100), pch=19, col="#9E0000")
-				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 7], pch=19, lwd=2, col="#9E0000")
-									axis(1, at=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], labels=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$xlabels, las=2)  
-				 	      	mtext("Week Number", side=1, line=5, cex=1.2)
-				 	      	legend("topright",legend=c("Instrument Errors", "Software Errors","Pouch Leaks", "PCR1", "PCR2", "yeastRNA"), col=c("#110FD1", "#EF52ED", "#128901", "#28E112", "#F09049", "#9E0000"), lwd=3)
-				 	      })
+				 #   x.limit <- length(unique(format(location.frames[["dungeon"]]$Date, format="%Y-%W")))		
+				 #   output$modalPlotErrors <- renderPlot({
+				 #	      	main.title.overall <- paste0("overall failure rate each week of the last 365 days for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num)
+				#					par(mar=c(6,5,4.1,2.1));
+				# 	      	plot(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 2] , main=main.title.overall, ylab="% of runs with faiures", xlab="", cex.main=1.5, xaxt="n", ylim=c(0,100),xlim=c(1,x.limit) ,cex.lab=1.2,pch=19, col="#110FD1")
+				# 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 2], pch=19, lwd=2, col="#110FD1")
+			#						points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 3] ,ylim=c(0,100), pch=19, col="#EF52ED")
+		#	#	 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 3], pch=19, lwd=2, col="#EF52ED")
+			#						points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 4] ,ylim=c(0,100), pch=19, col="#128901")
+		#		 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 4], pch=19, lwd=2, col="#128901")
+	#								points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 5] ,ylim=c(0,100), pch=19, col="#28E112")
+#				 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 5], pch=19, lwd=2, col="#28E112")
+			#						points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 6] ,ylim=c(0,100), pch=19, col="#F09049")
+			#	 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 6], pch=19, lwd=2, col="#F09049")
+				#					points(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 7] ,ylim=c(0,100), pch=19, col="#9E0000")
+				# 	      	lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 7], pch=19, lwd=2, col="#9E0000")
+				#					axis(1, at=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], labels=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$xlabels, las=2)  
+				 #	      	mtext("Week Number", side=1, line=5, cex=1.2)
+				 #	      	legend("topright",legend=c("Instrument Errors", "Software Errors","Pouch Leaks", "PCR1", "PCR2", "yeastRNA"), col=c("#110FD1", "#EF52ED", "#128901", "#28E112", "#F09049", "#9E0000"), lwd=3)
+				 #	      })
 				 
 				 	  
 				    #output$modalTrigger <- renderUI(
@@ -264,7 +273,7 @@ shinyServer(function(input, output, session){
 						#)
 				    
 				    #hide("cpError")
-				    show("triggerId")
+				    #show("triggerId")
 				    # open the plot in another window 
 				   
 				    
@@ -275,7 +284,7 @@ shinyServer(function(input, output, session){
 				 	 #		tags$div( id="cpErrorMessage", renderText(paste0("No Plot Available - there were no runs on ", serial.num, " with a yeastRNA control"))) 
 				 	 #)
 				 	 
-				 	 #showElement("cpError")
+				 	 #show("cpError")
 				# }
 			})
 			
