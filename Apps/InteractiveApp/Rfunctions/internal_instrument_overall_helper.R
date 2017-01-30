@@ -2,7 +2,7 @@
 
 
 storeOverallErrorRate <- function(row.numbers, location, protocol, serial.num){
-		
+		print("here")
 		temp.location.frames <- location.frames[[location]][row.numbers, ]
 		temp.location.frames$Date <- format(temp.location.frames$Date, format="%Y-%W")
 		
@@ -42,7 +42,8 @@ storeOverallErrorRate <- function(row.numbers, location, protocol, serial.num){
 				dates <- unique(temp.location.frames$Date)
 				for(w in dates ){
 				 		week.rates <- as.vector(unlist(apply(temp.location.frames[which(temp.location.frames$Date == w), c("InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1" ,"yeastRNA")], 2, function(x)round((sum(x, na.rm=TRUE)/length(x))*100,2))))
-						overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]] <<- rbind(overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]], c(which(overall.error.labels == w), week.rates))
+						
+				 		overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]] <<- rbind(overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]], c(which(overall.error.labels == w), week.rates))
 				}
 			
 				overall.error.rate.tables[[location]][[protocol]][[serial.num]][["xlabels"]] <<- dates
