@@ -21,7 +21,6 @@ WHERE TR.[TypeCode] = 'control' AND  R.[StartTime] >= GETDATE() - 370 AND
 		R.[SampleId] NOT LIKE '%service%'
 ) AND R.[InstrumentSerialNumber] IN serialnumbervector
 
-
 SELECT 
 	[Date], 
 	[PouchSerialNumber],
@@ -67,6 +66,7 @@ WHERE
 		R.[SampleId] NOT LIKE '%PostRepair%' AND
 		R.[SampleId] NOT LIKE '%service%'
 	)	AND R.[StartTime] >= GETDATE() - 400 AND  R.[InstrumentSerialNumber] IN serialnumbervector
+
 SELECT 
 	[Date], 
 	[SerialNo], 
@@ -102,7 +102,6 @@ WHERE
 		 R.[SampleId] NOT LIKE '%PostRepair%' AND
 		 R.[SampleId] NOT LIKE '%service%'
 	 )	 AND  R.[StartTime] >= GETDATE() - 400  AND  R.[InstrumentSerialNumber] IN serialnumbervector
-
 
 SELECT
        ER.[PouchSerialNumber] AS [PouchSerialNumber],
@@ -162,7 +161,6 @@ WHERE TR1.[TypeCode] = 'control' AND  R1.[StartTime] >= GETDATE() - 370 AND
 		R1.[SampleId] NOT LIKE '%service%'
 ) AND R1.[InstrumentSerialNumber] IN serialnumbervector
 
-
 SELECT 
 	[Date], 
 	[PouchSerialNumber],
@@ -208,8 +206,7 @@ WHERE
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-	)   AND  R1.[StartTime] >= GETDATE() - 400AND  R1.[InstrumentSerialNumber] IN serialnumbervector
-
+	)   AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervector
 
 SELECT 
 	[Date], 
@@ -271,8 +268,8 @@ SELECT
 	ISNULL(ie1.[Value], 0 ) AS [InstrumentError],
 	ISNULL(se1.[Value], 0)  AS [SoftwareError], 
 	ISNULL(pl1.[Value], 0)  AS [PouchLeak], 
-	ISNULL(c1.[PCR2], 0) AS [PCR1],
-	ISNULL(c1.[PCR1], 0) AS [PCR2],
+	ISNULL(c1.[PCR2], 0) AS [PCR2],
+	ISNULL(c1.[PCR1], 0) AS [PCR1],
 	ISNULL(c1.[yeastRNA], 0) AS [yeastRNA],
 	FORMAT(AVG(ISNULL(cpv1.[Cp], 40)), 'N2') AS [Cp]
 INTO #fa1
@@ -285,7 +282,7 @@ GROUP BY ie1.[Date], ie1.[SerialNo], ie1.[Protocol], ie1.[Value], se1.[Value], p
 
 
 
-SELECT * 
+SELECT *
 FROM 
 	( 
 		SELECT * 
