@@ -19,7 +19,13 @@ WHERE TR.[TypeCode] = 'control' AND  R.[StartTime] >= GETDATE() - 370 AND
 		R.[SampleId] NOT LIKE '%NewBuild%' AND
 		R.[SampleId] NOT LIKE '%PostRepair%' AND
 		R.[SampleId] NOT LIKE '%service%'
-) AND R.[InstrumentSerialNumber] IN serialnumbervector
+) AND R.[InstrumentSerialNumber] IN serialnumbervectors 
+GROUP BY
+     R.[StartTime],
+     R.[PouchSerialNumber],
+     R.[SampleType],
+     T.[Name],
+     TR.[Result]
 
 SELECT 
 	[Date], 
@@ -65,7 +71,7 @@ WHERE
 		R.[SampleId] NOT LIKE '%NewBuild%' AND
 		R.[SampleId] NOT LIKE '%PostRepair%' AND
 		R.[SampleId] NOT LIKE '%service%'
-	)	AND R.[StartTime] >= GETDATE() - 400 AND  R.[InstrumentSerialNumber] IN serialnumbervector
+	)	AND R.[StartTime] >= GETDATE() - 400 AND  R.[InstrumentSerialNumber] IN serialnumbervectors
 
 SELECT 
 	[Date], 
@@ -101,7 +107,7 @@ WHERE
 		 R.[SampleId] NOT LIKE '%NewBuild%' AND
 		 R.[SampleId] NOT LIKE '%PostRepair%' AND
 		 R.[SampleId] NOT LIKE '%service%'
-	 )	 AND  R.[StartTime] >= GETDATE() - 400  AND  R.[InstrumentSerialNumber] IN serialnumbervector
+	 )	 AND  R.[StartTime] >= GETDATE() - 400  AND  R.[InstrumentSerialNumber] IN serialnumbervectors
 
 SELECT
        ER.[PouchSerialNumber] AS [PouchSerialNumber],
@@ -117,7 +123,7 @@ FROM [FILMARRAYDB].[FilmArray2].[dbo].[AssayResult] AR WITH(NOLOCK) INNER JOIN [
                            ON RX.[Id] = RR.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] MA WITH(NOLOCK) 
                                  ON AR.[analysis_id] = MA.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] ER WITH(NOLOCK) 
                                         ON MA.[experiment_id] = ER.[Id]
-WHERE ER.[StartTime] >= GETDATE() - 370  AND  AA.[Name] LIKE 'yeastRNA'
+WHERE ER.[StartTime] >= GETDATE() - 370  AND  (AA.[Name] LIKE 'yeastRNA' OR AA.[Name] LIKE '%RNA%')
 
 
 
@@ -159,7 +165,13 @@ WHERE TR1.[TypeCode] = 'control' AND  R1.[StartTime] >= GETDATE() - 370 AND
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-) AND R1.[InstrumentSerialNumber] IN serialnumbervector
+) AND R1.[InstrumentSerialNumber] IN serialnumbervectors
+GROUP BY
+     R1.[StartTime],
+     R1.[PouchSerialNumber],
+     R1.[SampleType],
+     T1.[Name],
+     TR1.[Result]
 
 SELECT 
 	[Date], 
@@ -206,7 +218,7 @@ WHERE
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-	)   AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervector
+	)   AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervectors
 
 SELECT 
 	[Date], 
@@ -242,7 +254,7 @@ WHERE
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-	)	AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervector
+	)	AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervectors
 
 SELECT
        ER1.[PouchSerialNumber] AS [PouchSerialNumber],
@@ -258,7 +270,7 @@ FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[AssayResult] AR1 WITH(NOLOCK) INNER
                            ON RX1.[Id] = RR1.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] MA1 WITH(NOLOCK) 
                                  ON AR1.[analysis_id] = MA1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] ER1 WITH(NOLOCK) 
                                         ON MA1.[experiment_id] = ER1.[Id]
-WHERE ER1.[StartTime] >= GETDATE() - 370  AND AA1.[Name] LIKE 'yeastRNA'
+WHERE ER1.[StartTime] >= GETDATE() - 370  AND (AA1.[Name] LIKE 'yeastRNA' OR AA1.[Name] LIKE '%RNA%')
 
 
 SELECT 
