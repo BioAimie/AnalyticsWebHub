@@ -1,6 +1,4 @@
-
 SET NOCOUNT ON
-
 
 SELECT
        R.[StartTime] AS [Date],
@@ -22,14 +20,18 @@ WHERE TR.[TypeCode] = 'control' AND
        R.[SampleId] LIKE 'QC_ME%' OR 
 	   R.[SampleId] LIKE '%PouchQc%'
 ) AND R.[StartTime] >= GETDATE() - 370 AND 
-
 (
 
 		R.[SampleId] NOT LIKE '%NewBuild%' AND
 		R.[SampleId] NOT LIKE '%PostRepair%' AND
 		R.[SampleId] NOT LIKE '%service%'
 )
-
+GROUP BY
+	 R.[StartTime],
+     R.[PouchSerialNumber],
+     R.[SampleType],
+     T.[Name],
+     TR.[Result]
 
 SELECT 
 	[Date], 
@@ -147,7 +149,7 @@ FROM [FILMARRAYDB].[FilmArray2].[dbo].[AssayResult] AR WITH(NOLOCK) INNER JOIN [
                            ON RX.[Id] = RR.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] MA WITH(NOLOCK) 
                                  ON AR.[analysis_id] = MA.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] ER WITH(NOLOCK) 
                                         ON MA.[experiment_id] = ER.[Id]
-WHERE ER.[StartTime] >= GETDATE() - 370  AND  AA.[Name] LIKE 'yeastRNA'
+WHERE ER.[StartTime] >= GETDATE() - 30  AND (AA.[Name] LIKE 'yeast%' OR AA.[Name] LIKE '%RNA%')
 
 
 SELECT 
