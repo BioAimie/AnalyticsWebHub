@@ -114,9 +114,19 @@ dungeon.instrument.serial.numbers <- paste0("( '", dungeon.instrument.serial.num
 dungeon.query <- gsub('serialnumbervector', dungeon.instrument.serial.numbers, paste(scan("SQL\\dungeon_instruments.txt",what=character(),quote=""), collapse=' '))   
 pouch.qc.query <- paste(scan("SQL\\pouch_qc_instruments.txt",what=character(),quote=""), collapse=" ")
 
+location.frames <<- list()
+
+print("stating sql queries..")
+
+PMScxn <- odbcConnect("PMS_PROD")
+
+location.frames[["dungeon"]] <- sqlQuery(PMScxn, dungeon.query)
+location.frames[["pouchqc"]] <- sqlQuery(PMScxn, pouch.qc.query)
+
+
+odbcClose(PMScxn)
 
 print("sql queries completed")
-
 ############################################################################################################################
 ################ Create the rate tables that will be loaded into the UI (cut down on website load time) ####################
 ############################################################################################################################

@@ -209,27 +209,27 @@ shinyServer(function(input, output, session){
 				 	  	
 				 	  if(length(x.labels) <= 9){
 				 	  		output$modalPlotCp <- renderPlot({
-								main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+								main.title <- paste0("average yeast Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
 				 	  		par(mar=c(14,5,4.1,2.1));
-				 	  		barplot(cp.data[1, ], main=main.title, xlab="", xlim=c(0, 20), ylim=c(0,30), width=1.5, cex.main=1.5, cex.lab=1.2, cex.names=1.2, ylab="Average Cp - yeastRNA", names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
+				 	  		barplot(cp.data[1, ], main=main.title, xlab="", xlim=c(0, 20), ylim=c(0,30), width=1.5, cex.main=1.3, cex.lab=1.2, cex.names=1.2, ylab="Average Cp - yeast", names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
 								mtext("Run Start Time", side=1, line=11, cex=1.2)
 								})
 							
 				 	  }else if(length(x.labels) <= 35){
 				 	      output$modalPlotCp <- renderPlot({
 				 	      x.labels <- as.character(format(as.POSIXlt(cp.data[2, ], origin="1970-01-01"), format="%Y-%m-%d %H:%M:%S"))
-				 	  		main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+				 	  		main.title <- paste0("average yeast Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
 				 	  		par(mar=c(14,5,4.1,2.1));
-				 	  		barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.6, cex.lab=1.2, cex.names=1.3, cex.lab=1.2, ylab="Average Cp - yeastRNA", ylim=c(0, 30), names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
+				 	  		barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.3, cex.lab=1.2, cex.names=1.3, cex.lab=1.2, ylab="Average Cp - yeast", ylim=c(0, 30), names.arg=x.labels, col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
 				 	      mtext("Run Start Time", side=1, line=13, cex=1.2)
 				 	      })
 				 	     
 				 	  }else{
 								output$modalPlotCp <- renderPlot({
 				 	  	  x.labels <- as.character(format(as.POSIXlt(cp.data[2, ], origin="1970-01-01"), format="%Y-%m-%d %H:%M:%S"))
-				 	  		main.title <- paste0("average yeastRNA Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+				 	  		main.title <- paste0("average yeast Cp value for ", isolate(input$protocol.choice), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
 				 	  		par(mar=c(14,5,4.1,2.1));
-				 	  	  barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.6, cex.lab=1.2, cex.names=1.3,cex.lab=1.2, ylab="Average Cp - yeastRNA", names.arg=x.labels, ylim=c(0,30), col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
+				 	  	  barplot(cp.data[1, ], main=main.title, xlab="", cex.main=1.3, cex.lab=1.2, cex.names=1.3,cex.lab=1.2, ylab="Average Cp - yeast", names.arg=x.labels, ylim=c(0,30), col="#6B54B0", axes=TRUE, axisnames=TRUE, las=2)
 				 	  		mtext("Run Start Time", side=1, line=13, cex=1.2)
 				 	  		})
 				 	  }
