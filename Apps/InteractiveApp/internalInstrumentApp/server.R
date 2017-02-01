@@ -65,7 +65,7 @@ shinyServer(function(input, output, session){
 			 	  actionButton(class="orderButton","order.by.pcr1", "PCR1"),
 			 		tags$hr(id="orderButtonSpace"),
 			 	  actionButton(class="orderButton","order.by.pcr2", "PCR2"),
-			 	  actionButton(class="orderButton","order.by.yeast", "yeastRNA")
+			 	  actionButton(class="orderButton","order.by.yeast", "yeast")
 			 )
 				
 			 
@@ -138,11 +138,11 @@ shinyServer(function(input, output, session){
 		  observeEvent(input$order.by.yeast, {
 				  
 					if(length(isolate(input$protocol.choice)) == 1 ){
-							row.order <- order(as.numeric(gsub("%", "", unlist(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][,"yeastRNA Negative Rate"]))), decreasing=TRUE)
+							row.order <- order(as.numeric(gsub("%", "", unlist(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][,"yeast Negative Rate"]))), decreasing=TRUE)
 					    output$rate.table <- renderDataTable({rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]][row.order, ]}, selection="single")
 					}else{
 						
-							row.order <- order(as.numeric(gsub("%", "", unlist(combined.rate.table[,"yeastRNA Negative Rate"]))), decreasing=TRUE)
+							row.order <- order(as.numeric(gsub("%", "", unlist(combined.rate.table[,"yeast Negative Rate"]))), decreasing=TRUE)
 					    output$rate.table <- renderDataTable({combined.rate.table[row.order, ]}, selection="single")
 						
 					}
@@ -269,7 +269,7 @@ shinyServer(function(input, output, session){
 				 	  lines(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 7], pch=19, lwd=2, col="#9E0000")
 						axis(1, at=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix[, 1], labels=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$xlabels, las=2)  
 				 	  mtext("Week Number", side=1, line=5, cex=1.2)
-				 	  legend("topright",legend=c("Instrument Errors", "Software Errors","Pouch Leaks", "PCR1", "PCR2", "yeastRNA"), col=c("#110FD1", "#EF52ED", "#128901", "#28E112", "#F09049", "#9E0000"), lwd=3)
+				 	  legend("topright",legend=c("Instrument Errors", "Software Errors","Pouch Leaks", "PCR1", "PCR2", "yeast"), col=c("#110FD1", "#EF52ED", "#128901", "#28E112", "#F09049", "#9E0000"), lwd=3)
 				 })
 				 	
 				 		#hide("triggerId")

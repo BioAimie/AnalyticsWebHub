@@ -19,7 +19,7 @@ WHERE TR.[TypeCode] = 'control' AND  R.[StartTime] >= GETDATE() - 370 AND
 		R.[SampleId] NOT LIKE '%NewBuild%' AND
 		R.[SampleId] NOT LIKE '%PostRepair%' AND
 		R.[SampleId] NOT LIKE '%service%'
-) AND R.[InstrumentSerialNumber] IN serialnumbervectors 
+) AND R.[InstrumentSerialNumber] IN serialnumbervector 
 GROUP BY
      R.[StartTime],
      R.[PouchSerialNumber],
@@ -27,13 +27,14 @@ GROUP BY
      T.[Name],
      TR.[Result]
 
+
 SELECT 
 	[Date], 
 	[PouchSerialNumber],
 	[Protocol], 
 	[PCR2 Control] AS [PCR2], 
 	[PCR1 Control] AS [PCR1],
-	[RNA Process Control] AS [yeastRNA]
+	IIF((ISNULL([RNA Process Control], 0) + ISNULL([DNA Process Control], 0)) > 0, 1 ,0)  AS [yeast]
 INTO #controls
 FROM
 (
@@ -47,7 +48,8 @@ PIVOT(
 	(
 		[PCR1 Control],
 		[PCR2 Control],
-		[RNA Process Control]
+		[RNA Process Control],
+		[DNA Process Control]
 	)
 ) PIV
 
@@ -71,7 +73,7 @@ WHERE
 		R.[SampleId] NOT LIKE '%NewBuild%' AND
 		R.[SampleId] NOT LIKE '%PostRepair%' AND
 		R.[SampleId] NOT LIKE '%service%'
-	)	AND R.[StartTime] >= GETDATE() - 400 AND  R.[InstrumentSerialNumber] IN serialnumbervectors
+	)	AND R.[StartTime] >= GETDATE() - 400 AND  R.[InstrumentSerialNumber] IN serialnumbervector
 
 SELECT 
 	[Date], 
@@ -107,7 +109,7 @@ WHERE
 		 R.[SampleId] NOT LIKE '%NewBuild%' AND
 		 R.[SampleId] NOT LIKE '%PostRepair%' AND
 		 R.[SampleId] NOT LIKE '%service%'
-	 )	 AND  R.[StartTime] >= GETDATE() - 400  AND  R.[InstrumentSerialNumber] IN serialnumbervectors
+	 )	 AND  R.[StartTime] >= GETDATE() - 400  AND  R.[InstrumentSerialNumber] IN serialnumbervector
 
 SELECT
        ER.[PouchSerialNumber] AS [PouchSerialNumber],
@@ -123,7 +125,7 @@ FROM [FILMARRAYDB].[FilmArray2].[dbo].[AssayResult] AR WITH(NOLOCK) INNER JOIN [
                            ON RX.[Id] = RR.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] MA WITH(NOLOCK) 
                                  ON AR.[analysis_id] = MA.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] ER WITH(NOLOCK) 
                                         ON MA.[experiment_id] = ER.[Id]
-WHERE ER.[StartTime] >= GETDATE() - 370  AND  (AA.[Name] LIKE 'yeastRNA' OR AA.[Name] LIKE '%RNA%')
+WHERE ER.[StartTime] >= GETDATE() - 370  AND  (AA.[Name] LIKE 'yeast%' OR AA.[Name] LIKE '%RNA%')
 
 
 
@@ -136,7 +138,7 @@ SELECT
 	ISNULL(pl.[Value], 0 ) AS [PouchLeak], 
 	ISNULL(c.[PCR2], 0) AS [PCR2],
 	ISNULL(c.[PCR1], 0) AS [PCR1],
-	ISNULL(c.[yeastRNA], 0) AS [yeastRNA],
+	ISNULL(c.[yeast], 0) AS [yeast],
 	FORMAT(AVG(ISNULL(cpv.[Cp], 40)), 'N2') AS [Cp]
 INTO #fa2
 FROM #instrumentErrors ie LEFT JOIN #softwareErrors se 
@@ -144,7 +146,7 @@ FROM #instrumentErrors ie LEFT JOIN #softwareErrors se
 		ON ie.[PouchSerialNumber] = pl.[PouchSerialNumber] LEFT JOIN #controls c
 			ON ie.[PouchSerialNumber] = c.[PouchSerialNumber] LEFT JOIN #cpValues cpv
 				ON ie.[PouchSerialNumber] = cpv.[PouchSerialNumber]
-GROUP BY ie.[Date], ie.[SerialNo], ie.[Protocol], ie.[Value], se.[Value], pl.[Value], c.[PCR1], c.[PCR2], c.[yeastRNA]
+GROUP BY ie.[Date], ie.[SerialNo], ie.[Protocol], ie.[Value], se.[Value], pl.[Value], c.[PCR1], c.[PCR2], c.[yeast]
 
 
 SELECT
@@ -165,7 +167,7 @@ WHERE TR1.[TypeCode] = 'control' AND  R1.[StartTime] >= GETDATE() - 370 AND
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-) AND R1.[InstrumentSerialNumber] IN serialnumbervectors
+) AND R1.[InstrumentSerialNumber] IN serialnumbervector
 GROUP BY
      R1.[StartTime],
      R1.[PouchSerialNumber],
@@ -179,7 +181,7 @@ SELECT
 	[Protocol], 
 	[PCR2 Control] AS [PCR2], 
 	[PCR1 Control] AS [PCR1],
-	[RNA Process Control] AS [yeastRNA]
+	IIF((ISNULL([RNA Process Control], 0) + ISNULL([DNA Process Control], 0)) > 0, 1 ,0)  AS [yeast]
 INTO #controls1
 FROM
 (
@@ -193,7 +195,8 @@ PIVOT(
 	(
 		[PCR1 Control],
 		[PCR2 Control],
-		[RNA Process Control]
+		[RNA Process Control],
+		[DNA Process Control]
 	)
 ) PIV
 
@@ -218,7 +221,7 @@ WHERE
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-	)   AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervectors
+	)   AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervector
 
 SELECT 
 	[Date], 
@@ -254,7 +257,7 @@ WHERE
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-	)	AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervectors
+	)	AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervector
 
 SELECT
        ER1.[PouchSerialNumber] AS [PouchSerialNumber],
@@ -270,7 +273,7 @@ FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[AssayResult] AR1 WITH(NOLOCK) INNER
                            ON RX1.[Id] = RR1.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] MA1 WITH(NOLOCK) 
                                  ON AR1.[analysis_id] = MA1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] ER1 WITH(NOLOCK) 
                                         ON MA1.[experiment_id] = ER1.[Id]
-WHERE ER1.[StartTime] >= GETDATE() - 370  AND (AA1.[Name] LIKE 'yeastRNA' OR AA1.[Name] LIKE '%RNA%')
+WHERE ER1.[StartTime] >= GETDATE() - 370  AND (AA1.[Name] LIKE 'yeast%' OR AA1.[Name] LIKE '%RNA%')
 
 
 SELECT 
@@ -282,7 +285,7 @@ SELECT
 	ISNULL(pl1.[Value], 0)  AS [PouchLeak], 
 	ISNULL(c1.[PCR2], 0) AS [PCR2],
 	ISNULL(c1.[PCR1], 0) AS [PCR1],
-	ISNULL(c1.[yeastRNA], 0) AS [yeastRNA],
+	ISNULL(c1.[yeast], 0) AS [yeast],
 	FORMAT(AVG(ISNULL(cpv1.[Cp], 40)), 'N2') AS [Cp]
 INTO #fa1
 FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1 
@@ -290,7 +293,7 @@ FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1
 		ON ie1.[PouchSerialNumber] = pl1.[PouchSerialNumber] LEFT JOIN #controls1 c1
 			ON ie1.[PouchSerialNumber] = c1.[PouchSerialNumber] LEFT JOIN #cpValues1 cpv1
 				ON ie1.[PouchSerialNumber] = cpv1.[PouchSerialNumber]
-GROUP BY ie1.[Date], ie1.[SerialNo], ie1.[Protocol], ie1.[Value], se1.[Value], pl1.[Value], c1.[PCR1], c1.[PCR2], c1.[yeastRNA]
+GROUP BY ie1.[Date], ie1.[SerialNo], ie1.[Protocol], ie1.[Value], se1.[Value], pl1.[Value], c1.[PCR1], c1.[PCR2], c1.[yeast]
 
 
 
