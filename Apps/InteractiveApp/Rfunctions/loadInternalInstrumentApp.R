@@ -5,13 +5,45 @@ library(xlsx)
 library(RODBC)
 library(lubridate)
 
-#source("Rfunctions/internal_instrument_overall_helper.R")
+
+orderAllExceptCustomCpValues <- function( instrument, location, d){
+	
+	## inputs: serial number, locat, date
+  ## outputs: none, re-order the columns in the cp table matrices so they are in chronological order 
+
+	  if( dim(cp.tables[[location]][["All Except Custom"]][[d]][[instrument]])[2] > 1){ # if there is more than one column to order
+				except.custom.order <- order(cp.tables[[location]][["All Except Custom"]][[d]][[instrument]][ 2,])
+				cp.tables[[location]][["All Except Custom"]][[d]][[instrument]] <<- cp.tables[[location]][["All Except Custom"]][[d]][[instrument]][ , except.custom.order]
+	  }
+	  
+}
+
+orderAllCpValues <- function(instrument, location, d){
+	
+	## inputs: serial number, locat, date
+  ## outputs: none, re-order the columns in the cp table matrices so they are in chronological order 
+
+		if(dim(cp.tables[[location]][["All"]][[d]][[instrument]])[2] > 1){ # if there is more than one column to order 
+				all.order <- order(cp.tables[[location]][["All"]][[d]][[instrument]][ 2,])
+				cp.tables[[location]][["All"]][[d]][[instrument]] <<- cp.tables[[location]][["All"]][[d]][[instrument]][ , all.order]
+		}
+}
 
 
-
+allProtocolsOverallErrorRate <- function(instrument){
+	
+		## inputs: matrix from the overall.error.rate.tables data structure
+		## output: nothing, this function calculates rates for each instrument in each location after all the runs on that machine for location have been counted
+		
+		overall.error.rate.tables[["dungeon"]][["All Except Custom"]][[instrument]]$matrix[ , c(2,3,4,5,6,7)] <<- round((overall.error.rate.tables[["dungeon"]][["All Except Custom"]][[instrument]]$matrix[ , c(2,3,4,5,6,7)]/overall.error.rate.tables[["dungeon"]][["All Except Custom"]][[instrument]]$matrix[ ,8])*100, 2)  
+	
+}
 
 storeOverallErrorRate <- function(row.numbers, location, protocol, serial.num){
-		print("here")
+	
+	  ## inputs: a list of relevant row numbers, the current location, protocol and serial number that was given to the apply function
+	  ## outputs: none, this function either adds a row to overall.error.rate.tables or adds data into an existing row
+	
 		temp.location.frames <- location.frames[[location]][row.numbers, ]
 		temp.location.frames$Date <- format(temp.location.frames$Date, format="%Y-%W")
 		
@@ -22,15 +54,16 @@ storeOverallErrorRate <- function(row.numbers, location, protocol, serial.num){
 					dates <- unique(temp.location.frames$Date)
 				
 					for(w in dates ){
-				 			week.rates <- as.vector(unlist(apply(temp.location.frames[which(temp.location.frames$Date == w), c("InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1" ,"yeastRNA")], 2, function(x)round((sum(x, na.rm=TRUE)/length(x))*100,2))))
-						
+							## group all the runs by week and then calculate the error rate for that week 
+				 			week.sums <- as.vector(unlist(apply(temp.location.frames[which(temp.location.frames$Date == w), c("InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1" ,"yeast")], 2, function(x)sum(x, na.rm=TRUE))))
+							
 				 			if(w %in% overall.error.rate.tables[[location]][[protocol]][[serial.num]][["xlabels"]]){  #if another protocol already had data for this week, don't add a new row, just add the rates
 									row.index <- which(overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]][ ,1] == which(overall.error.labels ==w ))
-				 					overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]][row.index, c(2,3,4,5,6,7)] <<- overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]][row.index, c(2,3,4,5,6,7)] + week.rates
+				 					overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]][row.index, c(2,3,4,5,6,7,8)] <<- overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]][row.index, c(2,3,4,5,6,7,8)] + c(week.sums, length(which(temp.location.frames$Date == w)))
 								
-				 			}else{ # if this is the first time we're seeing this week 
-				 					overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]] <<- rbind(overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]], c(which(overall.error.labels == w), week.rates))
-				 						overall.error.rate.tables[[location]][[protocol]][[serial.num]]$xlabels <<- c(overall.error.rate.tables[[location]][[protocol]][[serial.num]]$xlabels, w)
+				 			}else{ # if this is the first time we're seeing this week, add a new row for it 
+				 					overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]] <<- rbind(overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]], c(which(overall.error.labels == w), week.sums, length(which(temp.location.frames$Date == w))))
+				 					overall.error.rate.tables[[location]][[protocol]][[serial.num]]$xlabels <<- c(overall.error.rate.tables[[location]][[protocol]][[serial.num]]$xlabels, w)
 							}
 					}
 						## now that the table is created, re order the rows/xlabels to be the chronological order 
@@ -44,13 +77,13 @@ storeOverallErrorRate <- function(row.numbers, location, protocol, serial.num){
 			
 			
 			
-		 ## if this is not  all or all except custom protocol 	
+		## if this is not  all or all except custom protocol 	
 		}else{
 		
 			if(nrow(temp.location.frames) != 0){
 				dates <- unique(temp.location.frames$Date)
 				for(w in dates ){
-				 		week.rates <- as.vector(unlist(apply(temp.location.frames[which(temp.location.frames$Date == w), c("InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1" ,"yeastRNA")], 2, function(x)round((sum(x, na.rm=TRUE)/length(x))*100,2))))
+				 		week.rates <- as.vector(unlist(apply(temp.location.frames[which(temp.location.frames$Date == w), c("InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1" ,"yeast")], 2, function(x)round((sum(x, na.rm=TRUE)/length(x))*100,2))))
 						
 				 		overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]] <<- rbind(overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]], c(which(overall.error.labels == w), week.rates))
 				}
@@ -81,12 +114,9 @@ dungeon.instrument.serial.numbers <- paste0("( '", dungeon.instrument.serial.num
 dungeon.query <- gsub('serialnumbervector', dungeon.instrument.serial.numbers, paste(scan("SQL\\dungeon_instruments.txt",what=character(),quote=""), collapse=' '))   
 pouch.qc.query <- paste(scan("SQL\\pouch_qc_instruments.txt",what=character(),quote=""), collapse=" ")
 
+location.frames <<- list()
 
-# initialize the list that will hold the query results 
-location.frames <<- vector(mode="list")
-
-# execute the queries to retrieve the instrument data 
-print("running sql queries...")
+print("stating sql queries..")
 
 PMScxn <- odbcConnect("PMS_PROD")
 
@@ -97,7 +127,6 @@ location.frames[["pouchqc"]] <- sqlQuery(PMScxn, pouch.qc.query)
 odbcClose(PMScxn)
 
 print("sql queries completed")
-
 ############################################################################################################################
 ################ Create the rate tables that will be loaded into the UI (cut down on website load time) ####################
 ############################################################################################################################
@@ -146,8 +175,6 @@ for( l in c("dungeon", "pouchqc")){ # first layer, locations
 }
 
 
-
-
 ## calculate the date ranges for "today"
 today <- as.POSIXct(Sys.Date(), origin="1970-01-01") + 30*60*60
 date.ranges <- list()
@@ -170,29 +197,36 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 		## input: a serial number and a list of row numbers and the location, protocol, date range
 		## output: add a row to the rate.tables data structure, return CP values for cp.tables, and add a table to the overall.error.rate.tables  
 		
-		x.row.numbers <- all.row.Numbers[which(location.frames[[l]]$SerialNo[all.row.Numbers] == x)]
-  	
+		x.row.numbers <- all.row.Numbers[which(location.frames[[l]]$SerialNo[all.row.Numbers] == x)] ## all the row number for the relevent runs on instrument x 
+		
+		#if(x == "TM56927" & l == "dungeon" & p == "NPS" & d == "30"){
+			
+		#		print(x.row.numbers)	
+		#}
+  	################# overall error rate tables #######################
 		if(d == "360"){
 				
-				#storeOverallErrorRate(x.row.numbers, l, p, x)	
-				#storeOverallErrorRate(x.row.numbers, l, "All", x)
-				#if(p != "Custom"){
-				#	storeOverallErrorRate(x.row.numbers, l, "All Except Custom", x)
-				#}
+				storeOverallErrorRate(x.row.numbers, l, p, x)	
+				storeOverallErrorRate(x.row.numbers, l, "All", x)
+				if(p != "Custom"){
+					storeOverallErrorRate(x.row.numbers, l, "All Except Custom", x)
+				}
 		}
+	####################################################################
 		
 		# calculate the different types of failure rates 
 		instrument.rate <- round((sum(location.frames[[l]][ x.row.numbers, "InstrumentError"])/length(location.frames[[l]][ x.row.numbers, "InstrumentError"]))*100, 2)
 		software.rate <- round((sum(location.frames[[l]][ x.row.numbers, "SoftwareError"])/length(location.frames[[l]][ x.row.numbers, "SoftwareError"]))*100, 2)
 		pcr2.rate <- round((sum(location.frames[[l]][ x.row.numbers, "PCR2"])/length(location.frames[[l]][ x.row.numbers, "PCR2"]))*100, 2)
 		pcr1.rate <- round((sum(location.frames[[l]][ x.row.numbers, "PCR1"])/length(location.frames[[l]][ x.row.numbers, "PCR1"]))*100, 2)
-		yeast.rate <- round((sum(location.frames[[l]][ x.row.numbers, "yeastRNA"])/length(location.frames[[l]][ x.row.numbers, "yeastRNA"]))*100, 2)
+		yeast.rate <- round((sum(location.frames[[l]][ x.row.numbers, "yeast"])/length(location.frames[[l]][ x.row.numbers, "yeast"]))*100, 2)
 		pouchleak.rate <-round((sum(location.frames[[l]][ x.row.numbers, "PouchLeak"])/length(location.frames[[l]][ x.row.numbers, "PouchLeak"]))*100, 2) 
 	
 		#total.rate <-  round(sum(instrument.rate, software.rate, control.rate, pouchleak.rate, na.rm=TRUE), 2)
-		total.rate.numerator <- sum(unlist(lapply(x.row.numbers, function(k)if(sum(location.frames[[l]][k, c("InstrumentError", "SoftwareError", "PouchLeak", "PCR1", "PCR2", "yeastRNA")]) > 0){return(1)}else{return(0)})))
+		total.rate.numerator <- sum(unlist(lapply(x.row.numbers, function(k)if(sum(location.frames[[l]][k, c("InstrumentError", "SoftwareError", "PouchLeak", "PCR1", "PCR2", "yeast")]) > 0){return(1)}else{return(0)})))
 		total.rate <- round((total.rate.numerator/length(x.row.numbers))*100, 2)
 		
+		##################### put data into rate.tables ################################
 		# add the rates to the "All" protocol category in rate.tables
 		if(p != "Custom"){
 			if(x %in% unlist(rate.tables[[l]][["All Except Custom"]][[d]][ , 1])){ #if this machine was alredady added in a previously processed protocol 
@@ -203,20 +237,21 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 					new.total.rate <- round(((error.run.counts[1] + total.rate.numerator)/new.number.runs)*100, 2)  
 					new.instrument.error <- round(((error.run.counts[2]+ sum(location.frames[[l]][ x.row.numbers, "InstrumentError"]))/new.number.runs)*100, 2)
 					new.software.error <-  round(((error.run.counts[3]+ sum(location.frames[[l]][ x.row.numbers, "SoftwareError"]))/new.number.runs)*100, 2)
-					new.pcr1.error <- round(((error.run.counts[4]+ sum(location.frames[[l]][ x.row.numbers, "PCR1Error"]))/new.number.runs)*100, 2)
-					new.pcr2.error <- round(((error.run.counts[5]+ sum(location.frames[[l]][ x.row.numbers, "PCR2Error"]))/new.number.runs)*100, 2)
-					new.yeast.error <- round(((error.run.counts[6]+ sum(location.frames[[l]][ x.row.numbers, "yeastRNA"]))/new.number.runs)*100, 2)
+					new.pcr1.error <- round(((error.run.counts[4]+ sum(location.frames[[l]][ x.row.numbers, "PCR1"]))/new.number.runs)*100, 2)
+					new.pcr2.error <- round(((error.run.counts[5]+ sum(location.frames[[l]][ x.row.numbers, "PCR2"]))/new.number.runs)*100, 2)
+					new.yeast.error <- round(((error.run.counts[6]+ sum(location.frames[[l]][ x.row.numbers, "yeast"]))/new.number.runs)*100, 2)
 					new.pouchleak <- round(((error.run.counts[7]+ sum(location.frames[[l]][ x.row.numbers, "PouchLeak"]))/new.number.runs)*100, 2)
 					rate.tables[[l]][["All Except Custom"]][[d]][row.num, c(2 ,3 ,4 ,5,6, 7, 8, 9) ] <<-  c(new.number.runs, new.total.rate, new.instrument.error, new.software.error, new.pcr1.error, new.pcr2.error, new.yeast.error, new.pouchleak)  # num of runs
 					
 			}else{ # if this machine was not previously added, then make a new row for it 
 					rate.tables[[l]][["All Except Custom"]][[d]] <<- rbind(rate.tables[[l]][["All Except Custom"]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "% of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
-						"Software Failure Rate"=software.rate, "PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeastRNA Negative Rate" =yeast.rate, "Pouch Leak Rate"=pouchleak.rate))
+						"Software Failure Rate"=software.rate, "PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeast Negative Rate" =yeast.rate, "Pouch Leak Rate"=pouchleak.rate))
 			}	
 		}
 		
 		
 		if(x %in% unlist(rate.tables[[l]][["All"]][[d]][ , 1])){
+					
 					row.num <- which(unlist(rate.tables[[l]][["All"]][[d]][ , 1]) == x)
 					number.runs <- unlist(unname(rate.tables[[l]][["All"]][[d]][ row.num, 2]))
 					error.run.counts <- round((unlist(unname(rate.tables[[l]][["All"]][[d]][row.num, c(3 ,4 ,5,6, 7, 8, 9) ]))/100)*number.runs)
@@ -224,15 +259,15 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 					new.total.rate <- round(((error.run.counts[1] + total.rate.numerator)/new.number.runs)*100, 2)  
 					new.instrument.error <- round(((error.run.counts[2]+ sum(location.frames[[l]][ x.row.numbers, "InstrumentError"]))/new.number.runs)*100, 2)
 					new.software.error <-  round(((error.run.counts[3]+ sum(location.frames[[l]][ x.row.numbers, "SoftwareError"]))/new.number.runs)*100, 2)
-					new.pcr1.error <- round(((error.run.counts[4]+ sum(location.frames[[l]][ x.row.numbers, "PCR1Error"]))/new.number.runs)*100, 2)
-					new.pcr2.error <- round(((error.run.counts[5]+ sum(location.frames[[l]][ x.row.numbers, "PCR2Error"]))/new.number.runs)*100, 2)
-					new.yeast.error <- round(((error.run.counts[6]+ sum(location.frames[[l]][ x.row.numbers, "yeastRNA"]))/new.number.runs)*100, 2)
+					new.pcr1.error <- round(((error.run.counts[4]+ sum(location.frames[[l]][ x.row.numbers, "PCR1"]))/new.number.runs)*100, 2)
+					new.pcr2.error <- round(((error.run.counts[5]+ sum(location.frames[[l]][ x.row.numbers, "PCR2"]))/new.number.runs)*100, 2)
+					new.yeast.error <- round(((error.run.counts[6]+ sum(location.frames[[l]][ x.row.numbers, "yeast"]))/new.number.runs)*100, 2)
 					new.pouchleak <- round(((error.run.counts[7]+ sum(location.frames[[l]][ x.row.numbers, "PouchLeak"]))/new.number.runs)*100, 2)
 					rate.tables[[l]][["All"]][[d]][row.num, c(2 ,3 ,4 ,5,6, 7, 8, 9) ] <<-  c(new.number.runs, new.total.rate, new.instrument.error, new.software.error, new.pcr1.error, new.pcr2.error, new.yeast.error, new.pouchleak)  # num of runs
-
+		
 		}else{
 				rate.tables[[l]][["All"]][[d]] <<- rbind(rate.tables[[l]][["All"]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "% of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
-						"Software Failure Rate"=software.rate, "PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeastRNA Negative Rate" =yeast.rate, "Pouch Leak Rate"=pouchleak.rate))
+						"Software Failure Rate"=software.rate, "PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeast Negative Rate" =yeast.rate, "Pouch Leak Rate"=pouchleak.rate))
 		}
 
 		# convert them into strings 
@@ -245,10 +280,49 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 	
 		# add the rates to rate.tables 
 		rate.tables[[l]][[p]][[d]] <<- rbind(rate.tables[[l]][[p]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "% of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
-			"Software Failure Rate"=software.rate,"PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeastRNA Negative Rate" =yeast.rate , "Pouch Leak Rate"=pouchleak.rate))
+			"Software Failure Rate"=software.rate,"PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeast Negative Rate" =yeast.rate , "Pouch Leak Rate"=pouchleak.rate))
 	
 			
-
+    ################################## put data into cp tables ###############################
+		
+		if( p != "Custom" & !is.null(cp.tables[[l]][["All Except Custom"]][[d]][[x]])){ # if this matrix has already been initialized in another protocol 
+			
+			  new.columns <- matrix(ncol=length(x.row.numbers), nrow=2)
+				new.columns[1, ] <- location.frames[[l]][x.row.numbers, "Cp"] 
+				new.columns[2, ] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
+				new.columns[which(new.columns == 40)] <- NA
+				cp.tables[[l]][["All Except Custom"]][[d]][[x]] <<- cbind(cp.tables[[l]][["All Except Custom"]][[d]][[x]], new.columns)
+			
+		}else if(p != "Custom"){
+			
+			  first.columns <- matrix(ncol=length(x.row.numbers), nrow=2)
+				first.columns[1, ] <- location.frames[[l]][x.row.numbers, "Cp"] 
+				first.columns[2, ] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
+				first.columns[which(first.columns == 40)] <- NA
+			  cp.tables[[l]][["All Except Custom"]][[d]][[x]] <<- first.columns
+		}
+		
+		
+		if(!is.null(cp.tables[[l]][["All"]][[d]][[x]])){ ## if this matrix has already been initialized in another protocol 
+				
+				new.columns <- matrix(ncol=length(x.row.numbers), nrow=2)
+				new.columns[1, ] <- location.frames[[l]][x.row.numbers, "Cp"] 
+				new.columns[2, ] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
+				new.columns[which(new.columns == 40)] <- NA
+				cp.tables[[l]][["All"]][[d]][[x]] <<- cbind(cp.tables[[l]][["All"]][[d]][[x]], new.columns)
+				
+			
+		}else{
+			
+				first.columns <- matrix(ncol=length(x.row.numbers), nrow=2)
+				first.columns[1, ] <- location.frames[[l]][x.row.numbers, "Cp"] 
+				first.columns[2, ] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
+				first.columns[which(first.columns == 40)] <- NA
+			  cp.tables[[l]][["All"]][[d]][[x]] <<- first.columns
+					
+			
+		}
+		
 		## now return the CP data
 		output <- matrix(ncol=length(x.row.numbers), nrow=2)
 		output[1, ] <- location.frames[[l]][x.row.numbers, "Cp"] 
@@ -263,7 +337,7 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 
 
 
-## fill up the output data structure 
+## fill up the output data structures 
 for( location in c("dungeon", "pouchqc")){
 	
 	  print(location)
@@ -283,8 +357,9 @@ for( location in c("dungeon", "pouchqc")){
 							serial.numbers <- as.character(unique(location.frames[[location]]$SerialNo[row.numbers]))
 							
 							## get the data that will go into the plots AND add a row to rate.tables 
-							
+						
 							cp.tables[[location]][[protocol]][[d]] <- lapply(serial.numbers, calculateRates, row.numbers, location, protocol, d)
+							
 							
 							names(cp.tables[[location]][[protocol]][[d]]) <- serial.numbers
 							
@@ -333,8 +408,23 @@ for( location in c("dungeon", "pouchqc")){
 						rate.tables[[location]][["All"]][[d]][, c(3, 4, 5, 6, 7, 8, 9)] <- paste0(as.character(rate.tables[[location]][["All"]][[d]][, c(3, 4, 5, 6, 7, 8, 9)]), "%")
 						rate.tables[[location]][["All Except Custom"]][[d]][, c(3, 4, 5, 6, 7 ,8 ,9)] <- paste0(as.character(rate.tables[[location]][["All Except Custom"]][[d]][, c(3, 4, 5, 6 ,7, 8, 9)]), "%")
 					  
+						##################### re-order the cp values for the All and All Except Custom Protocols ###########################
+						
+						cp.instruments.except.custom <- names(cp.tables[[location]][["All Except Custom"]][[d]])
+						cp.instruments.except.custom <- cp.instruments.except.custom[which(!is.na(cp.instruments.except.custom))]
+						cp.instruments.all <- names(cp.tables[[location]][["All"]][[d]])
+					  cp.instruments.all <- cp.instruments.all[which(!is.na(cp.instruments.all))]
+						lapply(cp.instruments.except.custom, orderAllExceptCustomCpValues, location, d)
+						lapply(cp.instruments.all, orderAllCpValues, location, d)
+						
+						
 					  
 		} # date ranges  
+	  
+	  instruments.except.custom <- names(overall.error.rate.tables[["dungeon"]][["All Except Custom"]])
+	  instruments <- names(overall.error.rate.tables[["dungeon"]][["All"]])
+	  lapply(instruments.except.custom, allProtocolsOverallErrorRate)
+	  
 } # locations 
 
 
