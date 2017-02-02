@@ -236,7 +236,7 @@ FROM
 			 [CustReportFailure],
              1 AS [Record]
        FROM #firstFailure
-       WHERE [Failure] = 1
+       WHERE [CustReportFailure] = 1
        GROUP BY 
              [SerialNo],
              [Version],
