@@ -247,7 +247,7 @@ FROM
 			 [CustReportFailure]
 ) F LEFT JOIN 
 (
-       SELECT 
+       SELECT
              C1.[SerialNo],
              C1.[TicketString],
              IIF(C1.[Complaint] LIKE '%Pressure Error%', 'Pressure Errors',
@@ -272,6 +272,7 @@ FROM
 SELECT 
 	[Year],
 	[Week],
+	[Version],
 	MIN(ISNULL([Complaint 1],'xNA')) AS [Complaint 1],
 	MAX(ISNULL([Record 1],0)) AS [Record 1],
 	MIN(ISNULL([Complaint 2],'xNA')) AS [Complaint 2],
@@ -298,6 +299,7 @@ FROM
 	SELECT 
 		[Year],
 		[Week],
+		[Version],
 		[Complaint],
 		[Record], 
 		CONCAT('Complaint ', [ComplaintNum]) AS [LabelNum],
@@ -312,10 +314,11 @@ FROM
 			SELECT 
 				[Year],
 				[Week],
+				[Version],
 				[Complaint],
 				COUNT([SerialNo]) AS [Record]
 			FROM #combined
-			GROUP BY [Year], [Week], [Complaint]
+			GROUP BY [Year], [Week], [Version], [Complaint]
 		) A
 	) B
 ) P
@@ -353,7 +356,7 @@ PIVOT
 		[Record 10]
 	)	
 ) PIV2 
-GROUP BY [Year], [Week]
+GROUP BY [Year], [Week], [Version]
 
 DECLARE @DateFrom DATETIME, @DateTo DATETIME;
 SET @DateFrom = CONVERT(DATETIME, '2014-06-01');
@@ -377,6 +380,7 @@ OPTION(MAXRECURSION 32767)
 SELECT
 	C.[Year],
 	C.[Week],
+	[Version],
 	ISNULL([Complaint 1], 'xNA') AS [Complaint 1], 
 	ISNULL([Record 1], 0) AS [Record 1],
 	ISNULL([Complaint 2], 'xNA') AS [Complaint 2], 
@@ -411,6 +415,7 @@ FROM
 SELECT	
 	A.[Year],
 	A.[Week],
+	A.[Version],
 	A.[Complaint 1],
 	A.[Record 1], 
 	A.[Complaint 2],
@@ -503,13 +508,14 @@ FROM
 		LAG([Year], 2) OVER(ORDER BY [Year], [Week]) AS [LagYear2],
 		LAG([Year], 1) OVER(ORDER BY [Year], [Week]) AS [LagYear3]
 	FROM #AllWeeks
-) A INNER JOIN #AllWeeks B1 ON A.[LagWeek1] = B1.[Week] AND A.[LagYear1] = B1.[Year] 
-	INNER JOIN #AllWeeks B2 ON A.[LagWeek2] = B2.[Week] AND A.[LagYear2] = B2.[Year] 
-	INNER JOIN #AllWeeks B3 ON A.[LagWeek3] = B3.[Week] AND A.[LagYear3] = B3.[Year] 
+) A INNER JOIN #AllWeeks B1 ON A.[LagWeek1] = B1.[Week] AND A.[LagYear1] = B1.[Year] AND A.[Version] = B1.[Version]
+	INNER JOIN #AllWeeks B2 ON A.[LagWeek2] = B2.[Week] AND A.[LagYear2] = B2.[Year] AND A.[Version] = B2.[Version]
+	INNER JOIN #AllWeeks B3 ON A.[LagWeek3] = B3.[Week] AND A.[LagYear3] = B3.[Year] AND A.[Version] = B3.[Version]
 
 SELECT 
 	[Year],
 	[Week],
+	[Version],
 	[Label],
 	SUM([Record]) AS [Record]
 INTO #WeeksAgg
@@ -518,6 +524,7 @@ FROM
 	SELECT 
 		[Year],
 		[Week],
+		[Version],
 		[Label],
 		[Record]  
 	FROM 
@@ -663,11 +670,12 @@ FROM
 	([RecordNum] = 'Record 40' AND [Complaint] = 'Complaint 40')
 ) A
 WHERE [Label] NOT LIKE 'xNA'
-GROUP BY [Year], [Week], [Label] 
+GROUP BY [Year], [Week], [Version], [Label] 
 
-SELECT 
+SELECT
        A.[Year],
        A.[Week],
+	   A.[Version],
        CONCAT(A.[Label], ' ', CONCAT(ROUND(100*CAST(A.[Record] AS FLOAT)/CAST(B.[Total] AS FLOAT), 0),'%')) AS [Label],
 	   A.[Record]
 INTO #labels
@@ -676,20 +684,21 @@ FROM #WeeksAgg A LEFT JOIN
 	SELECT 
 		[Year],
 		[Week],
+		[Version],
 		SUM([Record]) AS [Total]
 	FROM #WeeksAgg
-	GROUP BY [Year], [Week] 
-) B ON A.[Year] = B.[Year] AND A.[Week] = B.[Week] 
-ORDER BY A.[Year], A.[Week] 
+	GROUP BY [Year], [Week], [Version] 
+) B ON A.[Year] = B.[Year] AND A.[Week] = B.[Week] AND A.[Version] = B.[Version]
 
 SELECT DISTINCT
        IIF(L2.[Week] < 10, CONCAT(L2.[Year], '-0', L2.[Week]), CONCAT(L2.[Year], '-', L2.[Week])) AS [DateGroup],
+	   [Version],
        SUBSTRING(
              (
                     SELECT
                            ',' + L1.[Label] AS [text()]
                     FROM #labels L1
-                    WHERE L1.[Year] = L2.[Year] AND L1.[Week] = L2.[Week]
+                    WHERE L1.[Year] = L2.[Year] AND L1.[Week] = L2.[Week] AND L1.[Version] = L2.[Version]
                     ORDER BY L1.[Record] DESC
                     FOR XML PATH('')
              ), 2, 1000) AS [Annotation]
