@@ -12,7 +12,7 @@ library(lubridate)
 library(randomcoloR)
 
 # load user-created functions
-source('Portfolios/R_CONTAM_load_new.R')
+source('Portfolios/R_CONTAM_load.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 
