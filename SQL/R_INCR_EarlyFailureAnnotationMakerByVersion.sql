@@ -104,7 +104,6 @@ SELECT
 	[Title],
 	[CustFailType],
 	[Type],
-	[Complaint] AS [ComplaintNo],
 	CAST([HoursRun] AS FLOAT) AS [HoursRun],
 	IIF([Type] LIKE '% - Failure', 1, 0) AS [FailureType],
 	IIF([FailCheck] = 'True', 1, 0) AS [FailCheck],
@@ -130,7 +129,6 @@ SELECT
 	[CreatedDate],
 	[HoursRun],
 	[CustFailTypeProd],
-	[ComplaintNo],
 	IIF([FailureType] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([FailCheck] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([CustFailTypeProd] = 1 AND [HoursRunLow] = 1, 1,
@@ -140,7 +138,7 @@ SELECT
 INTO #master
 FROM #flaggedForFailures
 
-SELECT
+SELECT 
 	[SerialNo],
 	[Version],
 	[Year],
@@ -148,13 +146,11 @@ SELECT
 	[TicketId],
 	[TicketString],
 	[CreatedDate],
-	REPLACE([ComplaintNo],' ','') AS [ComplaintNo],
 	[BirthDate],
 	[Failure],
 	[CustFailTypeProd] AS [CustReportFailure]
 INTO #firstFailure
-FROM #master 
-WHERE [TicketId] IN 
+FROM #master WHERE [TicketId] IN 
 (
 	SELECT 
 		MIN([TicketId]) AS [TicketId]
@@ -166,7 +162,6 @@ WHERE [TicketId] IN
 SELECT 
 	[TicketId],
 	[TicketString],
-	SUBSTRING([TicketString], 11, 100) AS [ComplaintNo],
 	[CreatedDate],
 	[ObjectId],
 	[PropertyName],
@@ -178,7 +173,6 @@ WHERE [ObjectName] LIKE 'BFDX Part Number'
 SELECT 
        [TicketId],
        [TicketString],
-	   [ComplaintNo],
        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER([Lot/Serial Number]),',',''),' ',''),'.',''),'_',''),'-','') AS [SerialNo],
        IIF(CHARINDEX('-',[Failure Mode],8)<>0, SUBSTRING([Failure Mode], 1, CHARINDEX('-',[Failure Mode],8)-1), [Failure Mode]) AS [Complaint],
 	   IIF([Failure Mode] LIKE '%-1-%', 'InstrumentError','OtherError') AS [InstError]
@@ -188,7 +182,6 @@ FROM
        SELECT 
              [TicketId],
              [TicketString],
-			 [ComplaintNo],
              [CreatedDate],
              [ObjectId],
              [PropertyName],
@@ -207,6 +200,20 @@ PIVOT
 ) PIV
 
 SELECT 
+	[SerialNo],
+	[TicketId],
+	[TicketString],
+	[Complaint]
+INTO #complaintsCollapsed
+FROM
+(
+	SELECT *,
+		ROW_NUMBER() OVER(PARTITION BY [TicketId] ORDER BY [InstError]) AS [RowNo]
+	FROM #complaints
+) T
+WHERE [RowNo] = 1
+
+SELECT 
     F.[SerialNo],
     F.[Version],
 	F.[RMA],
@@ -223,7 +230,6 @@ FROM
              [SerialNo],
              [Version],
 			 [TicketString] AS [RMA],
-			 [ComplaintNo],
              [Year],
              [Week],
 			 [Failure],
@@ -235,17 +241,15 @@ FROM
              [SerialNo],
              [Version],
 			 [TicketString],
-			 [ComplaintNo],
              [Year],
              [Week],
 			 [Failure],
 			 [CustReportFailure]
 ) F LEFT JOIN 
 (
-       SELECT 
+       SELECT
              C1.[SerialNo],
              C1.[TicketString],
-			 C1.[ComplaintNo],
              IIF(C1.[Complaint] LIKE '%Pressure Error%', 'Pressure Errors',
                     IIF(C1.[Complaint] LIKE '%Seal Bar%', 'Seal Bar Errors',
                     IIF(C1.[Complaint] LIKE '%Lid Lock%', 'Lid Lock Errors',
@@ -253,13 +257,22 @@ FROM
                     IIF(C1.[Complaint] LIKE '%7003%', 'LED Excitation Error',
 					IIF(C1.[Complaint] LIKE 'Lua 1005%', 'LUA Execution Error: Set Clock',
                     IIF(C1.[Complaint] LIKE '%Temp %', 'Temp Timeout Errors', C1.[Complaint]))))))) AS [Complaint]
-       FROM #complaints C1
+       FROM #complaintsCollapsed C1 INNER JOIN
+       (
+             SELECT 
+                    [SerialNo],
+                    MIN([TicketId]) AS [TicketId]
+             FROM #complaintsCollapsed
+             GROUP BY [SerialNo]
+       ) C2
+             ON C1.[TicketId] = C2.[TicketId]
 ) C
-	ON F.[ComplaintNo] = C.[ComplaintNo]
+   ON F.[SerialNo] = C.[SerialNo]
 
 SELECT 
 	[Year],
 	[Week],
+	[Version],
 	MIN(ISNULL([Complaint 1],'xNA')) AS [Complaint 1],
 	MAX(ISNULL([Record 1],0)) AS [Record 1],
 	MIN(ISNULL([Complaint 2],'xNA')) AS [Complaint 2],
@@ -286,6 +299,7 @@ FROM
 	SELECT 
 		[Year],
 		[Week],
+		[Version],
 		[Complaint],
 		[Record], 
 		CONCAT('Complaint ', [ComplaintNum]) AS [LabelNum],
@@ -300,10 +314,11 @@ FROM
 			SELECT 
 				[Year],
 				[Week],
+				[Version],
 				[Complaint],
 				COUNT([SerialNo]) AS [Record]
 			FROM #combined
-			GROUP BY [Year], [Week], [Complaint]
+			GROUP BY [Year], [Week], [Version], [Complaint]
 		) A
 	) B
 ) P
@@ -341,7 +356,7 @@ PIVOT
 		[Record 10]
 	)	
 ) PIV2 
-GROUP BY [Year], [Week]
+GROUP BY [Year], [Week], [Version]
 
 DECLARE @DateFrom DATETIME, @DateTo DATETIME;
 SET @DateFrom = CONVERT(DATETIME, '2014-06-01');
@@ -365,6 +380,7 @@ OPTION(MAXRECURSION 32767)
 SELECT
 	C.[Year],
 	C.[Week],
+	[Version],
 	ISNULL([Complaint 1], 'xNA') AS [Complaint 1], 
 	ISNULL([Record 1], 0) AS [Record 1],
 	ISNULL([Complaint 2], 'xNA') AS [Complaint 2], 
@@ -399,6 +415,7 @@ FROM
 SELECT	
 	A.[Year],
 	A.[Week],
+	A.[Version],
 	A.[Complaint 1],
 	A.[Record 1], 
 	A.[Complaint 2],
@@ -491,13 +508,14 @@ FROM
 		LAG([Year], 2) OVER(ORDER BY [Year], [Week]) AS [LagYear2],
 		LAG([Year], 1) OVER(ORDER BY [Year], [Week]) AS [LagYear3]
 	FROM #AllWeeks
-) A INNER JOIN #AllWeeks B1 ON A.[LagWeek1] = B1.[Week] AND A.[LagYear1] = B1.[Year] 
-	INNER JOIN #AllWeeks B2 ON A.[LagWeek2] = B2.[Week] AND A.[LagYear2] = B2.[Year] 
-	INNER JOIN #AllWeeks B3 ON A.[LagWeek3] = B3.[Week] AND A.[LagYear3] = B3.[Year] 
+) A INNER JOIN #AllWeeks B1 ON A.[LagWeek1] = B1.[Week] AND A.[LagYear1] = B1.[Year] AND A.[Version] = B1.[Version]
+	INNER JOIN #AllWeeks B2 ON A.[LagWeek2] = B2.[Week] AND A.[LagYear2] = B2.[Year] AND A.[Version] = B2.[Version]
+	INNER JOIN #AllWeeks B3 ON A.[LagWeek3] = B3.[Week] AND A.[LagYear3] = B3.[Year] AND A.[Version] = B3.[Version]
 
 SELECT 
 	[Year],
 	[Week],
+	[Version],
 	[Label],
 	SUM([Record]) AS [Record]
 INTO #WeeksAgg
@@ -506,6 +524,7 @@ FROM
 	SELECT 
 		[Year],
 		[Week],
+		[Version],
 		[Label],
 		[Record]  
 	FROM 
@@ -651,11 +670,12 @@ FROM
 	([RecordNum] = 'Record 40' AND [Complaint] = 'Complaint 40')
 ) A
 WHERE [Label] NOT LIKE 'xNA'
-GROUP BY [Year], [Week], [Label] 
+GROUP BY [Year], [Week], [Version], [Label] 
 
-SELECT 
+SELECT
        A.[Year],
        A.[Week],
+	   A.[Version],
        CONCAT(A.[Label], ' ', CONCAT(ROUND(100*CAST(A.[Record] AS FLOAT)/CAST(B.[Total] AS FLOAT), 0),'%')) AS [Label],
 	   A.[Record]
 INTO #labels
@@ -664,24 +684,25 @@ FROM #WeeksAgg A LEFT JOIN
 	SELECT 
 		[Year],
 		[Week],
+		[Version],
 		SUM([Record]) AS [Total]
 	FROM #WeeksAgg
-	GROUP BY [Year], [Week] 
-) B ON A.[Year] = B.[Year] AND A.[Week] = B.[Week] 
-ORDER BY A.[Year], A.[Week] 
+	GROUP BY [Year], [Week], [Version] 
+) B ON A.[Year] = B.[Year] AND A.[Week] = B.[Week] AND A.[Version] = B.[Version]
 
 SELECT DISTINCT
        IIF(L2.[Week] < 10, CONCAT(L2.[Year], '-0', L2.[Week]), CONCAT(L2.[Year], '-', L2.[Week])) AS [DateGroup],
+	   [Version],
        SUBSTRING(
              (
                     SELECT
                            ',' + L1.[Label] AS [text()]
                     FROM #labels L1
-                    WHERE L1.[Year] = L2.[Year] AND L1.[Week] = L2.[Week]
+                    WHERE L1.[Year] = L2.[Year] AND L1.[Week] = L2.[Week] AND L1.[Version] = L2.[Version]
                     ORDER BY L1.[Record] DESC
                     FOR XML PATH('')
              ), 2, 1000) AS [Annotation]
 FROM #labels L2
 
-DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts,
+DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts, #complaintsCollapsed,
 	#AllWeeks, #Calendar, #WeeksAgg, #WeeksGrouped, #WeeksLagged
