@@ -104,6 +104,7 @@ SELECT
 	[Title],
 	[CustFailType],
 	[Type],
+	[Complaint] AS [ComplaintNo],
 	CAST([HoursRun] AS FLOAT) AS [HoursRun],
 	IIF([Type] LIKE '% - Failure', 1, 0) AS [FailureType],
 	IIF([FailCheck] = 'True', 1, 0) AS [FailCheck],
@@ -129,6 +130,7 @@ SELECT
 	[CreatedDate],
 	[HoursRun],
 	[CustFailTypeProd],
+	[ComplaintNo],
 	IIF([FailureType] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([FailCheck] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([CustFailTypeProd] = 1 AND [HoursRunLow] = 1, 1,
@@ -138,7 +140,7 @@ SELECT
 INTO #master
 FROM #flaggedForFailures
 
-SELECT 
+SELECT
 	[SerialNo],
 	[Version],
 	[Year],
@@ -146,22 +148,18 @@ SELECT
 	[TicketId],
 	[TicketString],
 	[CreatedDate],
+	REPLACE([ComplaintNo],' ','') AS [ComplaintNo],
 	[BirthDate],
 	[Failure],
 	[CustFailTypeProd] AS [CustReportFailure]
 INTO #firstFailure
-FROM #master WHERE [TicketId] IN 
-(
-	SELECT 
-		MIN([TicketId]) AS [TicketId]
-	FROM #master
-	WHERE [TicketString] IS NOT NULL
-	GROUP BY [SerialNo]
-) OR [TicketString] IS NULL
-
+FROM #master 
+WHERE [CustFailTypeProd] = 1
+		
 SELECT 
 	[TicketId],
 	[TicketString],
+	SUBSTRING([TicketString], 11, 100) AS [ComplaintNo],
 	[CreatedDate],
 	[ObjectId],
 	[PropertyName],
@@ -173,6 +171,7 @@ WHERE [ObjectName] LIKE 'BFDX Part Number'
 SELECT 
        [TicketId],
        [TicketString],
+	   [ComplaintNo],
        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(UPPER([Lot/Serial Number]),',',''),' ',''),'.',''),'_',''),'-','') AS [SerialNo],
        IIF(CHARINDEX('-',[Failure Mode],8)<>0, SUBSTRING([Failure Mode], 1, CHARINDEX('-',[Failure Mode],8)-1), [Failure Mode]) AS [Complaint],
 	   IIF([Failure Mode] LIKE '%-1-%', 'InstrumentError','OtherError') AS [InstError]
@@ -182,6 +181,7 @@ FROM
        SELECT 
              [TicketId],
              [TicketString],
+			 [ComplaintNo],
              [CreatedDate],
              [ObjectId],
              [PropertyName],
@@ -200,20 +200,6 @@ PIVOT
 ) PIV
 
 SELECT 
-	[SerialNo],
-	[TicketId],
-	[TicketString],
-	[Complaint]
-INTO #complaintsCollapsed
-FROM
-(
-	SELECT *,
-		ROW_NUMBER() OVER(PARTITION BY [TicketId] ORDER BY [InstError]) AS [RowNo]
-	FROM #complaints
-) T
-WHERE [RowNo] = 1
-
-SELECT 
     F.[SerialNo],
     F.[Version],
 	F.[RMA],
@@ -230,6 +216,7 @@ FROM
              [SerialNo],
              [Version],
 			 [TicketString] AS [RMA],
+			 [ComplaintNo],
              [Year],
              [Week],
 			 [Failure],
@@ -241,6 +228,7 @@ FROM
              [SerialNo],
              [Version],
 			 [TicketString],
+			 [ComplaintNo],
              [Year],
              [Week],
 			 [Failure],
@@ -250,6 +238,7 @@ FROM
        SELECT 
              C1.[SerialNo],
              C1.[TicketString],
+			 C1.[ComplaintNo],
              IIF(C1.[Complaint] LIKE '%Pressure Error%', 'Pressure Errors',
                     IIF(C1.[Complaint] LIKE '%Seal Bar%', 'Seal Bar Errors',
                     IIF(C1.[Complaint] LIKE '%Lid Lock%', 'Lid Lock Errors',
@@ -257,17 +246,9 @@ FROM
                     IIF(C1.[Complaint] LIKE '%7003%', 'LED Excitation Error',
 					IIF(C1.[Complaint] LIKE 'Lua 1005%', 'LUA Execution Error: Set Clock',
                     IIF(C1.[Complaint] LIKE '%Temp %', 'Temp Timeout Errors', C1.[Complaint]))))))) AS [Complaint]
-       FROM #complaintsCollapsed C1 INNER JOIN
-       (
-             SELECT 
-                    [SerialNo],
-                    MIN([TicketId]) AS [TicketId]
-             FROM #complaintsCollapsed
-             GROUP BY [SerialNo]
-       ) C2
-             ON C1.[TicketId] = C2.[TicketId]
+       FROM #complaints C1 
 ) C
-   ON F.[SerialNo] = C.[SerialNo]
+	ON F.[ComplaintNo] = C.[ComplaintNo]
 
 SELECT 
 	[Year],
@@ -695,5 +676,5 @@ SELECT DISTINCT
              ), 2, 1000) AS [Annotation]
 FROM #labels L2
 
-DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts, #complaintsCollapsed,
+DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts,
 	#AllWeeks, #Calendar, #WeeksAgg, #WeeksGrouped, #WeeksLagged
