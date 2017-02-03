@@ -4,7 +4,7 @@ SELECT
 	[TicketId]
 INTO #consider
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] LIKE 'RMA' AND [Status] IN ('Closed','Accounting','Shipping','SalesOrderGeneration','Closure','InstrumentQCandDHR')
+WHERE [Tracker] = 'RMA' AND [Status] IN ('Closed','Accounting','Shipping','SalesOrderGeneration','Closure','InstrumentQCandDHR')
 
 SELECT 
 	[TicketId],
@@ -15,7 +15,7 @@ SELECT
 	[RecordedValue]
 INTO #partinfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'Part Information'
 
 SELECT 
 	[TicketId],
@@ -23,7 +23,7 @@ SELECT
 	[RecordedValue]
 INTO #workflow
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'RMA Workflow' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [Tracker] = 'RMA' AND [ObjectName] = 'RMA Workflow'
 
 SELECT 
 	[TicketId],
@@ -31,7 +31,7 @@ SELECT
 	[RecordedValue]
 INTO #properties
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] IN ('RMA Title','RMA Type','Complaint Number','Hours Run') AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [PropertyName] IN ('RMA Title','RMA Type','Complaint Number','Hours Run','Service Completed') AND [TicketId] IN (SELECT [TicketId] FROM #consider)
 
 SELECT
 	[TicketId],
@@ -46,7 +46,10 @@ SELECT
 	I.[TicketId],
 	I.[TicketString],
 	I.[CreatedDate],
-	IIF(LEFT(I.[SerialNo],2) LIKE 'FA', SUBSTRING(I.[SerialNo],1,6),SUBSTRING(I.[SerialNo],1,8)) AS [SerialNo],
+	I.[Part Number] AS [PartNo],
+	IIF(LEFT(I.[SerialNo],2) LIKE 'FA', SUBSTRING(I.[SerialNo],1,6),
+		IIF(LEFT(I.[SerialNo],2) LIKE '2F', SUBSTRING(I.[SerialNo],1,8), [SerialNo])) AS [SerialNo],
+	P.[ServiceDate],
 	P.[HoursRun],
 	P.[Title],
 	I.[CustFail],
@@ -54,7 +57,7 @@ SELECT
 	P.[Type],
 	R.[RCFail],
 	W.[ServiceReq],
-	IIF(P.[Title] LIKE '%error%' OR P.[Title] LIKE '%fail%' OR P.[Title] LIKE ' DOA%' OR P.[Title] LIKE ' ELF%' OR P.[Title] LIKE ' SDOA%' OR P.[Title] LIKE ' SELF%', 1, 0) AS [TitleFlag],
+	IIF(P.[Title] LIKE '%error%' OR P.[Title] LIKE '%fail%' OR P.[Title] LIKE '% DOA%' OR P.[Title] LIKE '% ELF%' OR P.[Title] LIKE '% SDOA%' OR P.[Title] LIKE '% SELF%', 1, 0) AS [TitleFlag],
 	IIF(ISNUMERIC(P.[Complaint]) = 1, 1, 0) AS [ComplaintFlag],
 	IIF(ISNUMERIC(P.[Complaint]) = 1 AND P.[Title] LIKE '%loaner%', 1, 
 		IIF(ISNUMERIC(P.[Complaint]) = 1 AND P.[Title] LIKE '%demo%', 1, 
@@ -68,6 +71,7 @@ FROM
 		[TicketId],
 		[TicketString],
 		[CreatedDate],
+		[Part Number],
 		[Lot/Serial Number] AS [SerialNo],
 		[Early Failure Type] AS [CustFail]
 	FROM #partinfo P
@@ -82,7 +86,7 @@ FROM
 			[Early Failure Type]
 		)
 	) PIV
-	WHERE [Part Number] LIKE '%FLM%-ASY-0001%'
+	WHERE ([Part Number] LIKE '%FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%' OR [Part Number] LIKE 'HTFA-SUB-0103%') AND [TicketId] IN (SELECT [TicketId] FROM #consider)
 ) I LEFT JOIN
 (
 	SELECT 
@@ -90,7 +94,8 @@ FROM
 		[RMA Title] AS [Title],
 		[RMA Type] AS [Type],
 		[Complaint Number] AS [Complaint],
-		[Hours Run] AS [HoursRun]
+		[Hours Run] AS [HoursRun],
+		[Service Completed] AS [ServiceDate]
 	FROM #properties P
 	PIVOT
 	(
@@ -101,7 +106,8 @@ FROM
 			[RMA Title],
 			[RMA Type],
 			[Complaint Number],
-			[Hours Run]
+			[Hours Run],
+			[Service Completed]
 		)
 	) PIV
 ) P
@@ -119,10 +125,10 @@ FROM
 		[TicketId],
 		[RecordedValue] AS [ServiceReq]
 	FROM #workflow
-	WHERE [PropertyName] LIKE 'Service'
+	WHERE [PropertyName] LIKE 'Service' AND [TicketId] IN (SELECT [TicketId] FROM #consider)
 ) W
 	ON I.[TicketId] = W.[TicketId]
-WHERE LEFT([SerialNo],2) IN ('FA','2F') AND [ServiceReq] LIKE 'true' 
+WHERE (LEFT([SerialNo],2) IN ('FA','2F','HT','TM') OR [Part Number] LIKE 'HTFA-%') AND [ServiceReq] = 1
 
 SELECT 
 	[TicketId]
@@ -134,6 +140,8 @@ SELECT
 	F.[TicketId],
 	F.[TicketString],
 	F.[CreatedDate],
+	CAST(F.[ServiceDate] AS DATE) AS [ServiceDate],
+	F.[PartNo],
 	IIF(LEFT(F.[SerialNo],2) LIKE 'FA', SUBSTRING(F.[SerialNo], 1, 6), [SerialNo]) AS [SerialNo],
 	F.[HoursRun],
 	IIF(C.[TicketId] IS NOT NULL, 1, 
@@ -144,12 +152,15 @@ SELECT
 INTO #bestSet
 FROM #flagged F LEFT JOIN #complaintsReal C
 	ON F.[TicketId] = C.[TicketId]
+WHERE F.[ServiceDate] IS NOT NULL
 
 SELECT ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [TicketId]) AS [VisitNo],
+	UPPER([PartNo]) AS [PartNo],
 	UPPER([SerialNo]) AS [SerialNo],
 	[TicketId],
 	[TicketString],
 	[CreatedDate],
+	[ServiceDate],
 	CAST(REPLACE([HoursRun],',','') AS FLOAT) AS [HoursRun],	
 	[Failure]
 INTO #visitOrdered
@@ -158,9 +169,11 @@ WHERE [Failure] = 1 AND (ISNUMERIC([HoursRun]) = 1 OR [HoursRun] IS NULL)
 
 SELECT 
 	[VisitNo],
+	[PartNo],
 	[SerialNo],
 	[TicketString],
 	CAST([CreatedDate] AS DATE) AS [CreatedDate],
+	CAST([ServiceDate] AS DATE) AS [ServiceDate],
 	[HoursRun],
 	LAG([HoursRun]) OVER(PARTITION BY [SerialNo] ORDER BY [VisitNo]) AS [PriorHours]
 INTO #lagged
@@ -172,12 +185,10 @@ INTO #mtbf
 FROM #lagged
 
 SELECT 
-	[SerialNo],
-	[TicketString],
-	YEAR([CreatedDate]) AS [Year],
-	MONTH([CreatedDate]) AS [Month],
+	YEAR([ServiceDate]) AS [Year],
+	MONTH([ServiceDate]) AS [Month],
 	[MTBF]
 FROM #mtbf
-WHERE [MTBF] IS NOT NULL AND [MTBF] > 0.0000001
+WHERE [MTBF] IS NOT NULL AND [MTBF] > 0.0000001 AND [ServiceDate] IS NOT NULL
 
 DROP TABLE #consider, #partinfo, #workflow, #properties, #rootCause, #flagged, #complaintsReal, #bestSet, #visitOrdered, #lagged, #mtbf
