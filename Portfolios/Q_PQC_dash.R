@@ -59,8 +59,8 @@ leak.fail <- merge(pqcRuns.df[,c('SerialNumber','Year','Week')], ptRuns.df, by='
 leak.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', leak.fail, c('Key'), startDate, 'Record', 'sum', 0)
 leak.rate <- mergeCalSparseFrames(leak.fill, runs.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 leak.lims <- addStatsToSparseHandledData(leak.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0)
-x_pos.leak <- c('2016-32')
-annot.leak <- c('DX-DCT-031999')
+x_pos.leak <- c('2016-32', '2017-02')
+annot.leak <- c('DX-DCT-031999', 'CAPA 13316')
 y_pos.leak <- leak.lims[(leak.lims[,'DateGroup']) %in% x_pos.leak, 'Rate'] + 0.0001
 p.leak.fail <- ggplot(leak.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Leak Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + annotate("text", x=x_pos.leak, y=y_pos.leak, label=annot.leak, size=4)
 
