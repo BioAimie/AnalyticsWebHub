@@ -122,19 +122,27 @@ FROM
 ) D
 
 SELECT 
-	[LotNumber],
-	MAX([PartNumber]) AS [PartNumber] 
-INTO #lots
-FROM 
+	ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [TranDate], [ItemID]) AS [Row],
+	[ItemID],
+	[SerialNo],
+	[TranDate]
+INTO #Serials
+FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
+WHERE [ItemID] LIKE 'FLM%-ASY-0001%'
+
+SELECT 
+	S.[SerialNo],
+	S.[ItemID]
+INTO #Inst
+FROM #Serials S INNER JOIN
 (
 	SELECT 
-		[PartNumber],
-		IIF(REPLACE(REPLACE([LotNumber],'_',''),'.','') LIKE '%R', SUBSTRING(REPLACE(REPLACE([LotNumber],'_',''),'.',''), 1, LEN(REPLACE(REPLACE([LotNumber],'_',''),'.',''))-1) , REPLACE(REPLACE([LotNumber],'_',''),'.','')) AS [LotNumber] 
-	FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-		ON P.[PartNumberId] = L.[PartNumberId]
-	WHERE [PartNumber] LIKE 'FLM%-ASY-0001%'
-) A
-GROUP BY [LotNumber]
+		[SerialNo],
+		MAX([Row]) AS [MaxRow]
+	FROM #Serials
+	GROUP BY [SerialNo] 
+) C
+	ON S.[SerialNo] = C.[SerialNo] AND S.[Row] = C.[MaxRow]
 
 SELECT 
 	[dbKey],
@@ -160,14 +168,15 @@ SELECT
 	[PouchVersion],
 	[Department],
 	[Instrument],
-	IIF([PartNumber] LIKE 'FLM1%', 'FA1.5',
-		IIF([PartNumber] LIKE 'FLM2%', 'FA2.0', [InstVersion])) AS [InstVersion],
+	IIF([ItemID] LIKE 'FLM1%', 'FA1.5',
+		IIF([ItemID] LIKE 'FLM2%', 'FA2.0', [InstVersion])) AS [InstVersion],
 	[LotNo],
 	[Year],
 	[Week],
 	[BaselineFluorArray],
 	[MaximumFluorArray]
-FROM #final F LEFT JOIN #lots L
-	ON F.[Instrument] = L.[LotNumber]
+FROM #final F LEFT JOIN #Inst I
+	ON F.[Instrument] = I.[SerialNo]
+ORDER BY [Year], [Week] 
 
-DROP TABLE #base15, #oneFive, #twoOh, #fluor15, #master, #protocolNo, #lots, #final
+DROP TABLE #base15, #oneFive, #twoOh, #fluor15, #master, #protocolNo, #Serials, #Inst, #final
