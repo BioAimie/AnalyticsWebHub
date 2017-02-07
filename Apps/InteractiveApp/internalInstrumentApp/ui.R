@@ -27,8 +27,11 @@ shinyUI(
 		  uiOutput("errorMessage"),
 			uiOutput("dataFrameTitle"),
 			dataTableOutput("rate.table"),
+			tags$hr(color="white"),
+			uiOutput("downloadbutton"),
 			plotOutput("cpPlot"),
-			bsModal(id="modalObject", textOutput("modalTitle"), trigger="triggerId", size="large", plotOutput("modalPlotCp")) #plotOutput("modalPlotErrors"))
+			#bsModal(id="modalObject", textOutput("modalTitle"), trigger="triggerId", size="large", plotOutput("modalPlotCp"), plotOutput("modalPlotErrors"))
+			uiOutput("modal")
 		
 			
 		), # main panel 
