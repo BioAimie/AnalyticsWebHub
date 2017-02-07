@@ -14,6 +14,41 @@
 
 }
 
+#downloadaction{
+
+	color: #7F0909;
+	background-color: #9E9E9E;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	padding-right: 6px;
+	padding-left: 6px;
+	font-weight: bold;
+	
+}
+
+
+.modal{
+
+	
+	max-width: 100%;
+	overflow: auto;
+	
+	width: 100%;
+	
+}
+
+.modal-body{
+
+    height: 1000px;
+   
+    overflow: auto;
+    /*overflow-x: auto;*/
+    /*overflow-y: auto;*/
+
+}
+
+
+
 #triggerId{
 	padding-top: 5px;
 	padding-bottom: 5px;
@@ -40,7 +75,7 @@
 
 }
 
-hr{
+#sidepanelHR{
 
 	border: 1px solid #D0493B;
 
@@ -161,7 +196,7 @@ h2 {
 
 body{
 	
-	background-color: #D7D7D7;
+	/*background-color: #D7D7D7*/
 	font-size: 15px;
 	font-family: "Lucida Console";
 	
