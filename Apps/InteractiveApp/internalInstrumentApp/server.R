@@ -139,10 +139,10 @@ shinyServer(function(input, output, session){
 				 				  
 				 				  
 				 				  if(max(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix$Percentage, na.rm=TRUE) <= 10){
-				 				  		ggplot(data=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+ scale_y_continuous(limits=c(0, 15))+ scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14),plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
+				 				  		ggplot(data=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+ scale_y_continuous(limits=c(0, 15))+ scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)+1))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14),plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
 		              
 				 				  }else{ 
-				 							ggplot(data=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+  scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
+				 							ggplot(data=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+  scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)+1))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
 				 				  }	
 				 			}else if(length(isolate(input$protocol.choice)) > 1){ ## if the user selected multipe protocol types you have to combine the data frames 
 				 				  ## initialize the combined.df with a non-empty data frame
@@ -164,8 +164,7 @@ shinyServer(function(input, output, session){
 				 					combined.df$Percentage <- round((combined.df$Percentage/combined.df$RunCounts)*100, 2)
 				 				  
 				 					## plot the combined data frame 
-				 					
-				 					ggplot(data=combined.df, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+ scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
+				 					ggplot(data=combined.df, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+ scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)+1))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
 
 				 				  
 				 			}
