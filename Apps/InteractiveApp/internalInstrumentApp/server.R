@@ -139,26 +139,33 @@ shinyServer(function(input, output, session){
 				 				  
 				 				  
 				 				  if(max(overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix$Percentage, na.rm=TRUE) <= 10){
-				 				  		ggplot(data=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+ scale_y_continuous(limits=c(0, 15))+ scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14),plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
+				 				  		ggplot(data=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+ scale_y_continuous(limits=c(0, 15))+ scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14),plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
 		              
 				 				  }else{ 
-				 							ggplot(data=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+  scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
+				 							ggplot(data=overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[serial.num]]$matrix, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+  scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
 				 				  }	
 				 			}else if(length(isolate(input$protocol.choice)) > 1){ ## if the user selected multipe protocol types you have to combine the data frames 
-				 				  
-				 					combined.df <- overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)[1]]][[serial.num]]$matrix
+				 				  ## initialize the combined.df with a non-empty data frame
+				 					logical.vector <- unlist(lapply(c(isolate(input$protocol.choice)), function(x)return(!is.null(overall.error.rate.tables[[isolate(input$location.choice)]][[x]][[serial.num]]))))
+				 					initial.protocol <- isolate(input$protocol.choice)[logical.vector][1]
+				 					initial.index <- which(isolate(input$protocol.choice) == initial.protocol)
+				 					combined.df <- overall.error.rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)[initial.index]]][[serial.num]]$matrix
+				 					
 				 					combined.df$Percentage <- round((combined.df$Percentage/100)*combined.df$RunCounts)
-				 					for( PROTOCOL in (isolate(input$protocol.choice)[-1])){ ## add up the number of errors for each protcol 
-				 							errors.for.this.protocol <- round((overall.error.rate.tables[[isolate(input$location.choice)]][[PROTOCOL]][[serial.num]]$matrix$Percentage/100)*overall.error.rate.tables[[isolate(input$location.choice)]][[PROTOCOL]][[serial.num]]$matrix$RunCounts)
-				 							combined.df$Percentage <- apply(cbind(combined.df$Percentage, errors.for.this.protocol), 1, function(x)if(all(is.na(x))){return(NA)}else{return(sum(x, na.rm=TRUE))})
-				 							combined.df$RunCounts <- apply(cbind(combined.df$RunCounts, overall.error.rate.tables[[isolate(input$location.choice)]][[PROTOCOL]][[serial.num]]$matrix$RunCounts), 1, function(x)if(all(is.na(x))){return(NA)}else{return(sum(x, na.rm=TRUE))})
+				 					for( PROTOCOL in (isolate(input$protocol.choice)[-initial.index])){ ## add up the number of errors for each protcol 
+				 							if(!is.null(overall.error.rate.tables[[isolate(input$location.choice)]][[PROTOCOL]][[serial.num]])){
+				 								errors.for.this.protocol <- round((overall.error.rate.tables[[isolate(input$location.choice)]][[PROTOCOL]][[serial.num]]$matrix$Percentage/100)*overall.error.rate.tables[[isolate(input$location.choice)]][[PROTOCOL]][[serial.num]]$matrix$RunCounts)
+				 								combined.df$Percentage <- apply(cbind(combined.df$Percentage, errors.for.this.protocol), 1, function(x)if(all(is.na(x))){return(NA)}else{return(sum(x, na.rm=TRUE))})
+				 								combined.df$RunCounts <- apply(cbind(combined.df$RunCounts, overall.error.rate.tables[[isolate(input$location.choice)]][[PROTOCOL]][[serial.num]]$matrix$RunCounts), 1, function(x)if(all(is.na(x))){return(NA)}else{return(sum(x, na.rm=TRUE))})
+				 								
+				 							}
 				 					}
 				 					## convert the sums into percentages
 				 					combined.df$Percentage <- round((combined.df$Percentage/combined.df$RunCounts)*100, 2)
 				 				  
 				 					## plot the combined data frame 
 				 					
-				 					ggplot(data=combined.df, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+ scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
+				 					ggplot(data=combined.df, aes(x=Date, y=Percentage, fill=FailureType)) +geom_bar(stat="identity")+ scale_x_continuous(name="Week Number (year-week)", labels=overall.error.labels, breaks=seq(1, length(overall.error.labels), 1), limits=c(1, length(overall.error.labels)))+ labs(title=overall.plot.title, y="percent of runs with errors")	+ theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14))
 
 				 				  
 				 			}
