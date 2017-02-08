@@ -66,10 +66,8 @@ allProtocolsOverallErrorRate <- function(instrument, location, protocol.type){
 	  for(k in 2:6){
 	  	temp.matrix[overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix[ , 1], k-1] <- overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix[, k]  
 	  }
-		#print(temp.matrix)
 	  overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix <<- temp.matrix
-	  #print(overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix)
-	  
+
 	  ############## now re-shape it into a data frame ggplot can use #####################
 	  temp.dataframe <- data.frame(matrix(ncol=4, nrow=nrow(overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix)*4))
 	  colnames(temp.dataframe) <- c("Date", "Percentage", "FailureType", "RunCounts")
@@ -78,7 +76,12 @@ allProtocolsOverallErrorRate <- function(instrument, location, protocol.type){
 	  temp.dataframe$Percentage <- c(overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix[ ,1], overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix[ , 2], overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix[ , 3], overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix[ , 4])
 	  temp.dataframe$FailureType <- c(rep("Instrument Error", number.weeks), rep("Software Error", number.weeks), rep("PouchLeak", number.weeks), rep("Control Fails", number.weeks))  
 		temp.dataframe$RunCounts <- rep(overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix[ ,5], 4)
-	  overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix <<- temp.dataframe
+	  ### turn the zero percentages into NA's so the old version of R won't plot zeros
+		temp.dataframe$Percentage[which(temp.dataframe$Percentage == 0)] <- NA
+		overall.error.rate.tables[[location]][[protocol.type]][[instrument]]$matrix <<- temp.dataframe
+	  
+	   
+	  
 }
 
 
@@ -133,23 +136,15 @@ storeOverallErrorRate <- function(row.numbers, location, protocol, serial.num){
 			if(nrow(temp.location.frames) != 0){
 				dates <- unique(temp.location.frames$Date)
 				for(w in dates ){
-				 		#week.rates <- as.vector(unlist(apply(temp.location.frames[which(temp.location.frames$Date == w), c("InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1" ,"yeast")], 2, function(x)round((sum(x, na.rm=TRUE)/length(x))*100,2))))
 						week.rates <- as.vector(unlist(apply(temp.location.frames[which(temp.location.frames$Date == w), c("InstrumentError", "SoftwareError", "PouchLeak")], 2, function(x)round((sum(x, na.rm=TRUE)/length(x))*100,2))))
 						control.sum <- sum(unlist(apply(temp.location.frames[which(temp.location.frames$Date == w), c("PouchLeak", "PCR2", "PCR1", "yeast")], 1, function(x)if(sum(x[2:4]) >= 1 &  x[1] != 1){return(1)}else{return(0)})), na.rm=TRUE)
 						
 						control.sum <- round((control.sum/length(which(temp.location.frames$Date == w)))*100, 2) 
 				 		
-						#yeast.errors <- sum(temp.location.frames[which(temp.location.frames$Date == w), "yeast"], na.rm=TRUE)
-				 		#pcr2.errors <- sum(temp.location.frames[which(temp.location.frames$Date == w), "PCR2"], na.rm=TRUE)
-				 		#pcr1.errors <- sum(temp.location.frames[which(temp.location.frames$Date == w), "PCR1"], na.rm=TRUE)
 				 		week.rates <- c(week.rates, control.sum)
 				 		
 						overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]] <<- rbind(overall.error.rate.tables[[location]][[protocol]][[serial.num]][["matrix"]], c(which(overall.error.labels == w), week.rates,length(which(temp.location.frames$Date == w))))
-						    #print(which(overall.error.labels == w)) 
-								#print(w)
-								#print(serial.num)
-								#print(protocol)
-						
+
 				}
 			
 				overall.error.rate.tables[[location]][[protocol]][[serial.num]][["xlabels"]] <<- dates
@@ -238,14 +233,7 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 
 		}
 
-		# convert them into strings 
-		#instrument.rate <- paste0(as.character(instrument.rate), "%")
-  	#software.rate <- paste0(as.character(software.rate), "%")
-		#pcr1.rate <- paste0(as.character(pcr1.rate), "%")
-		#pcr2.rate <- paste0(as.character(pcr2.rate), "%")
-		#yeast.rate <- paste0(as.character(yeast.rate), "%")
-		#pouchleak.rate <- paste0(as.character(pouchleak.rate), "%")
-	
+
 		# add the rates to rate.tables for the protocol that is being processed right now  
 		rate.tables[[l]][[p]][[d]] <<- rbind(rate.tables[[l]][[p]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "fraction of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
 			"Software Failure Rate"=software.rate,"PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeast Negative Rate" =yeast.rate , "Pouch Leak Rate"=pouchleak.rate))
