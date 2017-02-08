@@ -151,7 +151,7 @@ FROM [FILMARRAYDB].[FilmArray2].[dbo].[AssayResult] AR WITH(NOLOCK) INNER JOIN [
                            ON RX.[Id] = RR.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] MA WITH(NOLOCK) 
                                  ON AR.[analysis_id] = MA.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] ER WITH(NOLOCK) 
                                         ON MA.[experiment_id] = ER.[Id]
-WHERE ER.[StartTime] >= GETDATE() - 30  AND (AA.[Name] LIKE 'yeast%' OR AA.[Name] LIKE '%RNA%') AND (AA.[Name] NOT LIKE 'hRNA')
+WHERE ER.[StartTime] >= GETDATE() - 370  AND (AA.[Name] LIKE 'yeast%' OR AA.[Name] LIKE '%RNA%') AND (AA.[Name] NOT LIKE 'hRNA')
 
 
 SELECT 
