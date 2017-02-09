@@ -1,6 +1,4 @@
-
 SET NOCOUNT ON
-
 
 SELECT
        R.[StartTime] AS [Date],
@@ -22,7 +20,6 @@ WHERE TR.[TypeCode] = 'control' AND
        R.[SampleId] LIKE 'QC_ME%' OR 
 	   R.[SampleId] LIKE '%PouchQc%'
 ) AND R.[StartTime] >= GETDATE() - 370 AND 
-
 (
 
 		R.[SampleId] NOT LIKE '%NewBuild%' AND
@@ -30,12 +27,11 @@ WHERE TR.[TypeCode] = 'control' AND
 		R.[SampleId] NOT LIKE '%service%'
 )
 GROUP BY
-     R.[StartTime],
+	 R.[StartTime],
      R.[PouchSerialNumber],
      R.[SampleType],
      T.[Name],
      TR.[Result]
-
 
 SELECT 
 	[Date], 
@@ -55,10 +51,11 @@ PIVOT(
 	FOR [ControlName] 
 	IN
 	(
+		[PCR1 Control],
 		[PCR2 Control],
 		[RNA Process Control],
-		[PCR1 Control],
 		[DNA Process Control]
+		
 	)
 ) PIV
 
@@ -154,7 +151,7 @@ FROM [FILMARRAYDB].[FilmArray2].[dbo].[AssayResult] AR WITH(NOLOCK) INNER JOIN [
                            ON RX.[Id] = RR.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] MA WITH(NOLOCK) 
                                  ON AR.[analysis_id] = MA.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] ER WITH(NOLOCK) 
                                         ON MA.[experiment_id] = ER.[Id]
-WHERE ER.[StartTime] >= GETDATE() - 370  AND  (AA.[Name] LIKE 'yeast%' OR AA.[Name] LIKE '%RNA%')
+WHERE ER.[StartTime] >= GETDATE() - 370  AND (AA.[Name] LIKE 'yeast%' OR AA.[Name] LIKE '%RNA%') AND (AA.[Name] NOT LIKE 'hRNA')
 
 
 SELECT 
@@ -205,12 +202,7 @@ WHERE TR1.[TypeCode] = 'control' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
 )
-GROUP BY
-     R1.[StartTime],
-     R1.[PouchSerialNumber],
-     R1.[SampleType],
-     T1.[Name],
-     TR1.[Result]
+
 
 SELECT 
 	[Date], 
@@ -230,9 +222,9 @@ PIVOT(
 	FOR [ControlName] 
 	IN
 	(
+		[PCR1 Control],
 		[PCR2 Control],
 		[RNA Process Control],
-		[PCR1 Control],
 		[DNA Process Control]
 	)
 ) PIV
@@ -330,8 +322,7 @@ FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[AssayResult] AR1 WITH(NOLOCK) INNER
                            ON RX1.[Id] = RR1.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] MA1 WITH(NOLOCK) 
                                  ON AR1.[analysis_id] = MA1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] ER1 WITH(NOLOCK) 
                                         ON MA1.[experiment_id] = ER1.[Id]
-WHERE ER1.[StartTime] >= GETDATE() - 370  AND (AA1.[Name] LIKE 'yeast%' OR AA1.[Name] LIKE '%RNA%')
-
+WHERE ER1.[StartTime] >= GETDATE() - 370  AND (AA1.[Name] LIKE 'yeast%' OR AA1.[Name] LIKE '%RNA%') AND (AA1.[Name] NOT LIKE 'hRNA')
 
 
 SELECT 
