@@ -354,7 +354,7 @@ shinyServer(function(input, output, session) {
       paste(input$dfName,'.csv', sep='')
     },
     content = function(file) {
-      write.csv(makeDataTable(input$dfName, input$dateRange[1], input$dateRange[2], input$dateType, input$partNum, input$ncrType, input$whereType, input$problemType, input$failType), file)
+      write.csv(makeDataTable(input$dfName, input$dateRange[1], input$dateRange[2], input$dateType, input$partNum, input$ncrType, input$whereType, input$problemType, input$failType), file, row.names=FALSE)
     }
   ) 
   
