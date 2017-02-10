@@ -69,6 +69,7 @@ WHERE [PartNo] IS NOT NULL OR [ServiceCode] IS NOT NULL
 SELECT 
 	[SerialNo],
 	[Note],
+	[TicketId],
 	[TicketString],
 	[CreatedDate],
 	IIF([LotNo] IS NULL AND [CreatedDate] < CONVERT(DATETIME, '2016-02-01'), 'FLM1-GAS-0009', 
@@ -102,6 +103,7 @@ WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-S
 
 SELECT
 	S.[SerialNo],
+	S.[TicketId],
 	S.[TicketString],
 	S.[CreatedDate],
 	S.[Note],
@@ -111,7 +113,7 @@ SELECT
 INTO #partHistory
 FROM
 (
-	SELECT ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [TicketString]) AS [VisitNo],
+	SELECT ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [TicketId]) AS [VisitNo],
 		 *
 	FROM #partPutIn 
 	
@@ -141,6 +143,7 @@ SELECT DISTINCT
 	[PartTakenOut]
 INTO #distinct
 FROM #partRemoved
+ORDER BY [TicketString]
 
 SELECT 
 	YEAR([CreatedDate]) AS [Year],
