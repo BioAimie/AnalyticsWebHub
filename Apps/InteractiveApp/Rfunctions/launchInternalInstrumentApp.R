@@ -12,3 +12,4 @@ source("Rfunctions\\loadInternalInstrumentApp.R")
 # launch the app
 runApp('internalInstrumentApp', port = 4038,
        launch.browser = getOption('shiny.launch.browser', interactive()), host = getOption('shiny.host', '10.1.23.96'))
+
