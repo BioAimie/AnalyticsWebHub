@@ -155,10 +155,10 @@ SELECT
        T1.[Name] AS [ControlName],
        IIF(TR1.[Result] LIKE 'Pass', 0 , 1) AS [Result]
 INTO #allcontrols1
-FROM [FILMARRAYDB].[FilmArray2].[dbo].[Target_Assay] TA1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[Target] T1 WITH(NOLOCK)
-       ON TA1.[target_id] = T1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[TargetResult] TR1 WITH(NOLOCK)
-             ON T1.[Id] = TR1.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] A1 WITH(NOLOCK)
-                    ON TR1.[analysis_id] = A1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R1 WITH(NOLOCK)
+FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[Target_Assay] TA1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[Target] T1 WITH(NOLOCK)
+       ON TA1.[target_id] = T1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[TargetResult] TR1 WITH(NOLOCK)
+             ON T1.[Id] = TR1.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] A1 WITH(NOLOCK)
+                    ON TR1.[analysis_id] = A1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R1 WITH(NOLOCK)
                            ON A1.[experiment_id] = R1.[Id]
 WHERE TR1.[TypeCode] = 'control' AND  R1.[StartTime] >= GETDATE() - 370 AND 
 (

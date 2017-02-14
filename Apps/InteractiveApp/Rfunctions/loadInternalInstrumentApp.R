@@ -169,8 +169,9 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 		
 		x.row.numbers <- all.row.Numbers[which(location.frames[[l]]$SerialNo[all.row.Numbers] == x)] ## all the row number for the relevent runs on instrument x 
 		
+		
 		################# overall error rate tables #######################
-		#if(d == "360" ){
+	
 			
 		storeOverallErrorRate(x.row.numbers, l, p, x, d)	
 				
@@ -304,7 +305,6 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 }
 
  
-
 #*********************************************************************************************
 #********************** initialize variables/data structures **********************************
 #**********************************************************************************************

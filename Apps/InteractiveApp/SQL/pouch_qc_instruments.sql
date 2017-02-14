@@ -33,6 +33,7 @@ GROUP BY
      T.[Name],
      TR.[Result]
 
+
 SELECT 
 	[Date], 
 	[PouchSerialNumber],
@@ -137,6 +138,7 @@ WHERE
 	)
 
 
+
 SELECT
        ER.[PouchSerialNumber] AS [PouchSerialNumber],
        CAST(ER.[StartTime]  AS DATE) AS [Date],
@@ -174,7 +176,6 @@ FROM #instrumentErrors ie LEFT JOIN #softwareErrors se
 GROUP BY ie.[Date], ie.[SerialNo], ie.[Protocol], ie.[Value], se.[Value], pl.[Value], c.[PCR1], c.[PCR2], c.[yeast]
 
 
-
 SELECT
        R1.[StartTime] AS [Date],
        R1.[PouchSerialNumber] AS [PouchSerialNumber],
@@ -182,10 +183,10 @@ SELECT
        T1.[Name] AS [ControlName],
        IIF(TR1.[Result] LIKE 'Pass', 0 , 1) AS [Result]
 INTO #allcontrols1
-FROM [FILMARRAYDB].[FilmArray2].[dbo].[Target_Assay] TA1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[Target] T1 WITH(NOLOCK)
-       ON TA1.[target_id] = T1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[TargetResult] TR1 WITH(NOLOCK)
-             ON T1.[Id] = TR1.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] A1 WITH(NOLOCK)
-                    ON TR1.[analysis_id] = A1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R1 WITH(NOLOCK)
+FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[Target_Assay] TA1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[Target] T1 WITH(NOLOCK)
+       ON TA1.[target_id] = T1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[TargetResult] TR1 WITH(NOLOCK)
+             ON T1.[Id] = TR1.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] A1 WITH(NOLOCK)
+                    ON TR1.[analysis_id] = A1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R1 WITH(NOLOCK)
                            ON A1.[experiment_id] = R1.[Id]
 WHERE TR1.[TypeCode] = 'control' AND 
 (
@@ -202,6 +203,12 @@ WHERE TR1.[TypeCode] = 'control' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
 )
+GROUP BY
+	 R1.[StartTime],
+     R1.[PouchSerialNumber],
+     R1.[SampleType],
+     T1.[Name],
+     TR1.[Result]
 
 
 SELECT 
