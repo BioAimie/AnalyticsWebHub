@@ -69,7 +69,7 @@ bladder.all.rate <- mergeCalSparseFrames(bladder.all.fail, bladder.denom.fill, c
 bladder.all.rate$Key <- 'Failures/Lot Size in Field'
 bladder.all.count <- data.frame(DateGroup = bladder.all.fail[,'DateGroup'], Key = 'Count of Failures', RecordedValue = bladder.all.fail[,'RecordedValue'], HoursBetweenBin = bladder.all.fail[,'HoursBetweenBin'], Rate = bladder.all.fail[,'AdjRecord'])
 bladder.all.voe <- rbind(bladder.all.rate, bladder.all.count)
-bladder.all.voe <- bladder.all.voe[with(bladder.all.voe, order(HoursBetweenBin, decreasing=TRUE)), ]
+bladder.all.voe$HoursBetweenBin <- factor(bladder.all.voe$HoursBetweenBin, levels = c('0-100','100-500','500-1000','1000+','Unknown'))
 p.bladder.all.voe <- ggplot(subset(bladder.all.voe, RecordedValue != 'NoFailure')[with(subset(bladder.all.voe, RecordedValue != 'NoFailure'), order(HoursBetweenBin)), ], aes(x=DateGroup, y=Rate, fill=HoursBetweenBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(bladder.all.voe, 'HoursBetweenBin'), name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nAll Failures/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(aes(label=annotations.bladder, x=x_position, y=0), angle=90, hjust=-0.5, size=4)
 
 # BOARD VoEs:
@@ -139,10 +139,8 @@ pal.lids <- createPaletteOfVariableLength(lids.rate, 'Key')
 p.lids.voe <- ggplot(lids.rate, aes(x=DateGroup, y=Rate, group=Key, color=Key)) + scale_color_manual(values=pal.lids, name='') + geom_line() + geom_point() + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Lid Latch Failures per RMAs Shipped', x='Date\n(Year-Week)', y='Rolling 4-Week Average')
 
 # LED Excitation Error VoE
-order.lots <- c('071709', 'Bad-NoScreeningOrRework','Bad-WithScreening','Bad-Reworked')
+order.lots <- c('071709', 'Bad-NoScreeningOrRework','Bad-WithScreening','Bad-Reworked','New-PriorToFirmwareUpdate','New-UpdatedFirmware')
 order.lots.new <- as.character(excitation.df[!(as.character(excitation.df$Lot) %in% order.lots), 'Lot'])
-excitation.df <- rbind(excitation.df[excitation.df$Lot %in% order.lots, ], data.frame(Lot='New', with(excitation.df[excitation.df$Lot %in% order.lots.new, ], aggregate(cbind(Record, LotSizeInField)~Key, FUN=sum))))
-order.lots <- c(order.lots, 'New')
 excitation.unique <- unique(excitation.df[,c('Lot','LotSizeInField')])
 excitation.unique$Lot <- factor(excitation.unique$Lot, levels = order.lots)
 excitation.ordered <- merge(excitation.unique, excitation.df, by=c('Lot','LotSizeInField'))

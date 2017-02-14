@@ -125,14 +125,23 @@ INTO #partsUsed
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
 WHERE [ObjectName] = 'Parts Used' AND [TicketId] IN (SELECT [TicketId] FROM #partInfoAll) AND [Tracker] = 'RMA'
 
+SELECT 
+	[TicketId],
+	[RecordedValue] AS [ServiceDate]
+INTO #serviceDate
+FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
+WHERE [PropertyName] = 'Service Completed' AND [RecordedValue] IS NOT NULL
+
 SELECT
 	[CreatedDate],
 	[TicketString],
+	T.[TicketId],
 	[SerialNo],
 	IIF(CHARINDEX(':', [Config], 1) <> 0 , SUBSTRING([Config], 1, CHARINDEX(':', [Config], 1)-1), [Config]) AS [Config],
 	[Part Used],
 	[Lot/Serial Number],
-	CAST([HoursRun] AS FLOAT) AS [HoursRun]
+	CAST([HoursRun] AS FLOAT) AS [HoursRun],
+	[ServiceDate]
 INTO #partsAdded
 FROM
 (
@@ -146,7 +155,11 @@ FROM
 		U.[Lot/Serial Number]
 	FROM #partInfoAll I INNER JOIN 
 	(
-		SELECT *
+		SELECT 
+			[TicketId],
+			[ObjectId],
+			[Part Used],
+			IIF(CHARINDEX(':', [Lot/Serial Number], 1) <> 0 , SUBSTRING([Lot/Serial Number], 1, CHARINDEX(':', [Lot/Serial Number], 1)-1), [Lot/Serial Number]) AS [Lot/Serial Number]
 		FROM #partsUsed U
 		PIVOT
 		(
@@ -162,12 +175,14 @@ FROM
 		ON I.[TicketId] = U.[TicketId]
 	WHERE (U.[Part Used] LIKE '%MOTR%' OR U.[Part Used] LIKE '%FLM1-SUB-0006%')
 ) T LEFT JOIN #hoursRun H
-	ON T.[TicketId] = H.[TicketId]
+	ON T.[TicketId] = H.[TicketId] LEFT JOIN #serviceDate S
+		ON T.[TicketId] = S.[TicketId]
 WHERE [Config] IS NOT NULL
 
 SELECT
 	P.[PartNumber],
 	REPLACE(REPLACE(REPLACE(IIF(L.[LotNumber] LIKE 'KTM%', SUBSTRING(L.[LotNumber], 2, 12), L.[LotNumber]), '.',''),'_',''),'-','') AS [SerialNo],
+	L.[DateOfManufacturing] AS [InstrumentBuildDate],
 	UPPP.[LotNumber] AS [SubLotNumber],
 	IIF(CHARINDEX(':', UPPPP.[LotNumber], 1) <> 0 , SUBSTRING(UPPPP.[LotNumber], 1, CHARINDEX(':', UPPPP.[LotNumber], 1)-1), UPPPP.[LotNumber]) AS [LotNumber]
 INTO #birthLots
@@ -182,15 +197,15 @@ FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[db
 								ON ULLL.[LotNumberId] = UPPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLLL WITH(NOLOCK)
 									ON UPPP.[LotNumber] = ULLLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPPP WITH(NOLOCK)
 										ON ULLLL.[LotNumberId] = UPPPP.[LotNumberId]
-WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%') 
+WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%') AND UPPP.[Quantity] > 0
 	AND UPPPP.[PartNumber] LIKE 'MOTR-DCM-0006' AND UPPPP.[Quantity] > 0
 
 SELECT *
 INTO #Lots
 FROM
 (
-	SELECT 
-		L.[LotNumber] AS [SubLotNumber], 
+	SELECT
+		L.[LotNumber] AS [SubLotNumber],
 		UL.[LotNumber]
 	FROM [ProductionWeb].[dbo].[Parts] P INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
 		ON P.[PartNumberId] = L.[PartNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
@@ -211,13 +226,14 @@ UNION
 				ON L.[PartNumberId] = P.[PartNumberId]
 	WHERE U.[PartNumber] LIKE 'MOTR-DCM-0006' AND CHARINDEX(':', U.[LotNumber], 1) <> 0 AND U.[Quantity] > 0
 	GROUP BY 
-		L.[LotNumber], 
+		L.[LotNumber],
 		U.[LotNumber]
 ) T
 
 SELECT
 	[SerialNo],
 	[CreatedDate],
+	[ServiceDate],
 	SUBSTRING([TicketString], 5, 10) AS [RMA],
 	SUBSTRING([PriorRMA], 5, 10) AS [PriorRMA],
 	IIF([PriorHours] IS NULL OR [PriorHours] > [HoursRun], [HoursRun], [HoursRun] - [PriorHours]) AS [HoursRun],
@@ -226,15 +242,17 @@ INTO #servicedInstHistory
 FROM
 (
 	SELECT *,
-		LAG([TicketString],1) OVER(PARTITION BY [SerialNo] ORDER BY [TicketString]) AS [PriorRMA],
-		LAG([LotAdded], 1) OVER(PARTITION BY [SerialNo] ORDER BY [TicketString]) AS [LotRemoved],
-		LAG([HoursRun]) OVER(PARTITION BY [SerialNo] ORDER BY [TicketString]) AS [PriorHours]
+		LAG([TicketString],1) OVER(PARTITION BY [SerialNo] ORDER BY [TicketId]) AS [PriorRMA],
+		LAG([LotAdded], 1) OVER(PARTITION BY [SerialNo] ORDER BY [TicketId]) AS [LotRemoved],
+		LAG([HoursRun]) OVER(PARTITION BY [SerialNo] ORDER BY [TicketId]) AS [PriorHours]
 	FROM
 	(
 		SELECT 
 			[SerialNo],
 			[CreatedDate],
+			[ServiceDate],
 			[TicketString],
+			[TicketId],
 			[BirthLot],
 			IIF([PartReplaced] LIKE 'FLM1-SUB-0006' AND [LotInProdWeb] IS NOT NULL, [LotInProdWeb], [LotAdded]) AS [LotAdded],
 			[HoursRun]
@@ -242,7 +260,9 @@ FROM
 		(
 			SELECT
 				R.[CreatedDate],
+				R.[TicketId],
 				R.[TicketString],
+				R.[ServiceDate],
 				R.[SerialNo],
 				R.[HoursRun],
 				R.[Part Used] AS [PartReplaced],
@@ -257,6 +277,8 @@ FROM
 			GROUP BY
 				R.[CreatedDate],
 				R.[TicketString],
+				R.[TicketId],
+				R.[ServiceDate],
 				R.[SerialNo],
 				R.[HoursRun],
 				R.[Part Used],
@@ -269,7 +291,9 @@ FROM
 		GROUP BY
 			[SerialNo],
 			[CreatedDate],
+			[ServiceDate],
 			[TicketString],
+			[TicketId],
 			[BirthLot],
 			[PartReplaced],
 			[LotInProdWeb],
@@ -281,6 +305,7 @@ FROM
 SELECT
 	REPLACE(S.[SerialNo], ' ','') AS [SerialNo],
 	S.[CreatedDate],
+	S.[ServiceDate],
 	S.[RMA],
 	S.[PriorRMA], 
 	C.[ComplaintNo], 
@@ -310,9 +335,10 @@ SELECT
 	ISNULL(S.[SerialNo], O.[SerialNo]) AS [SerialNo],
 	ISNULL(S.[CreatedDate], O.[CreatedDate]) AS [CreatedDate],
 	ISNULL(S.[RMA], O.[RMA]) AS [RMA],
-	S.[PriorRMA], 
+	S.[PriorRMA],
 	ISNULL(S.[ComplaintNo], O.[ComplaintNo]) AS [ComplaintNo],
 	ISNULL(S.[HoursRun], O.[HoursRun]) AS [HoursRun],
+	S.[ServiceDate],
 	ISNULL(S.[LotRemovedInService], O.[LotToBeRemovedInService]) AS [BeadBeaterLot],
 	ISNULL(S.[ExcitationErrorReported], O.[ExcitationErrorReported]) AS [ExcitationErrorReported],
 	IIF(S.[RMA] IS NOT NULL, 1, 
@@ -324,7 +350,7 @@ FROM #servicedWithAnnotations S FULL OUTER JOIN #outstandingComplaints O
 WHERE S.[ExcitationErrorReported] = 1 OR O.[ExcitationErrorReported] = 1
 
 SELECT 
-	[SerialNo],
+	IIF(LEFT([SerialNo],3) = 'KTM', REPLACE([SerialNo],'KTM','TM'), [SerialNo]) AS [SerialNo],
 	MIN([TranDate]) AS [ShipDate]
 INTO #shipped
 FROM
@@ -340,6 +366,7 @@ GROUP BY [SerialNo]
 SELECT
 	[SerialNo],
 	[ShipDate],
+	[LotShipped],
 	IIF([LotShipped] LIKE '071709', '071709',
 		IIF([LotShipped] IN ('6483110515.00','6483012516.00') AND [SerialNo] IN
 		(
@@ -366,19 +393,21 @@ SELECT
 			'2FA02630','2FA02633','2FA02635','2FA02636','2FA02638','2FA02639','2FA02640','2FA02641','2FA02642','2FA02643','2FA02644','2FA02645','2FA02648','2FA02672'
 		), 'Bad-Reworked',
 		IIF([LotShipped] IN ('6483110515.00','6483012516.00') AND [ShipDate] < CONVERT(DATETIME, '2016-04-19'), 'Bad-NoScreeningOrRework',
-		IIF([LotShipped] IN ('6483110515.00','6483012516.00'), 'Bad-WithScreening', [LotShipped])))) AS [LotFlag]
+		IIF([LotShipped] IN ('6483110515.00','6483012516.00'), 'Bad-WithScreening', 
+		IIF([InstrumentBuildDate] >= CAST('2016-10-06' AS DATETIME), 'New-UpdatedFirmware', 'New-PriorToFirmwareUpdate'))))) AS [LotFlag]
 INTO #lotGroupsShipped
 FROM 
 (
 	SELECT 
 		S.[SerialNo],
 		S.[ShipDate],
+		B.[InstrumentBuildDate],
 		ISNULL(B.[LotNumber], '071709') AS [LotShipped]
 	FROM #shipped S INNER JOIN #birthLots B
 		ON S.[SerialNo] = B.[SerialNo]
 ) T
 
-SELECT 
+SELECT
 	ISNULL(F.[Lot], S.[Lot]) AS [Lot],
 	ISNULL(F.[HoursBetweenBin], 'NoFailures') AS [Key],
 	ISNULL(F.[Record], 0) AS [Record],
@@ -386,7 +415,7 @@ SELECT
 INTO #master
 FROM
 (
-	SELECT 
+	SELECT
 		ISNULL([LotFlag], [BeadBeaterLot]) AS [Lot],
 		CASE
 			WHEN [HoursRun] IS NULL THEN 'Unknown'
@@ -416,16 +445,27 @@ FROM
 			COUNT([SerialNo]) AS [LotShipped]
 		FROM
 		(
-			SELECT 
-				IIF([LotAdded]  IN ('6483110515.00','6483012516.00') AND [CreatedDate] < CONVERT(DATETIME, '2016-04-19'), 'Bad-NoScreeningOrRework', 
-					IIF([LotAdded]  IN ('6483110515.00','6483012516.00'), 'Bad-WithScreening', [LotAdded])) AS [LotFlag],
+			SELECT
+				[SerialNo],
+				IIF([LotAdded] = '071709', '071709',
+					IIF([ServiceDate] < CAST('2016-04-19' AS DATE), 'Bad-NoScreeningOrRework',
+					IIF([ServiceDate] < CAST('2016-05-20' AS DATE), 'Bad-WithScreening',
+					IIF([ServiceDate] < CAST('2016-08-23' AS DATE), 'Bad-Reworked',
+					IIF([ServiceDate] < CAST('2016-10-06' AS DATE), 'New-PriorToFirmwareUpdate', 'New-UpdatedFirmware'))))) AS [LotFlag] 
+				/*
+					IIF([LotAdded] IN ('6483110515.00','6483012516.00') AND [CreatedDate] < CONVERT(DATETIME, '2016-04-19'), 'Bad-NoScreeningOrRework', 
+					IIF([LotAdded]  IN ('6483110515.00','6483012516.00'), 'Bad-WithScreening', 
+					IIF([CreatedDate] >= CAST('2016-10-06' AS DATETIME), 'New-UpdatedFirmware', 
+					IIF([LotAdded] LIKE 'n%a', 'NA', 'New-PriorToFirmwareUpdate'))))) AS [LotFlag],
 				[SerialNo]
+				*/
 			FROM
 			(
 				SELECT 
 					[SerialNo],
 					[CreatedDate],
 					[TicketString],
+					[ServiceDate],
 					[BirthLot],
 					IIF([PartReplaced] LIKE 'FLM1-SUB-0006' AND [LotInProdWeb] IS NOT NULL, [LotInProdWeb], [LotAdded]) AS [LotAdded],
 					[HoursRun]
@@ -436,6 +476,7 @@ FROM
 						R.[TicketString],
 						R.[SerialNo],
 						R.[HoursRun],
+						CAST(R.[ServiceDate] AS DATE) AS [ServiceDate],
 						R.[Part Used] AS [PartReplaced],
 						R.[Config] AS [LotAdded],
 						ISNULL(B.[SubLotNumber], '071709') AS [BirthSubLot],
@@ -445,11 +486,13 @@ FROM
 							ON R.[SerialNo] = B.[SerialNo] LEFT JOIN #Lots L
 								ON R.[Config] = L.[LotNumber] LEFT JOIN #Lots LL
 									ON R.[Config] = LL.[SubLotNumber]
+					WHERE R.[ServiceDate] IS NOT NULL
 					GROUP BY
 						R.[CreatedDate],
 						R.[TicketString],
 						R.[SerialNo],
 						R.[HoursRun],
+						R.[ServiceDate],
 						R.[Part Used],
 						R.[Config],
 						B.[SubLotNumber],
@@ -462,6 +505,7 @@ FROM
 					[CreatedDate],
 					[TicketString],
 					[BirthLot],
+					[ServiceDate],
 					[PartReplaced],
 					[LotInProdWeb],
 					[LotAdded],
@@ -494,4 +538,4 @@ GROUP BY
 	[Key]
 
 DROP TABLE #failureMode, #relatedRMA, #pivoted, #complaints, #partInfo, #hoursRun, #partsUsed, #partsAdded, #birthLots, #Lots, #servicedInstHistory, #servicedWithAnnotations,
-			#outstandingComplaints, #fieldComplaints, #shipped, #lotGroupsShipped, #disposition, #partInfoAll, #master
+			#outstandingComplaints, #fieldComplaints, #shipped, #lotGroupsShipped, #disposition, #partInfoAll, #master, #serviceDate

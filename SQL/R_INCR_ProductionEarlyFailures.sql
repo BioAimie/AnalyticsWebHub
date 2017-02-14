@@ -1,13 +1,25 @@
 SET NOCOUNT ON
 
 SELECT 
-	REPLACE(REPLACE(REPLACE(REPLACE([LotNumber],'_',''),'-',''),'.',''),' ','') AS [LotNumber],
-	[PartNumber],
-	[DateOfManufacturing]
+	[SerialNo],
+	MIN([DateOfManufacturing]) AS [DateOfManufacturing]
 INTO #birthDate
-FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-	ON P.[PartNumberId] = L.[PartNumberId]
-WHERE [PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103','HTFA-ASY-0003','HTFA-SUB-0103') AND [DateOfManufacturing] > CONVERT(datetime,'2014-06-01')
+FROM
+(
+	SELECT 
+		REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.','') AS [LotNo],
+		IIF(LEFT(P.[PartNumber],4) IN ('FLM2','HTFA'), SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 8),
+			SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 6)) AS [SerialNo],
+		P.[PartNumber],
+		L.[DateOfManufacturing],
+		L.[VersionId],
+		IIF(L.[VersionId] IN ('IP','01','02','03'), 1, 0) AS [New]
+	FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
+		ON L.[PartNumberId] = P.[PartNumberId]
+	WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001%' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%' OR P.[PartNumber] = 'HTFA-SUB-0103') AND [DateOfManufacturing] > CONVERT(DATETIME, '2014-06-01')
+) T
+WHERE [New] = 1
+GROUP BY [SerialNo]
 
 SELECT 
 	[TicketId],
@@ -82,14 +94,13 @@ PIVOT
 	)
 ) PIV
 
-SELECT 
-	[LotNumber] AS [SerialNo],
-	[PartNumber] AS [PartNo],
+SELECT
+	B.[SerialNo],
 	[DateOfManufacturing] AS [BirthDate],
 	[TicketString],
 	P.[TicketId],
 	[CreatedDate],
-	[Part Number],
+	[Part Number] AS [PartNo],
 	[Title],
 	[CustFailType],
 	[Type],
@@ -101,8 +112,8 @@ SELECT
 	IIF([Title] LIKE '% error%' OR [Title] LIKE '% fail%' OR [Title] LIKE '%DOA%' OR [Title] LIKE '%ELF%',1, 0) AS [TitleFail],
 	IIF(ISNUMERIC([Complaint])=1, 1, 0) AS [Complaint]
 INTO #flaggedForFailures
-FROM #birthDate B LEFT JOIN #partInfoPiv P
-	ON B.[LotNumber] = P.[SerialNo] LEFT JOIN #freePropPiv F
+FROM #birthDate B INNER JOIN #partInfoPiv P
+	ON B.[SerialNo] = P.[SerialNo] LEFT JOIN #freePropPiv F
 		ON P.[TicketId] = F.[TicketId]
 WHERE [HoursRun] NOT LIKE 'N%A' AND [HoursRun] IS NOT NULL
 
@@ -117,6 +128,7 @@ SELECT
 	[TicketString],
 	[CreatedDate],
 	[HoursRun],
+	[CustFailTypeProd],
 	IIF([FailureType] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([FailCheck] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([CustFailTypeProd] = 1 AND [HoursRunLow] = 1, 1,
@@ -135,7 +147,8 @@ SELECT
 	[TicketString],
 	[CreatedDate],
 	[BirthDate],
-	[Failure]
+	[Failure],
+	[CustFailTypeProd] AS [CustReportFailure]
 INTO #firstFailure
 FROM #master WHERE [TicketId] IN 
 (
@@ -156,5 +169,16 @@ SELECT
 	1 AS [Record]
 FROM #firstFailure
 WHERE [Failure] = 1
+UNION ALL
+SELECT 
+	[SerialNo],
+	[Version],
+	[Year],
+	[Week],
+	DATEDIFF(ww, [BirthDate], [CreatedDate]) AS [DeltaWeeks],
+	'CustReportedFailure' AS [Key],
+	1 AS [Record]
+FROM #firstFailure
+WHERE [CustReportFailure] = 1
 
 DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure

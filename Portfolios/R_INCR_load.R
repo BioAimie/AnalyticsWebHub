@@ -38,6 +38,11 @@ queryText <- readLines("SQL/R_INCR_EarlyFailureAnnotationMaker.sql")
 query <- paste(queryText,collapse="\n")
 annotations.df <- sqlQuery(PMScxn,query)
 
+# Load the data for early failure annotations
+queryText <- readLines("SQL/R_INCR_EarlyFailureAnnotationMakerByCustReport.sql")
+query <- paste(queryText,collapse="\n")
+annotations.cust.df <- sqlQuery(PMScxn,query)
+
 # Load the data for early failures by serial batch size
 queryText <- readLines("SQL/R_INCR_EarlyFailuresBySerialNumberFamily.sql")
 query <- paste(queryText,collapse="\n")
