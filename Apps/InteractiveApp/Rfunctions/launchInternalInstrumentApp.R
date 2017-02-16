@@ -1,6 +1,7 @@
 
 
 library(shiny)
+library(sendmailR)
 
 # set the working directory 
 setwd('~/WebHub/AnalyticsWebHub/Apps/InteractiveApp')
@@ -36,8 +37,6 @@ calculateAlerts <- function(serial.num, alert.frame, location){
 			if(failure.rate >= .2){
 				## THIS MACHINE NEEDS AN ALERT
 				alerts.output[[location]][["20percent"]] <<- c(alerts.output[[location]][["20percent"]], as.character(serial.num))
-				#alert.frame$Instrument <- c(as.character(serial.num), rep(NA, number.runs - 1))
-				#alerts.output[[location]] <<- rbind(alerts.output[[location]], alert.frame[, c("Instrument", "Date", "Protocol", "InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1", "yeast", "Cp")]) 	
 			}
 		## alert case 2: three consecutive runs with errors (there doesn't need to be five runs in the past week) 	
 		}else if(sum(alert.frame$error, na.rm=TRUE) == 3){ # if there were at least three runs with errors 
@@ -45,8 +44,6 @@ calculateAlerts <- function(serial.num, alert.frame, location){
 				if(all(alert.frame$error[2:3] == 1)){ # if the three runs with errors were consecutive
 					## THIS MACHINE NEEDS AN ALERT 
 					alerts.output[[location]][["3consecutive"]] <<- c(alerts.output[[location]][["3consecutive"]], as.character(serial.num))
-					#alert.frame$Instrument <- c(as.character(serial.num), rep(NA ,number.runs -1))
-					#alerts.output[[location]] <<- rbind(alerts.output[[location]], alert.frame[, c("Instrument", "Date", "Protocol", "InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1", "yeast", "Cp")])
 				}
 			
 			}
@@ -55,7 +52,8 @@ calculateAlerts <- function(serial.num, alert.frame, location){
 	
 } # end calculateAlerts 
 
-if(wday(Sys.Date() == 4)){
+
+if(wday(Sys.Date()) == 4){
 	
 	
 	## initialize the output data structure and email varialbes for the instrument alerts 
@@ -78,27 +76,20 @@ if(wday(Sys.Date() == 4)){
 			lapply(serial.numbers, calculateAlerts, alert.location.frames[[l]], l)
 			
 			##### now write the results in an email ######
-			if(length(alerts.output[[location]][["20percent"]]) > 0 & length(alerts.output[[location]][["3consecutive"]])){ #both kinds of alerts
+			if(length(alerts.output[[l]][["20percent"]]) > 0 & length(alerts.output[[l]][["3consecutive"]])){ #both kinds of alerts
 				subject <- paste0("Weekly ", subject.names[[l]], " Suspect Instrument Alert")
-				body <- capture.output(cat("The following instrument(s) had at least 5 runs and a 20% failure rate in the last seven days: \n\n ", paste0(alerts.output[[l]][["20percent"]], collapse=", "), " \n The following instruments had 3 consecutive failed runs in less than 5 runs in the last seven days: \n", paste0(alerts.output[[l]][["3consecutive"]], collapse=", ")))      
+				body <- capture.output(cat("The following instrument(s) had at least 5 runs and a 20% failure rate in the last seven days: \n\n ", paste0(alerts.output[[l]][["20percent"]], collapse=", "), "\n\nThe following instrument(s) had 3 consecutive failed runs in less than 5 runs in the last seven days: \n\n ", paste0(alerts.output[[l]][["3consecutive"]], collapse=", ")))      
 				sendmail(from=from, to=to, subject=subject, msg=body, control=mailControl)
-			}else if(length(alerts.output[[location]][["20percent"]]) > 0 & length(alerts.output[[location]][["3consecutive"]]) == 0 ){ # just 20% alerts
+			}else if(length(alerts.output[[l]][["20percent"]]) > 0 & length(alerts.output[[l]][["3consecutive"]]) == 0 ){ # just 20% alerts
 				subject <- paste0("Weekly ", subject.names[[l]], " Suspect Instrument Alert")
 				body <- capture.output(cat("The following instrument(s) had at least 5 runs and a 20% failure rate in the last seven days: \n\n ", paste0(alerts.output[[l]][["20percent"]], collapse=", ")))
 				sendmail(from=from, to=to, subject=subject, msg=body, control=mailControl)
-			}else if(length(alerts.output[[location]][["20percent"]]) == 0 & length(alerts.output[[location]][["3consecutive"]]) > 0){ # just 3 consecutive failure alerts 
+			}else if(length(alerts.output[[l]][["20percent"]]) == 0 & length(alerts.output[[l]][["3consecutive"]]) > 0){ # just 3 consecutive failure alerts 
 				subject <- paste0("Weekly ", subject.names[[l]], " Suspect Instrument Alert")
-				body <- capture.output(cat("The following instrument(s) had 3 consecutive failed runs in less than 5 runs in the last seven days: \n", paste0(alerts.output[[l]][["3consecutive"]], collapse=", ")))      
+				body <- capture.output(cat("The following instrument(s) had 3 consecutive failed runs in less than 5 runs in the last seven days: \n\n ", paste0(alerts.output[[l]][["3consecutive"]], collapse=", ")))      
 				sendmail(from=from, to=to, subject=subject, msg=body, control=mailControl)
 			}
 	}
-
-	#header.names=c("Suspect Instrument", "Run Start Time", "Protocol", "Instrument Error", "Software Error", "Pouch Leak", "Negative PCR2", "Negative PCR1", "Negative Yeast", "Yeast Cp")
-	#colnames(alerts.output[["dungeon"]]) <- header.names
-	#colnames(alerts.output[["pouchqc"]]) <- header.names
-	
-	
-	
 
 	
 

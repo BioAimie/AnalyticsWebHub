@@ -173,62 +173,113 @@ shinyServer(function(input, output, session){
 				 	})
 				 	
 				 	
-					############ create the yeast CP plots if there is data #############	
+					############ create the yeast Cp/Tm plots if there is data #############	
 				 	
-				 	if(!is.null(cp.data) & !all(is.na(cp.data$Cp))){ ## if there are Cp runs to plot 
+				 	if(!is.null(cp.data) & !all(is.na(cp.data$Values))){ ## if there are Cp runs to plot 
             
-				 		if(length(cp.data$Date) <= 45){
-				    		date.labels <- as.character(format(cp.data$Date, format="%Y-%m-%d %H:%M:%S"))
-				    		cp.data$Date <- as.factor(cp.data$Date)
-				    		main.title <- paste0("average yeast Cp value for ", paste(isolate(input$protocol.choice), collapse=" , "), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
-				 				# make y labels 
-				    		if(min(cp.data$Cp, na.rm=TRUE) >= 5){
-				    				y.min <- floor(min(cp.data$Cp, na.rm=TRUE) - 3)
-				    				y.max <- ceiling(max(cp.data$Cp, na.rm=TRUE) + 3)
+				 		### define some variables for plotting
+				 		cp.indices <-which(cp.data$Key == "Cp")
+				    tm.indices <- which(cp.data$Key == "Tm")
+				    main.title.cp <- paste0("average yeast Cp values for ", paste(isolate(input$protocol.choice), collapse=" , "), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+				 		main.title.tm <- paste0("average yeast Tm values for ", paste(isolate(input$protocol.choice), collapse=" , "), " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+
+				    
+				    # make y limits 
+				    if(min(cp.data$Values[cp.indices], na.rm=TRUE) >= 5){
+				    	cp.y.min <- floor(min(cp.data$Values[cp.indices], na.rm=TRUE) - 3)
+				    	cp.y.max <- ceiling(max(cp.data$Values[cp.indices], na.rm=TRUE) + 3)
 				    				
-				    		}else{
-				    				y.min<- 0 
-				    				y.max <- ceiling(max(cp.data$Cp, na.rm=TRUE) + 3)
-				    		}
+				    }else{
+				    	cp.y.min<- 0 
+				    	cp.y.max <- ceiling(max(cp.data$Values[cp.indices], na.rm=TRUE) + 3)
+				    }
+				    		
+				    if(min(cp.data$Values[tm.indices], na.rm=TRUE) >= 5){
+				    			
+				    	tm.y.min <- floor(min(cp.data$Values[tm.indices], na.rm=TRUE) - 3)
+				    	tm.y.max <- ceiling(max(cp.data$Values[tm.indices], na.rm=TRUE) + 3)
+														    			
+				    }else{
+				    	tm.y.min<- 0 
+				    	tm.y.max <- ceiling(max(cp.data$Values[tm.indices], na.rm=TRUE) + 3)
+
+				    }
 			
+            
+				 		if(length(cp.data$Date)/2 <= 45){
+				    		date.labels <- as.character(format(cp.data$Date[tm.indices], format="%Y-%m-%d %H:%M:%S"))
+				    		cp.data$Date <- as.factor(cp.data$Date)
+				    		
+				    
 				    		x.min <- cp.data$Date[1]
 				    		x.max <- cp.data$Date[length(cp.data$Date)]
+				    		
 				    		output$cpValues <- renderPlot({
-				    			ggplot(data=cp.data, aes(x=Date, y=Cp)) +geom_bar(stat="identity", colour="#000000", fill="#000000") + labs(title=main.title, y="average yeast Cp value") + theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14)) + coord_cartesian(ylim=c(y.min, y.max), expand=FALSE) + scale_x_discrete(name="Run Start Time", labels=date.labels, breaks=cp.data$Date) + theme(plot.margin = unit(c(1,1,1,.6), "cm"))
+				    			ggplot(data=cp.data[cp.indices, ], aes(x=Date, y=Values)) +geom_bar(stat="identity", color="black", fill="black") + labs(title=main.title.cp, y="average yeast Cp value") + theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14, face="plain"), axis.text.y=element_text(size=14, face="plain"), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14, face="plain"), text=element_text(size=16, face="bold")) + coord_cartesian(ylim=c(cp.y.min, cp.y.max), expand=FALSE) + scale_x_discrete(breaks=cp.data$Date[cp.indices], labels=NULL, name=NULL) + theme(plot.margin = unit(c(1,1,.1,.5), "cm"))
 				    		})
 				    		
-				    }else{ ## make the graph a scatter plot if there are more than 45 runs 
-				    		main.title <- paste0("average yeast Cp value for ", paste(isolate(input$protocol.choice), collapse=" , ") , " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
+				    		output$tmValues <- renderPlot({
+				    			ggplot(data=cp.data[tm.indices, ], aes(x=Date, y=Values)) +geom_bar(stat="identity", color="black", fill="black") + labs(title=main.title.tm, y="average yeast Tm value") + theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14, face="plain"), axis.text.y=element_text(size=14, face="plain"), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14, face="plain"), text=element_text(size=16, face="bold")) + coord_cartesian(ylim=c(tm.y.min, tm.y.max), expand=FALSE) + scale_x_discrete(name="Run Start Time", labels=date.labels, breaks=cp.data$Date[tm.indices]) + theme(plot.margin = unit(c(.5,1,1, .5), "cm"))
+
+				    			
+				    		})
+				    		
+				     		## set plot dimensions
+				    		height.cp <- "300px"
+				    		width.cp <- "850px"
+				    		
+				    		height.tm <- "500px"
+				    		width.tm <- "850px"
+				    		
+				    		
+				    		
+				    		
+				    }else{ ## make the graph into two scatter plots if there are more than 45 runs 
+				    		main.title <- paste0("average yeast Cp/Tm values for ", paste(isolate(input$protocol.choice), collapse=" , ") , " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
 				 
 				    		## choose which runs to label so that the graph will look good
 				    	  months.with.runs <- unique(format(cp.data$Date, format="%Y-%m"))
-				    	  label.indices <- unique(c(1, unlist(lapply(months.with.runs, function(x)which(grepl(x, cp.data$Date))[1])), length(cp.data$Date) )) 
-				    		date.labels.scatter <- as.character(format(cp.data$Date, format="%Y-%m-%d"))[label.indices]
-
-                scatter.breaks <- as.vector(cp.data$Date)[label.indices]
+				    	  label.indices.cp <- unique(c(1, unlist(lapply(months.with.runs, function(x)which(grepl(x, cp.data$Date[cp.indices]))[1])), length(cp.data$Date[cp.indices]) )) 
+				    		date.labels.scatter.cp <- as.character(format(cp.data$Date[cp.indices], format="%Y-%m-%d"))[label.indices.cp]
+                scatter.breaks.cp <- as.vector(cp.data$Date[cp.indices])[label.indices.cp]
+                
+                label.indices.tm <- unique(c(1, unlist(lapply(months.with.runs, function(x)which(grepl(x, cp.data$Date[tm.indices]))[1])), length(cp.data$Date[tm.indices]) )) 
+				    		date.labels.scatter.tm <- as.character(format(cp.data$Date[tm.indices], format="%Y-%m-%d"))[label.indices.tm]
+                scatter.breaks.tm <- as.vector(cp.data$Date[tm.indices])[label.indices.tm]
+                
+                
                 cp.data$Date <- as.factor(cp.data$Date)
-
+                
 				    		output$cpValues <- renderPlot({
-				    			ggplot(data=cp.data, aes(x=Date, y=Cp, group=1)) +geom_point( size=2) + geom_line(data=cp.data[!is.na(cp.data$Cp), ]) + labs(title=main.title, y="average yeast Cp value") + theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14)) + theme(plot.margin = unit(c(1, 1, 0.5, 0.5), "cm")) + scale_x_discrete(name="Run Start Time", breaks=cp.data$Date[label.indices], labels=date.labels.scatter) + theme(plot.margin = unit(c(1,1,1,.6), "cm")) 
+				    			ggplot(data=cp.data[cp.indices, ], aes(x=Date, y=Values, group=1)) + geom_point( size=2) + geom_line(data=cp.data[cp.indices, ][!is.na(cp.data$Values[cp.indices]), ]) + labs(title=main.title.cp, y="average yeast Cp value") + theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14)) + theme(plot.margin = unit(c(1, 1, 0.5, 0.5), "cm")) + scale_x_discrete(name=NULL, breaks=cp.data$Date[label.indices.cp], labels=NULL) + theme(plot.margin = unit(c(1,1,.1,.6), "cm"))
 				    		})
-	
+				    		output$tmValues <- renderPlot({
+				    			ggplot(data=cp.data[tm.indices, ], aes(x=Date, y=Values, group=1)) + geom_point( size=2) + geom_line(data=cp.data[tm.indices, ][!is.na(cp.data$Values[tm.indices]), ]) + labs(title=main.title.tm, y="average yeast Tm value") + theme(axis.text.x = element_text(angle = 90, hjust = 1, size=14), axis.text.y=element_text(size=14), plot.title=element_text(face="bold", size=15), axis.title=element_text(size=14)) + theme(plot.margin = unit(c(1, 1, 0.5, 0.5), "cm")) + scale_x_discrete(name="Run Start Time", breaks=cp.data$Date[label.indices.tm], labels=date.labels.scatter.tm) + theme(plot.margin = unit(c(.4,1,1,.6), "cm")) 
+
+				    		})
+				    		
+				    		## set plot dimensions
+				    		height.cp <- "300px"
+				    		width.cp <- "800px"
+				    			
+				    		height.tm <- "400px"
+				    		width.tm <- "800px"
+				    		
 				    }
 				    
 				 	 ####################################################################################################################################################################### 	
-
+            
 				   output$modalTrigger <- renderUI(
 				
 							actionButton("triggerId","Click Here to View Plot" ) 
-				
-						)
+					 )
 				   output$modal <- renderUI(
 				   	
-				   		bsModal(id="modalObject", textOutput("modalTitle"), trigger="triggerId", size="large", plotOutput("cpValues"), tags$hr(color="white"), plotOutput("stackedBarChart"))
+				   		bsModal(id="modalObject", textOutput("modalTitle"), trigger="triggerId", size="large", plotOutput("cpValues", height=height.cp, width=width.cp), plotOutput("tmValues", height=height.tm, width=width.tm), tags$hr(color="white"), plotOutput("stackedBarChart"))
 				   	
 				   )
 				    
 
-				    
 				 	}else{ ## if there are no cp values to plot, display an message that says that in lieu of the plot link 
 							output$modal <- renderUI(
 										bsModal(id="modalObject", textOutput("modalTitle"), trigger="triggerId", size="large", plotOutput("stackedBarChart"))
