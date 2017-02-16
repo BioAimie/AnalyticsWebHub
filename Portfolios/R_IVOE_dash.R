@@ -139,10 +139,8 @@ pal.lids <- createPaletteOfVariableLength(lids.rate, 'Key')
 p.lids.voe <- ggplot(lids.rate, aes(x=DateGroup, y=Rate, group=Key, color=Key)) + scale_color_manual(values=pal.lids, name='') + geom_line() + geom_point() + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Lid Latch Failures per RMAs Shipped', x='Date\n(Year-Week)', y='Rolling 4-Week Average')
 
 # LED Excitation Error VoE
-order.lots <- c('071709', 'Bad-NoScreeningOrRework','Bad-WithScreening','Bad-Reworked')
+order.lots <- c('071709', 'Bad-NoScreeningOrRework','Bad-WithScreening','Bad-Reworked','New-PriorToFirmwareUpdate','New-UpdatedFirmware')
 order.lots.new <- as.character(excitation.df[!(as.character(excitation.df$Lot) %in% order.lots), 'Lot'])
-excitation.df <- rbind(excitation.df[excitation.df$Lot %in% order.lots, ], data.frame(Lot='New', with(excitation.df[excitation.df$Lot %in% order.lots.new, ], aggregate(cbind(Record, LotSizeInField)~Key, FUN=sum))))
-order.lots <- c(order.lots, 'New')
 excitation.unique <- unique(excitation.df[,c('Lot','LotSizeInField')])
 excitation.unique$Lot <- factor(excitation.unique$Lot, levels = order.lots)
 excitation.ordered <- merge(excitation.unique, excitation.df, by=c('Lot','LotSizeInField'))
