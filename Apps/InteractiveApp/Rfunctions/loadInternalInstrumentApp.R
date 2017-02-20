@@ -250,54 +250,57 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 		
 		if( p != "Custom" & !is.null(cp.tables[[l]][["All Except Custom"]][[d]][[x]])){ # if this matrix has already been initialized in another protocol 
 			
-			  new.rows <- data.frame(matrix(nrow=length(x.row.numbers), ncol=2))
-			  colnames(new.rows) <- c("Date", "Cp")
+			  new.rows <- data.frame(matrix(nrow=length(x.row.numbers)*2, ncol=3))
+			  colnames(new.rows) <- c("Date", "Values", "Key")
 				new.rows[, 1] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
-				new.rows[, 2] <- location.frames[[l]][x.row.numbers, "Cp"] 
-				new.rows$Cp[which(new.rows$Cp == 40)] <- NA
+				new.rows[, 2] <- c(location.frames[[l]][x.row.numbers, "Cp"], location.frames[[l]][x.row.numbers, "Tm"]) 
+				new.rows[, 3] <- c(rep( "Cp", length(x.row.numbers)), rep("Tm", length(x.row.numbers)))
 			
 				cp.tables[[l]][["All Except Custom"]][[d]][[x]] <<- rbind(cp.tables[[l]][["All Except Custom"]][[d]][[x]], new.rows)
 			
 		}else if(p != "Custom"){
 			
-			  first.rows <- data.frame(matrix(nrow=length(x.row.numbers), ncol=2))
-			  colnames(first.rows) <- c("Date", "Cp")
+			  first.rows <- data.frame(matrix(nrow=length(x.row.numbers)*2, ncol=3))
+			  colnames(first.rows) <- c("Date", "Values", "Key")
 				first.rows[, 1] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
-				first.rows[, 2] <- location.frames[[l]][x.row.numbers, "Cp"] 
-				first.rows$Cp[which(first.rows$Cp == 40)] <- NA
+				first.rows[, 2] <- c(location.frames[[l]][x.row.numbers, "Cp"], location.frames[[l]][x.row.numbers, "Tm"]) 
+				first.rows[, 3] <- c(rep( "Cp", length(x.row.numbers)), rep("Tm", length(x.row.numbers)))
+				
 			  cp.tables[[l]][["All Except Custom"]][[d]][[x]] <<- first.rows
 		}
 		
 		
 		if(!is.null(cp.tables[[l]][["All"]][[d]][[x]])){ ## if this matrix has already been initialized in another protocol 
 				
-					new.rows <- data.frame(matrix(nrow=length(x.row.numbers), ncol=2))
-			  colnames(new.rows) <- c("Date", "Cp")
+				new.rows <- data.frame(matrix(nrow=length(x.row.numbers)*2, ncol=3))
+			  colnames(new.rows) <- c("Date", "Values", "Key")
 				new.rows[, 1] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
-				new.rows[, 2] <- location.frames[[l]][x.row.numbers, "Cp"] 
-				new.rows$Cp[which(new.rows$Cp == 40)] <- NA
+				new.rows[, 2] <- c(location.frames[[l]][x.row.numbers, "Cp"], location.frames[[l]][x.row.numbers, "Tm"]) 
+				new.rows[, 3] <- c(rep( "Cp", length(x.row.numbers)), rep("Tm", length(x.row.numbers)))
+				
 				cp.tables[[l]][["All"]][[d]][[x]] <<- rbind(cp.tables[[l]][["All"]][[d]][[x]], new.rows)
 
 
 		}else{
 			
-				first.rows <- data.frame(matrix(nrow=length(x.row.numbers), ncol=2))
-			  colnames(first.rows) <- c("Date", "Cp")
+				first.rows <- data.frame(matrix(nrow=length(x.row.numbers)*2, ncol=3))
+			  colnames(first.rows) <- c("Date", "Values", "Key")
 				first.rows[, 1] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
-				first.rows[, 2] <- location.frames[[l]][x.row.numbers, "Cp"] 
-				first.rows$Cp[which(first.rows$Cp == 40)] <- NA
+				first.rows[, 2] <- c(location.frames[[l]][x.row.numbers, "Cp"], location.frames[[l]][x.row.numbers, "Tm"]) 
+				first.rows[, 3] <- c(rep( "Cp", length(x.row.numbers)), rep("Tm", length(x.row.numbers)))
+				#first.rows$Values[which(first.rows$Values[1:length(x.row.numbers)] == 40)] <- NA
 			  cp.tables[[l]][["All"]][[d]][[x]] <<- first.rows
 					
 			
 		}
 		
 		## now return the cp data for the non-all/all except custom protocols 
-		output <- data.frame(matrix(nrow=length(x.row.numbers), ncol=2))
-		colnames(output) <- c("Date", "Cp")
+		output <- data.frame(matrix(nrow=length(x.row.numbers)*2, ncol=3))
+		colnames(output) <- c("Date", "Values", "Key")
 		output[, 1] <- as.POSIXct(location.frames[[l]][x.row.numbers, "Date"], origin-"1970-01-01")
-		output[, 2] <- location.frames[[l]][x.row.numbers, "Cp"] 
-		
-		output$Cp[which(output$Cp == 40)] <- NA
+		output[, 2] <- c(location.frames[[l]][x.row.numbers, "Cp"], location.frames[[l]][x.row.numbers, "Tm"]) 
+		output[, 3] <- c(rep( "Cp", length(x.row.numbers)), rep("Tm", length(x.row.numbers)))
+		#output$Values[which(output$Values[1:length(x.row.numbers)] == 40)] <- NA
 		
 		return(output)
   
@@ -325,6 +328,7 @@ location.frames <<- list()
 print("running sql queries..")
 
 PMScxn <- odbcConnect("PMS_PROD")
+
 
 location.frames[["dungeon"]] <- sqlQuery(PMScxn, dungeon.query)
 location.frames[["pouchqc"]] <- sqlQuery(PMScxn, pouch.qc.query)
@@ -533,7 +537,7 @@ for( location in c("dungeon", "pouchqc")){
 
 
 
-print("rate tables created")
+print("data structures created")
 
 
 			
