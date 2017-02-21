@@ -10,6 +10,20 @@ library(lubridate)
 #***************************************************
 
 
+
+makeVersionNames <- function(v){
+	## inputs: an entry of the Version column of location.frames
+	## outputs: a modified version of that string, just to make it more readable 
+	## without this funcion the versions would just be "1", "2" or "3"
+	for( k in names(version.names)){
+		if(grepl(k, v)){
+			return(gsub(k, version.names[[k]], v))	
+		}
+	}
+	return(v)
+	
+}
+
 fixWeekZero <- function(x){
 	## inputs: a "year-week" date group from the overall.error.lablels vector
 	## outputs: a new "year-week" date group that it is either the same or modified 
@@ -169,7 +183,7 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 		
 		x.row.numbers <- all.row.Numbers[which(location.frames[[l]]$SerialNo[all.row.Numbers] == x)] ## all the row number for the relevent runs on instrument x 
 		
-		
+		version <- location.frames[[l]][x.row.numbers[1], "Version"]
 		################# overall error rate tables #######################
 	
 			
@@ -199,8 +213,8 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 		if(p != "Custom"){
 			if(x %in% unlist(rate.tables[[l]][["All Except Custom"]][[d]][ , 1])){ #if this machine was alredady added in a previously processed protocol 
 					row.num <- which(unlist(rate.tables[[l]][["All Except Custom"]][[d]][ , 1]) == x)
-					number.runs <- unlist(unname(rate.tables[[l]][["All Except Custom"]][[d]][ row.num, 2]))
-					error.run.counts <- round((unlist(unname(rate.tables[[l]][["All Except Custom"]][[d]][row.num, c(3 ,4 ,5,6, 7, 8, 9) ])))*number.runs)
+					number.runs <- unlist(unname(rate.tables[[l]][["All Except Custom"]][[d]][ row.num, 3]))
+					error.run.counts <- round((unlist(unname(rate.tables[[l]][["All Except Custom"]][[d]][row.num, c(4 ,5 ,6,7, 8, 9, 10) ])))*number.runs)
 					new.number.runs <- length(x.row.numbers)+ number.runs
 					new.total.rate <- round(((error.run.counts[1] + total.rate.numerator)/new.number.runs), 3)  
 					new.instrument.error <- round(((error.run.counts[2]+ sum(location.frames[[l]][ x.row.numbers, "InstrumentError"]))/new.number.runs), 3)
@@ -209,10 +223,10 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 					new.pcr2.error <- round(((error.run.counts[5]+ sum(location.frames[[l]][ x.row.numbers, "PCR2"]))/new.number.runs), 3)
 					new.yeast.error <- round(((error.run.counts[6]+ sum(location.frames[[l]][ x.row.numbers, "yeast"]))/new.number.runs), 3)
 					new.pouchleak <- round(((error.run.counts[7]+ sum(location.frames[[l]][ x.row.numbers, "PouchLeak"]))/new.number.runs), 3)
-					rate.tables[[l]][["All Except Custom"]][[d]][row.num, c(2 ,3 ,4 ,5,6, 7, 8, 9) ] <<-  c(new.number.runs, new.total.rate, new.instrument.error, new.software.error, new.pcr1.error, new.pcr2.error, new.yeast.error, new.pouchleak)  # num of runs
+					rate.tables[[l]][["All Except Custom"]][[d]][row.num, c(3 ,4 ,5 ,6,7, 8, 9, 10) ] <<-  c(new.number.runs, new.total.rate, new.instrument.error, new.software.error, new.pcr1.error, new.pcr2.error, new.yeast.error, new.pouchleak)  # num of runs
 					
 			}else{ # if this machine was not previously added, then make a new row for it 
-					rate.tables[[l]][["All Except Custom"]][[d]] <<- rbind(rate.tables[[l]][["All Except Custom"]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "fraction of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
+					rate.tables[[l]][["All Except Custom"]][[d]] <<- rbind(rate.tables[[l]][["All Except Custom"]][[d]], list("Instrument Serial Number" = x , "Version"=version, "# of runs"= length(x.row.numbers), "fraction of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
 						"Software Failure Rate"=software.rate, "PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeast Negative Rate" =yeast.rate, "Pouch Leak Rate"=pouchleak.rate))
 
 			}	
@@ -222,8 +236,8 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 		if(x %in% unlist(rate.tables[[l]][["All"]][[d]][ , 1])){
 					
 					row.num <- which(unlist(rate.tables[[l]][["All"]][[d]][ , 1]) == x)
-					number.runs <- unlist(unname(rate.tables[[l]][["All"]][[d]][ row.num, 2]))
-					error.run.counts <- round((unlist(unname(rate.tables[[l]][["All"]][[d]][row.num, c(3 ,4 ,5,6, 7, 8, 9) ])))*number.runs)
+					number.runs <- unlist(unname(rate.tables[[l]][["All"]][[d]][ row.num, 3]))
+					error.run.counts <- round((unlist(unname(rate.tables[[l]][["All"]][[d]][row.num, c(4 ,5 ,6, 7, 8, 9, 10) ])))*number.runs)
 					new.number.runs <- length(x.row.numbers)+ number.runs
 					new.total.rate <- round(((error.run.counts[1] + total.rate.numerator)/new.number.runs), 3)  
 					new.instrument.error <- round(((error.run.counts[2]+ sum(location.frames[[l]][ x.row.numbers, "InstrumentError"]))/new.number.runs), 3)
@@ -232,17 +246,17 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 					new.pcr2.error <- round(((error.run.counts[5]+ sum(location.frames[[l]][ x.row.numbers, "PCR2"]))/new.number.runs), 3)
 					new.yeast.error <- round(((error.run.counts[6]+ sum(location.frames[[l]][ x.row.numbers, "yeast"]))/new.number.runs),3 )
 					new.pouchleak <- round(((error.run.counts[7]+ sum(location.frames[[l]][ x.row.numbers, "PouchLeak"]))/new.number.runs), 3)
-					rate.tables[[l]][["All"]][[d]][row.num, c(2 ,3 ,4 ,5,6, 7, 8, 9) ] <<-  c(new.number.runs, new.total.rate, new.instrument.error, new.software.error, new.pcr1.error, new.pcr2.error, new.yeast.error, new.pouchleak)  # num of runs
+					rate.tables[[l]][["All"]][[d]][row.num, c(3 ,4 ,5 ,6, 7, 8, 9, 10) ] <<-  c(new.number.runs, new.total.rate, new.instrument.error, new.software.error, new.pcr1.error, new.pcr2.error, new.yeast.error, new.pouchleak)  # num of runs
 		
 		}else{
-				rate.tables[[l]][["All"]][[d]] <<- rbind(rate.tables[[l]][["All"]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "fraction of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
+				rate.tables[[l]][["All"]][[d]] <<- rbind(rate.tables[[l]][["All"]][[d]], list("Instrument Serial Number" = x ,"Version"=version, "# of runs"= length(x.row.numbers), "fraction of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
 						"Software Failure Rate"=software.rate, "PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeast Negative Rate" =yeast.rate, "Pouch Leak Rate"=pouchleak.rate))
 
 		}
 
 
 		# add the rates to rate.tables for the protocol that is being processed right now  
-		rate.tables[[l]][[p]][[d]] <<- rbind(rate.tables[[l]][[p]][[d]], list("Instrument Serial Number" = x , "# of runs"= length(x.row.numbers), "fraction of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
+		rate.tables[[l]][[p]][[d]] <<- rbind(rate.tables[[l]][[p]][[d]], list("Instrument Serial Number" = x , "Version"=version, "# of runs"= length(x.row.numbers), "fraction of runs with at least one error" =  total.rate, "Instrument Failure Rate" = instrument.rate, 
 			"Software Failure Rate"=software.rate,"PCR1 Negative Rate"=pcr1.rate, "PCR2 Negative Rate"=pcr2.rate, "yeast Negative Rate" =yeast.rate , "Pouch Leak Rate"=pouchleak.rate))
 
 			
@@ -345,6 +359,16 @@ print("creating rate tables...")
 protocol.types <- c("NPS", "Stool", "BC", "CSF", "QC", "BT", "LRTI", "NGDS", "BJI", "Custom")
 
 
+## make the "Version" column  of location.frames more understandable 
+
+
+
+version.names <<- list("1"="1.5", "2"="2.0", "3"="Torch")
+location.frames[["pouchqc"]]$Version <- unlist(lapply(location.frames[["pouchqc"]]$Version, makeVersionNames))
+location.frames[["dungeon"]]$Version <- unlist(lapply(location.frames[["dungeon"]]$Version, makeVersionNames))
+
+
+
 ## initialize the output data structue that holds the information to go in the data tables 
 rate.tables <<- list()
 
@@ -411,6 +435,8 @@ for( d in c("7", "30", "90", "360")){
 #****************************************************************************************
 #****************************** fill up the output data structures **********************
 #****************************************************************************************
+
+
 
 for( location in c("dungeon", "pouchqc")){
 	
