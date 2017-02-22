@@ -92,7 +92,7 @@ shinyServer(function(input, output, session){
 					if(length(isolate(input$protocol.choice)) == 1){
 							write.csv(rate.tables[[isolate(input$location.choice)]][[isolate(input$protocol.choice)]][[isolate(input$date.range.choice)]], file, row.names=FALSE)	
 					}else{
-						  write.csv(combined.rate.table, file, row.name=FALSE) 
+						  write.csv(combined.rate.table, file, row.names=FALSE) 
 								
 					}
 			
@@ -233,18 +233,28 @@ shinyServer(function(input, output, session){
 				    		
 				    		
 				    		
-				    		
+
 				    }else{ ## make the graph into two scatter plots if there are more than 45 runs 
 				    		main.title <- paste0("average yeast Cp/Tm values for ", paste(isolate(input$protocol.choice), collapse=" , ") , " ", isolate(input$location.choice) , " runs on ", serial.num, " in the last ", isolate(input$date.range.choice), " days") 
 				 
 				    		## choose which runs to label so that the graph will look good
-				    	  months.with.runs <- unique(format(cp.data$Date, format="%Y-%m"))
+				    	  months.with.runs <- unique(format(cp.data$Date[order(cp.data$Date)], format="%Y-%m"))
+				    	  
+				    	  #last.month <- months.with.runs[length(months.with.runs)]
+				    	 
 				    	  label.indices.cp <- unique(c(1, unlist(lapply(months.with.runs, function(x)which(grepl(x, cp.data$Date[cp.indices]))[1])), length(cp.data$Date[cp.indices]) )) 
-				    		date.labels.scatter.cp <- as.character(format(cp.data$Date[cp.indices], format="%Y-%m-%d"))[label.indices.cp]
+				    	  #last.label.vector.cp <- which(grepl(last.month, cp.data$Date[cp.indices]))
+				    		#last.label.cp <- last.label.vector.cp[length(last.label.vector.cp)] 
+				    	  #label.indices.cp <- unique(c(label.indices.cp, last.label.cp))
+				    	  
+				    	  date.labels.scatter.cp <- as.character(format(cp.data$Date[cp.indices], format="%Y-%m-%d"))[label.indices.cp]
                 scatter.breaks.cp <- as.vector(cp.data$Date[cp.indices])[label.indices.cp]
-                
+               
                 label.indices.tm <- unique(c(1, unlist(lapply(months.with.runs, function(x)which(grepl(x, cp.data$Date[tm.indices]))[1])), length(cp.data$Date[tm.indices]) )) 
-				    		date.labels.scatter.tm <- as.character(format(cp.data$Date[tm.indices], format="%Y-%m-%d"))[label.indices.tm]
+                #last.label.vector.tm <- which(grepl(last.month, cp.data$Date[tm.indices]))
+				    		#last.label.tm <- last.label.vector.tm[length(last.label.vector.tm)] 
+				    	  #label.indices.tm <- unique(c(label.indices.tm, last.label.tm))
+                date.labels.scatter.tm <- as.character(format(cp.data$Date[tm.indices], format="%Y-%m-%d"))[label.indices.tm]
                 scatter.breaks.tm <- as.vector(cp.data$Date[tm.indices])[label.indices.tm]
                 
                 
@@ -271,7 +281,7 @@ shinyServer(function(input, output, session){
             
 				   output$modalTrigger <- renderUI(
 				
-							actionButton("triggerId","Click Here to View Plot" ) 
+							actionButton("triggerId","Click Here to View Plots" ) 
 					 )
 				   output$modal <- renderUI(
 				   	
@@ -318,7 +328,7 @@ shinyServer(function(input, output, session){
 		  	  			 
 		  	  	     number.runs <- sum(combined.rate.table[indices, "# of runs"], na.rm=TRUE)
 		  	  	     individual.runs <- combined.rate.table[indices, "# of runs"]
-		  	  	     
+		  	  	     version <- combined.rate.table[indices, "Version"][1]
 		  	  	     instrument.errors <- round(sum(combined.rate.table[indices, "Instrument Failure Rate"]*individual.runs)/number.runs, 3)
 		  	  	     
 		  	  	     software.errors <- round(sum(combined.rate.table[indices, "Software Failure Rate"]*individual.runs)/number.runs, 3)
@@ -329,8 +339,7 @@ shinyServer(function(input, output, session){
 		  	  	     
 		  	  	     total.errors <- round(sum(combined.rate.table[indices, "fraction of runs with at least one error"]*individual.runs)/number.runs, 3)
 		  	  	
-
-		  	  	     combined.rate.table <<- rbind(combined.rate.table, list(combined.rate.table[indices[1], "Instrument Serial Number"], number.runs , total.errors, instrument.errors, software.errors, pcr1.errors, pcr2.errors,yeast.errors, pouchleak.errors))  
+		  	  	     combined.rate.table <<- rbind(combined.rate.table, list(combined.rate.table[indices[1], "Instrument Serial Number"], version, number.runs , total.errors, instrument.errors, software.errors, pcr1.errors, pcr2.errors,yeast.errors, pouchleak.errors))  
 		  	  			 combined.rate.table <<- combined.rate.table[-indices,  ]
 		  	  	}
 		  	  	
@@ -339,7 +348,7 @@ shinyServer(function(input, output, session){
 		  	  serial.nums <- unique(combined.rate.table[, "Instrument Serial Number"])
 		  	  
 		  	  lapply(serial.nums, combineRows)
-
+					
 
 		  	  title.string <- paste(isolate(input$protocol.choice), collapse=" , ")
 		  	  # now re-order the new combined data frame 
