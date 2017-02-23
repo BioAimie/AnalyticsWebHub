@@ -22,7 +22,7 @@ shinyUI(
 		## create the panel that holds the data table (or error message)
 		mainPanel(id="mainPanel",
 			#uiOutput("modalTrigger"),
-			actionButton("triggerId","Click Here to View Plot"), 
+			actionButton("triggerId","Click Here to View Plots"), 
 			uiOutput("cpError"),
 		  uiOutput("errorMessage"),
 			uiOutput("dataFrameTitle"),

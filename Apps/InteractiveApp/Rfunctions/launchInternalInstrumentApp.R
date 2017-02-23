@@ -2,6 +2,7 @@
 
 library(shiny)
 library(sendmailR)
+library(lubridate)
 
 # set the working directory 
 setwd('~/WebHub/AnalyticsWebHub/Apps/InteractiveApp')

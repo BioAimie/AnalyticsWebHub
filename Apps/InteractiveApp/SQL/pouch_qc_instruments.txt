@@ -1,6 +1,63 @@
 SET NOCOUNT ON
 
 
+SELECT 
+	R.[StartTime] AS [Date],
+    R.[InstrumentSerialNumber] AS [SerialNo],
+	R.[PouchSerialNumber] AS [PouchSerialNumber],
+	R.[SoftwareVersion]
+INTO #version2
+FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK)
+
+
+SELECT 
+	R.[StartTime] AS [Date],
+    R.[InstrumentSerialNumber] AS [SerialNo],
+	R.[PouchSerialNumber] AS [PouchSerialNumber],
+	R.[SoftwareVersion]
+INTO #version1
+FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R WITH(NOLOCK)
+
+
+SELECT 
+	ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [Date]) AS [RowNumber],
+	[Date], 
+	[SerialNo], 
+	[PouchSerialNumber], 
+	[SoftwareVersion]
+INTO #allVersions
+FROM 
+	(	
+		SELECT * 
+		FROM #version1
+		UNION 
+		SELECT * 
+		FROM #version2
+	)vs
+
+
+SELECT 
+	av.[SerialNo], 
+	av.[SoftwareVersion] AS [FirstVersion], 
+	av2.[SoftwareVersion] AS [LastVersion],
+	IIF(SUBSTRING(av.[SoftwareVersion], 1,1) != SUBSTRING(av2.[SoftwareVersion], 1, 1), CONCAT( 'Converted to ', SUBSTRING(av2.[SoftwareVersion], 1,1)),
+	 SUBSTRING(av2.[SoftwareVersion], 1, 1)) AS [Version]
+INTO #versions
+FROM 
+	(
+		SELECT 
+		[SerialNo],
+		MIN(RowNumber) AS [firstRow], 
+		MAX(RowNumber) AS [lastRow]
+		FROM #allVersions
+		GROUP BY [SerialNo]
+	 )tmp INNER JOIN #allVersions av
+		ON av.[SerialNo] = tmp.[SerialNo] AND av.[RowNumber] = tmp.[firstRow] INNER JOIN #allVersions av2
+			ON av2.[SerialNo] = tmp.[SerialNo] AND av2.[RowNumber] = tmp.[lastRow]
+ORDER BY av.[SerialNo] 
+
+
+
 SELECT
        R.[StartTime] AS [Date],
        R.[PouchSerialNumber] AS [PouchSerialNumber],
@@ -67,7 +124,8 @@ SELECT
 	R.[PouchSerialNumber] AS [PouchSerialNumber],
 	R.[SampleType] AS [Protocol],
     R.[InstrumentSerialNumber] AS [SerialNo],
-	R.[ExperimentStatus] 
+	R.[ExperimentStatus],
+	R.[SoftwareVersion]
 INTO #experimentStatus
 FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK)
 WHERE 
@@ -93,12 +151,14 @@ WHERE
 	)
 
 
+
 SELECT 
 	[Date], 
 	[SerialNo], 
 	[PouchSerialNumber],
 	[Protocol],
-	IIF([ExperimentStatus] LIKE 'Instrument% Error', 1, 0) AS [Value]
+	IIF([ExperimentStatus] LIKE 'Instrument% Error', 1, 0) AS [Value],
+	[SoftwareVersion]
 INTO #instrumentErrors
 FROM #experimentStatus
 
@@ -181,6 +241,7 @@ SELECT
 	ie.[Date], 
 	ie.[SerialNo],
 	ie.[Protocol],
+	v.[Version], 
 	ISNULL(ie.[Value], 0) AS [InstrumentError],
 	ISNULL(se.[Value], 0) AS [SoftwareError], 
 	ISNULL(pl.[Value],0 ) AS [PouchLeak], 
@@ -195,7 +256,8 @@ FROM #instrumentErrors ie LEFT JOIN #softwareErrors se
 		ON ie.[PouchSerialNumber] = pl.[PouchSerialNumber] LEFT JOIN #controls c
 			ON ie.[PouchSerialNumber] = c.[PouchSerialNumber] LEFT JOIN #cpAvg cp
 				ON ie.[PouchSerialNumber] = cp.[PouchSerialNumber] LEFT JOIN #tmAvg tm
-					ON ie.[PouchSerialNumber] = tm.[PouchSerialNumber] 
+					ON ie.[PouchSerialNumber] = tm.[PouchSerialNumber] LEFT JOIN #versions v
+						ON ie.[SerialNo] = v.[SerialNo]
 
 
 SELECT
@@ -264,7 +326,8 @@ SELECT
     R1.[InstrumentSerialNumber] AS [SerialNo],
 	R1.[PouchSerialNumber] AS [PouchSerialNumber],
 	R1.[SampleType] AS [Protocol],
-	R1.[ExperimentStatus] 
+	R1.[ExperimentStatus],
+	R1.[SoftwareVersion] 
 INTO #experimentStatus1
 FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R1 WITH(NOLOCK)
 WHERE 
@@ -290,12 +353,14 @@ WHERE
 	)
 
 
+
 SELECT 
 	[Date], 
 	[SerialNo], 
 	[PouchSerialNumber],
 	[Protocol],
-	IIF([ExperimentStatus] LIKE 'Instrument% Error', 1, 0) AS [Value]
+	IIF([ExperimentStatus] LIKE 'Instrument% Error', 1, 0) AS [Value],
+	[SoftwareVersion]
 INTO #instrumentErrors1
 FROM #experimentStatus1
 
@@ -378,6 +443,7 @@ SELECT
 	ie1.[Date],
 	ie1.[SerialNo],
 	ie1.[Protocol],
+	v1.[Version],
 	ISNULL(ie1.[Value], 0 ) AS [InstrumentError],
 	ISNULL(se1.[Value], 0)  AS [SoftwareError], 
 	ISNULL(pl1.[Value], 0)  AS [PouchLeak], 
@@ -392,9 +458,8 @@ FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1
 		ON ie1.[PouchSerialNumber] = pl1.[PouchSerialNumber] LEFT JOIN #controls1 c1
 			ON ie1.[PouchSerialNumber] = c1.[PouchSerialNumber] LEFT JOIN #cpAvg1 cp1
 				ON ie1.[PouchSerialNumber] = cp1.[PouchSerialNumber] LEFT JOIN #tmAvg1 tm1
-					ON ie1.[PouchSerialNumber] = tm1.[PouchSerialNumber] 
-
-
+					ON ie1.[PouchSerialNumber] = tm1.[PouchSerialNumber] LEFT JOIN #versions v1
+						ON ie1.[SerialNo] = v1.[SerialNo]
 
 SELECT * 
 FROM 
@@ -407,5 +472,4 @@ FROM
 	)aft
 
 
-
-DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cptm, #cpAvg,  #tmAvg, #cptm1, #cpAvg1, #tmAvg1 
+DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cptm, #cpAvg,  #tmAvg, #cptm1, #cpAvg1, #tmAvg1, #version1, #version2, #allVersions, #versions 
