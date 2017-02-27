@@ -20,19 +20,11 @@ for (i in folders) {
       
       #verify timestamp is within last hour, except IR dashboard, Instrument Calibration, and Trends
       
-      #if (grepl('Dashboard_InternalReliability', i, ignore.case = TRUE) || grepl('Dashboard_InstrumentCalibration', i, ignore.case = TRUE) || grepl('Dashboard_Trends', i, ignore.case = TRUE)) {
-      
-      if (grepl('Dashboard_InternalReliability', i, ignore.case = TRUE) || grepl('Dashboard_InstrumentCalibration', i, ignore.case = TRUE)) {
+      if (grepl('Dashboard_InternalReliability', i, ignore.case = TRUE) || grepl('Dashboard_InstrumentCalibration', i, ignore.case = TRUE) || grepl('Dashboard_Trends', i, ignore.case = TRUE)) {
         if (timeUpdated < (Sys.time()-86400)){
           #add to list of items not updated  
           itemsNotUpdated = c(itemsNotUpdated, paste(i,'/',j, sep=''))
         }
-      
-        #temporarily not checking trends dashboard, until Aimie returns
-      } else if(grepl('Dashboard_Trends', i, ignore.case = TRUE)) {
-        
-        itemsNotUpdated = itemsNotUpdated
-        
         #all other dashboards
       } else if (timeUpdated < (Sys.time()-3600)){
         #add to list of items not updated  
