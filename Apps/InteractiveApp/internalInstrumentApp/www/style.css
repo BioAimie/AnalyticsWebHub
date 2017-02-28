@@ -14,7 +14,42 @@
 
 }
 
-#plotlink{
+#downloadaction{
+
+	color: #7F0909;
+	background-color: #9E9E9E;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	padding-right: 6px;
+	padding-left: 6px;
+	font-weight: bold;
+	
+}
+
+
+.modal{
+
+	
+	max-width: 100%;
+	overflow: auto;
+	
+	width: 100%;
+	
+}
+
+.modal-body{
+
+    height: 1200px;
+   
+    /*overflow: auto; */
+    /*overflow-x: auto;*/
+    /*overflow-y: auto;*/
+
+}
+
+
+
+#triggerId{
 	padding-top: 5px;
 	padding-bottom: 5px;
 	padding-right: 3px;
@@ -22,6 +57,14 @@
 	color:#CA2818 ;
 	background-color:black;
 	font-weight: bold;
+	width: 250px;
+
+}
+
+
+#modalObject{
+
+	width: 1000px;
 	
 
 }
@@ -32,7 +75,7 @@
 
 }
 
-hr{
+#sidepanelHR{
 
 	border: 1px solid #D0493B;
 
@@ -153,7 +196,7 @@ h2 {
 
 body{
 	
-	background-color: #D7D7D7;
+	/*background-color: #D7D7D7*/
 	font-size: 15px;
 	font-family: "Lucida Console";
 	

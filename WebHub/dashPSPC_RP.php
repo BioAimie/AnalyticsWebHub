@@ -119,6 +119,7 @@
                             <li id="IMAN"><a href="dashIMAN.html">Instrument Manufacturing</a></li>
                             <li id="ISERV"><a href="dashISERV.html">Instrument Servicing</a></li>
                             <li id="PMG"><a href="dashPMG.html">Program Management</a></li>
+                            <li id="CS"><a href="dashCS.html">Customer Support</a></li>
                             <li><a href="../WebHub.html">Pouch Manufacturing</a></li>
                         </ul>
                     </div>

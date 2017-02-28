@@ -93,8 +93,8 @@ rp.runs.norm.nat$Season <- paste(rp.runs.norm.nat$SeasonYear,rp.runs.norm.nat$Se
 pal.season.overlay <- createPaletteOfVariableLength(subset(rp.runs.norm.nat, SeasonYear > 2012), 'Season')
 pal.season.overlay[max(names(pal.season.overlay))] <- '#ff0000'
 x.breaks <- seq(1, 53, 13)
-x.labels <- c('Jan','Apr','Jul','Oct','Dec')
-p.rp.season.overlay <- ggplot(subset(rp.runs.norm.nat, SeasonYear > 2012), aes(x=SeasonWeek, y=NormalizedBurn, group=Season, color=Season)) + geom_line(size=1.5) + scale_color_manual(values=pal.season.overlay, name='Respiratory Season') + theme(panel.background=element_rect(color='white',fill='white'), plot.title=element_text(hjust=0.5), text=element_text(size=20, face='bold'), axis.text=element_text(size=20, color='black', face='bold')) + scale_x_continuous(breaks=x.breaks, labels=x.labels) + labs(title='Normalized RP Burn Rate at Trend Sites', x='', y='Normalized Burn Rate')
+x.labels <- c('Jul','Oct','Jan','Apr','Jun')
+p.rp.season.overlay <- ggplot(subset(rp.runs.norm.nat, SeasonYear > 2012), aes(x=SeasonWeek, y=NormalizedBurn, group=Season, color=Season)) + geom_line(size=1.5) + scale_color_manual(values=pal.season.overlay, name='Respiratory Season') + theme(panel.background=element_rect(color='white',fill='white'), plot.title=element_text(hjust=0.5), text=element_text(size=20, face='bold'), axis.text=element_text(size=20, color='black', face='bold')) + scale_x_continuous(breaks=x.breaks, labels=x.labels) + labs(title='RP Test Utilization Rate Normalized (TURN)', x='', y='TURN')
 
 # get percent detection of organisms in the RP panel
 rp.bugs.reg <- c()

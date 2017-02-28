@@ -154,15 +154,8 @@ SELECT
 	[CustFailTypeProd] AS [CustReportFailure]
 INTO #firstFailure
 FROM #master 
-WHERE [TicketId] IN 
-(
-	SELECT 
-		MIN([TicketId]) AS [TicketId]
-	FROM #master
-	WHERE [TicketString] IS NOT NULL
-	GROUP BY [SerialNo]
-) OR [TicketString] IS NULL
-
+WHERE [CustFailTypeProd] = 1
+		
 SELECT 
 	[TicketId],
 	[TicketString],
@@ -230,7 +223,7 @@ FROM
 			 [CustReportFailure],
              1 AS [Record]
        FROM #firstFailure
-       WHERE [Failure] = 1
+       WHERE [CustReportFailure] = 1
        GROUP BY 
              [SerialNo],
              [Version],
@@ -253,7 +246,7 @@ FROM
                     IIF(C1.[Complaint] LIKE '%7003%', 'LED Excitation Error',
 					IIF(C1.[Complaint] LIKE 'Lua 1005%', 'LUA Execution Error: Set Clock',
                     IIF(C1.[Complaint] LIKE '%Temp %', 'Temp Timeout Errors', C1.[Complaint]))))))) AS [Complaint]
-       FROM #complaints C1
+       FROM #complaints C1 
 ) C
 	ON F.[ComplaintNo] = C.[ComplaintNo]
 

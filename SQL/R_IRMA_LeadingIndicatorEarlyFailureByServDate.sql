@@ -330,6 +330,7 @@ SELECT
 		WHEN 'V019, V030' THEN 'Pressure Error'
 		WHEN 'V019, V030, V039, V041 Pressure Error' THEN 'Pressure Error'
 		WHEN 'V030' THEN 'Pressure Error'
+		WHEN 'V030, V019' THEN 'Pressure Error'
 		WHEN 'V030, V039' THEN 'Pressure Error'
 		WHEN 'V039' THEN 'Pressure Error'
 		WHEN 'V039, V019' THEN 'Pressure Error'
@@ -344,6 +345,14 @@ SELECT
 		WHEN 'T032' THEN 'Temperature Control Error'
 		WHEN 'T032 Temp Timeout Error' THEN 'Temperature Control Error'
 		WHEN '7003 Failed Excitation Check' THEN 'Optics'
+		WHEN 'Fails To Power On' THEN 'Fails To Power On'
+		WHEN 'Initialization Error' THEN 'Initialization Error'
+		WHEN 'Torch - Failure to Eject Pouch' THEN 'Pouch Loading Area'
+		WHEN 'Torch - Failure to Load Pouch' THEN 'Pouch Loading Area'
+		WHEN 'Torch - Touch Screen No Display' THEN 'Touch Screen Error'
+		WHEN 'Torch - Touch Screen User Input Unrecognized' THEN 'Touch Screen Error'
+		WHEN 'Torch - Assemby' THEN 'Case Damage'
+		WHEN 'Torch - Case Damage' THEN 'Case Damage'
 		ELSE 'Other'
 	END AS [RecordedValue],
 	1 AS [Record]

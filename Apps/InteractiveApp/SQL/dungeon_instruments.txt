@@ -1,6 +1,67 @@
 
 SET NOCOUNT ON 
 
+
+SELECT 
+	R.[StartTime] AS [Date],
+    R.[InstrumentSerialNumber] AS [SerialNo],
+	R.[PouchSerialNumber] AS [PouchSerialNumber],
+	R.[SoftwareVersion]
+INTO #version2
+FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK)
+WHERE R.[InstrumentSerialNumber] IN serialnumbervector
+
+	
+SELECT 
+	R.[StartTime] AS [Date],
+    R.[InstrumentSerialNumber] AS [SerialNo],
+	R.[PouchSerialNumber] AS [PouchSerialNumber],
+	R.[SoftwareVersion]
+INTO #version1
+FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R WITH(NOLOCK)
+WHERE R.[InstrumentSerialNumber] IN serialnumbervector
+
+
+SELECT 
+	ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [Date]) AS [RowNumber],
+	[Date], 
+	[SerialNo], 
+	[PouchSerialNumber], 
+	[SoftwareVersion]
+INTO #allVersions
+FROM 
+	(	
+		SELECT * 
+		FROM #version1
+		UNION 
+		SELECT * 
+		FROM #version2
+	)vs
+
+
+SELECT 
+	av.[SerialNo], 
+	av.[SoftwareVersion] AS [FirstVersion], 
+	av2.[SoftwareVersion] AS [LastVersion],
+	IIF(SUBSTRING(av.[SoftwareVersion], 1,1) != SUBSTRING(av2.[SoftwareVersion], 1, 1), CONCAT( 'Converted to ', SUBSTRING(av2.[SoftwareVersion], 1,1)),
+	 SUBSTRING(av2.[SoftwareVersion], 1, 1)) AS [Version]
+INTO #versions
+FROM 
+	(
+		SELECT 
+		[SerialNo],
+		MIN(RowNumber) AS [firstRow], 
+		MAX(RowNumber) AS [lastRow]
+		FROM #allVersions
+		GROUP BY [SerialNo]
+	 )tmp INNER JOIN #allVersions av
+		ON av.[SerialNo] = tmp.[SerialNo] AND av.[RowNumber] = tmp.[firstRow] INNER JOIN #allVersions av2
+			ON av2.[SerialNo] = tmp.[SerialNo] AND av2.[RowNumber] = tmp.[lastRow]
+ORDER BY av.[SerialNo] 
+
+
+
+
 SELECT
        R.[StartTime] AS [Date],
        R.[PouchSerialNumber] AS [PouchSerialNumber],
@@ -20,6 +81,12 @@ WHERE TR.[TypeCode] = 'control' AND  R.[StartTime] >= GETDATE() - 370 AND
 		R.[SampleId] NOT LIKE '%PostRepair%' AND
 		R.[SampleId] NOT LIKE '%service%'
 ) AND R.[InstrumentSerialNumber] IN serialnumbervector
+GROUP BY
+     R.[StartTime],
+     R.[PouchSerialNumber],
+     R.[SampleType],
+     T.[Name],
+     TR.[Result]
 
 
 SELECT 
@@ -28,7 +95,7 @@ SELECT
 	[Protocol], 
 	[PCR2 Control] AS [PCR2], 
 	[PCR1 Control] AS [PCR1],
-	[RNA Process Control] AS [yeastRNA]
+	IIF((ISNULL([RNA Process Control], 0) + ISNULL([DNA Process Control], 0)) > 0, 1 ,0)  AS [yeast]
 INTO #controls
 FROM
 (
@@ -42,7 +109,8 @@ PIVOT(
 	(
 		[PCR1 Control],
 		[PCR2 Control],
-		[RNA Process Control]
+		[RNA Process Control],
+		[DNA Process Control]
 	)
 ) PIV
 
@@ -52,7 +120,7 @@ SELECT
     R.[InstrumentSerialNumber] AS [SerialNo],
 	R.[PouchSerialNumber] AS [PouchSerialNumber],
 	R.[SampleType] AS [Protocol],
-	R.[ExperimentStatus] 
+	R.[ExperimentStatus]
 INTO #experimentStatus
 FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK)
 WHERE 
@@ -67,6 +135,8 @@ WHERE
 		R.[SampleId] NOT LIKE '%PostRepair%' AND
 		R.[SampleId] NOT LIKE '%service%'
 	)	AND R.[StartTime] >= GETDATE() - 400 AND  R.[InstrumentSerialNumber] IN serialnumbervector
+
+
 SELECT 
 	[Date], 
 	[SerialNo], 
@@ -103,14 +173,13 @@ WHERE
 		 R.[SampleId] NOT LIKE '%service%'
 	 )	 AND  R.[StartTime] >= GETDATE() - 400  AND  R.[InstrumentSerialNumber] IN serialnumbervector
 
-
 SELECT
        ER.[PouchSerialNumber] AS [PouchSerialNumber],
        CAST(ER.[StartTime]  AS DATE) AS [Date],
        AA.[Name],
        ISNULL(RR.[Cp], 30) AS [Cp],
        [Tm1]
-INTO #cpValues
+INTO #cptm
 FROM [FILMARRAYDB].[FilmArray2].[dbo].[AssayResult] AR WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[Assay] AA WITH(NOLOCK) 
        ON AR.[assay_id] = AA.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[Assay_Reaction] ARX WITH(NOLOCK) 
              ON AA.[Id] = ARX.[assay_id] INNER JOIN  [FILMARRAYDB].[FilmArray2].[dbo].[Reaction] RX WITH(NOLOCK) 
@@ -118,28 +187,52 @@ FROM [FILMARRAYDB].[FilmArray2].[dbo].[AssayResult] AR WITH(NOLOCK) INNER JOIN [
                            ON RX.[Id] = RR.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] MA WITH(NOLOCK) 
                                  ON AR.[analysis_id] = MA.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] ER WITH(NOLOCK) 
                                         ON MA.[experiment_id] = ER.[Id]
-WHERE ER.[StartTime] >= GETDATE() - 370  AND  AA.[Name] LIKE 'yeastRNA'
+WHERE ER.[StartTime] >= GETDATE() - 370  AND  (AA.[Name] LIKE 'yeast%' OR AA.[Name] LIKE '%RNA%') AND (AA.[Name] NOT LIKE 'hRNA')
 
+
+
+
+SELECT 
+	[PouchSerialNumber], 
+	MAX([Date]) AS [Date], 
+	AVG([Cp]) AS [Cp]
+INTO #cpAvg 
+FROM #cptm
+WHERE [Cp] != 30 AND [Cp] IS NOT NULL
+GROUP BY [PouchSerialNumber]
+
+
+SELECT 
+	[PouchSerialNumber], 
+	MAX([Date]) AS [Date], 
+	AVG([Tm1]) AS [Tm]
+INTO #tmAvg
+FROM #cptm
+WHERE [Tm1] IS NOT NULL 
+GROUP BY [PouchSerialNumber]
 
 
 SELECT 
 	ie.[Date], 
 	ie.[SerialNo],
-	ie.[Protocol],  
+	ie.[Protocol], 
+	v.[Version], 
 	ISNULL(ie.[Value], 0) AS [InstrumentError],
 	ISNULL(se.[Value], 0) AS [SoftwareError], 
 	ISNULL(pl.[Value], 0 ) AS [PouchLeak], 
 	ISNULL(c.[PCR2], 0) AS [PCR2],
 	ISNULL(c.[PCR1], 0) AS [PCR1],
-	ISNULL(c.[yeastRNA], 0) AS [yeastRNA],
-	FORMAT(AVG(ISNULL(cpv.[Cp], 40)), 'N2') AS [Cp]
+	ISNULL(c.[yeast], 0) AS [yeast],
+	FORMAT(cp.[Cp], 'N2') AS [Cp],
+	FORMAT(tm.[Tm], 'N2') AS [Tm]
 INTO #fa2
 FROM #instrumentErrors ie LEFT JOIN #softwareErrors se 
 	ON ie.[PouchSerialNumber] = se.[PouchSerialNumber] LEFT JOIN #pouchLeaks pl 
 		ON ie.[PouchSerialNumber] = pl.[PouchSerialNumber] LEFT JOIN #controls c
-			ON ie.[PouchSerialNumber] = c.[PouchSerialNumber] LEFT JOIN #cpValues cpv
-				ON ie.[PouchSerialNumber] = cpv.[PouchSerialNumber]
-GROUP BY ie.[Date], ie.[SerialNo], ie.[Protocol], ie.[Value], se.[Value], pl.[Value], c.[PCR1], c.[PCR2], c.[yeastRNA]
+			ON ie.[PouchSerialNumber] = c.[PouchSerialNumber] LEFT JOIN #cpAvg cp
+				ON ie.[PouchSerialNumber] = cp.[PouchSerialNumber] LEFT JOIN #tmAvg tm
+					ON ie.[PouchSerialNumber] = tm.[PouchSerialNumber] LEFT JOIN #versions v
+						ON ie.[SerialNo] = v.[SerialNo]
 
 
 SELECT
@@ -149,10 +242,10 @@ SELECT
        T1.[Name] AS [ControlName],
        IIF(TR1.[Result] LIKE 'Pass', 0 , 1) AS [Result]
 INTO #allcontrols1
-FROM [FILMARRAYDB].[FilmArray2].[dbo].[Target_Assay] TA1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[Target] T1 WITH(NOLOCK)
-       ON TA1.[target_id] = T1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[TargetResult] TR1 WITH(NOLOCK)
-             ON T1.[Id] = TR1.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[MetaAnalysis] A1 WITH(NOLOCK)
-                    ON TR1.[analysis_id] = A1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R1 WITH(NOLOCK)
+FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[Target_Assay] TA1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[Target] T1 WITH(NOLOCK)
+       ON TA1.[target_id] = T1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[TargetResult] TR1 WITH(NOLOCK)
+             ON T1.[Id] = TR1.[target_id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] A1 WITH(NOLOCK)
+                    ON TR1.[analysis_id] = A1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R1 WITH(NOLOCK)
                            ON A1.[experiment_id] = R1.[Id]
 WHERE TR1.[TypeCode] = 'control' AND  R1.[StartTime] >= GETDATE() - 370 AND 
 (
@@ -161,7 +254,12 @@ WHERE TR1.[TypeCode] = 'control' AND  R1.[StartTime] >= GETDATE() - 370 AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
 ) AND R1.[InstrumentSerialNumber] IN serialnumbervector
-
+GROUP BY
+     R1.[StartTime],
+     R1.[PouchSerialNumber],
+     R1.[SampleType],
+     T1.[Name],
+     TR1.[Result]
 
 SELECT 
 	[Date], 
@@ -169,7 +267,7 @@ SELECT
 	[Protocol], 
 	[PCR2 Control] AS [PCR2], 
 	[PCR1 Control] AS [PCR1],
-	[RNA Process Control] AS [yeastRNA]
+	IIF((ISNULL([RNA Process Control], 0) + ISNULL([DNA Process Control], 0)) > 0, 1 ,0)  AS [yeast]
 INTO #controls1
 FROM
 (
@@ -183,7 +281,8 @@ PIVOT(
 	(
 		[PCR1 Control],
 		[PCR2 Control],
-		[RNA Process Control]
+		[RNA Process Control],
+		[DNA Process Control]
 	)
 ) PIV
 
@@ -193,7 +292,7 @@ SELECT
     R1.[InstrumentSerialNumber] AS [SerialNo],
 	R1.[PouchSerialNumber],
 	R1.[SampleType] AS [Protocol],
-	R1.[ExperimentStatus] 
+	R1.[ExperimentStatus]
 INTO #experimentStatus1
 FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R1 WITH(NOLOCK)
 WHERE 
@@ -208,8 +307,7 @@ WHERE
 		R1.[SampleId] NOT LIKE '%NewBuild%' AND
 		R1.[SampleId] NOT LIKE '%PostRepair%' AND
 		R1.[SampleId] NOT LIKE '%service%'
-	)   AND  R1.[StartTime] >= GETDATE() - 400AND  R1.[InstrumentSerialNumber] IN serialnumbervector
-
+	)   AND  R1.[StartTime] >= GETDATE() - 400 AND  R1.[InstrumentSerialNumber] IN serialnumbervector
 
 SELECT 
 	[Date], 
@@ -253,7 +351,7 @@ SELECT
        AA1.[Name],
        ISNULL(RR1.[Cp], 30) AS [Cp],
 	   [Tm1]
-INTO #cpValues1
+INTO #cptm1
 FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[AssayResult] AR1 WITH(NOLOCK) INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[Assay] AA1 WITH(NOLOCK) 
        ON AR1.[assay_id] = AA1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[Assay_Reaction] ARX1 WITH(NOLOCK) 
              ON AA1.[Id] = ARX1.[assay_id] INNER JOIN  [FILMARRAYDB].[FilmArray1].[FilmArray].[Reaction] RX1 WITH(NOLOCK) 
@@ -261,31 +359,53 @@ FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[AssayResult] AR1 WITH(NOLOCK) INNER
                            ON RX1.[Id] = RR1.[reaction_id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[MetaAnalysis] MA1 WITH(NOLOCK) 
                                  ON AR1.[analysis_id] = MA1.[Id] INNER JOIN [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] ER1 WITH(NOLOCK) 
                                         ON MA1.[experiment_id] = ER1.[Id]
-WHERE ER1.[StartTime] >= GETDATE() - 370  AND AA1.[Name] LIKE 'yeastRNA'
+WHERE ER1.[StartTime] >= GETDATE() - 370  AND (AA1.[Name] LIKE 'yeast%' OR AA1.[Name] LIKE '%RNA%') AND (AA1.[Name] NOT LIKE 'hRNA')
+
+
+SELECT 
+	[PouchSerialNumber], 
+	MAX([Date]) AS [Date], 
+	AVG([Cp]) AS [Cp]
+INTO #cpAvg1
+FROM #cptm1
+WHERE [Cp] != 30 AND [Cp] IS NOT NULL
+GROUP BY [PouchSerialNumber]
+
+
+SELECT 
+	[PouchSerialNumber], 
+	MAX([Date]) AS [Date], 
+	AVG([Tm1]) AS [Tm]
+INTO #tmAvg1
+FROM #cptm1
+WHERE [Tm1] IS NOT NULL 
+GROUP BY [PouchSerialNumber]
 
 
 SELECT 
 	ie1.[Date],
 	ie1.[SerialNo],
 	ie1.[Protocol],
+	v1.[Version],
 	ISNULL(ie1.[Value], 0 ) AS [InstrumentError],
 	ISNULL(se1.[Value], 0)  AS [SoftwareError], 
 	ISNULL(pl1.[Value], 0)  AS [PouchLeak], 
-	ISNULL(c1.[PCR2], 0) AS [PCR1],
-	ISNULL(c1.[PCR1], 0) AS [PCR2],
-	ISNULL(c1.[yeastRNA], 0) AS [yeastRNA],
-	FORMAT(AVG(ISNULL(cpv1.[Cp], 40)), 'N2') AS [Cp]
+	ISNULL(c1.[PCR2], 0) AS [PCR2],
+	ISNULL(c1.[PCR1], 0) AS [PCR1],
+	ISNULL(c1.[yeast], 0) AS [yeast],
+	FORMAT(cp1.[Cp], 'N2') AS [Cp],
+	FORMAT(tm1.[Tm], 'N2') AS [Tm]
 INTO #fa1
 FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1 
 	ON ie1.[PouchSerialNumber] = se1.[PouchSerialNumber] LEFT JOIN #pouchLeaks1 pl1 
 		ON ie1.[PouchSerialNumber] = pl1.[PouchSerialNumber] LEFT JOIN #controls1 c1
-			ON ie1.[PouchSerialNumber] = c1.[PouchSerialNumber] LEFT JOIN #cpValues1 cpv1
-				ON ie1.[PouchSerialNumber] = cpv1.[PouchSerialNumber]
-GROUP BY ie1.[Date], ie1.[SerialNo], ie1.[Protocol], ie1.[Value], se1.[Value], pl1.[Value], c1.[PCR1], c1.[PCR2], c1.[yeastRNA]
+			ON ie1.[PouchSerialNumber] = c1.[PouchSerialNumber] LEFT JOIN #cpAvg1 cp1
+				ON ie1.[PouchSerialNumber] = cp1.[PouchSerialNumber] LEFT JOIN #tmAvg1 tm1
+					ON ie1.[PouchSerialNumber] = tm1.[PouchSerialNumber] LEFT JOIN #versions v1
+						ON ie1.[SerialNo] = v1.[SerialNo]
 
 
-
-SELECT * 
+SELECT *
 FROM 
 	( 
 		SELECT * 
@@ -293,7 +413,10 @@ FROM
 		UNION
 	    SELECT * 
 	    FROM #fa2
-	)aft
+	)aft 
 
-DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cpValues, #cpValues1
+
+
+
+DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cptm, #cpAvg, #tmAvg, #cptm1, #cpAvg1, #tmAvg1, #version1, #version2, #allVersions, #versions
 
