@@ -322,14 +322,18 @@ p.WhereFound.array <- ggplot(array.where.mon, aes(x=DateGroup, y=Record, fill=Wh
 
 #----------------------------------------Monthly count of NCRs per BuildYear--------------------------------------
 array.build.mon <- subset(array.ncr, as.character(WhereFound) == 'Pouch Manufacture')
-array.build.mon <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', array.build.mon, 'BuildYear', startstring.month, 'Record','sum',0)
-
-array.build.pal <- createPaletteOfVariableLength(array.build.mon, 'BuildYear')
-
-p.BuildYear.array <- ggplot(array.build.mon, aes(x=DateGroup, y=Record, fill=BuildYear)) + geom_bar(stat='identity', position='stack') + 
-  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, hjust=1,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  labs(title='Array MEQ NCRs by Build Year\nFound in Pouch Manufacturing', x='Date\n(Year-Month)', y='Count of NCRs') + scale_y_continuous(breaks=pretty_breaks(n=intB1.num)) +
-  scale_fill_manual(values=array.build.pal)
+array.build.mon$DateGroup <- with(array.build.mon, ifelse(Month < 10, paste0(Year,'-0', Month), paste0(Year,'-', Month)))
+if(nrow(subset(array.build.mon, DateGroup >= startstring.month)) > 0) {
+  array.build.mon <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', array.build.mon, 'BuildYear', startstring.month, 'Record','sum',0)
+  array.build.pal <- createPaletteOfVariableLength(array.build.mon, 'BuildYear')
+  p.BuildYear.array <- ggplot(array.build.mon, aes(x=DateGroup, y=Record, fill=BuildYear)) + geom_bar(stat='identity', position='stack') + 
+    theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, hjust=1,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
+    labs(title='Array MEQ NCRs by Build Year\nFound in Pouch Manufacturing', x='Date\n(Year-Month)', y='Count of NCRs') + scale_y_continuous(breaks=pretty_breaks(n=intB1.num)) +
+    scale_fill_manual(values=array.build.pal)
+} else {
+  emptyPlot <- data.frame(DateGroup = as.character(unique(subset(calendar.month, DateGroup >= startstring.month)[,'DateGroup'])), Record = 0)
+  p.BuildYear.array <- ggplot(emptyPlot, aes(x=DateGroup, y=Record)) + geom_bar(stat='identity') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, hjust=1,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + labs(title='Array MEQ NCRs by Build Year\nFound in Pouch Manufacturing', x='Date\n(Year-Month)', y='Count of NCRs')
+}
 
 #----------------------------------------Top Failure + SubFailure Categories in last 60 days Pareto ---------------------------------------------
 array.fail <- with(subset(array.ncr, CreatedDate >= D90), aggregate(Record~FailCat+SubFailCat, FUN=sum))
