@@ -151,6 +151,16 @@ pal.excitation <- createPaletteOfVariableLength(excitation.ordered, 'Key')
 pal.excitation[names(pal.excitation)=='zNoFailure'] <- '#FFFFFF'
 p.excitation.voe <- ggplot(excitation.ordered[with(excitation.ordered, order(Key)), ], aes(x=Lot, y=Record/LotSizeInField, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values = pal.excitation, name='Hours Run', labels=c('0-100','100-500','500-1000','1000+','Unknown','')) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=40, hjust=1)) + labs(title='LED Excitation Errors Reported by Bead Beater Lot Size in Field', x='Lot', y='7003 Complaints/Lot Size')
 
+# Seal bar alignment NCRs and RMAs
+# sealBarNCR.num.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', sealBarNCR.df, 'Version', '2015-01', 'Record', 'sum', 0)
+# sealBarRMA.num.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', sealBarRMA.df, 'Version', '2015-01', 'Record', 'sum', 0)
+# sealBar.voe = rbind(cbind(sealBarNCR.num.fill, Key='NCR'),cbind(sealBarRMA.num.fill, Key='RMA'));
+# sealBar.x_position <- c('2016-49')
+# annotations.sealBar <- c('Process Change')
+# pal.sealBar <- createPaletteOfVariableLength(sealBar.voe, 'Version')
+# p.sealBar.voe <- ggplot(sealBar.voe, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.sealBar, name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Seal bar alignment failures for new FA2.0 instruments', y='Failure Count', x='NCR Created Date, Manifold Manufacture Date\n(Year-Week)') + facet_wrap(~Key, ncol=1) + geom_text(aes(label=annotations.sealBar, x=sealBar.x_position, y=0), angle=90, hjust=-0.5, size=4)
+
+
 # #Thermoboard date settings
 # bigGroup <- 'Year'
 # smallGroup <- 'Month'

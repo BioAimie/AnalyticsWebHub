@@ -78,28 +78,42 @@ SELECT
 	UPPER([LotNo]) AS [LotPutIn]
 INTO #partPutIn
 FROM #plungerServiced
-WHERE (LEFT([SerialNo],2) LIKE 'FA' AND LEN([SerialNo]) = 6) OR (LEFT([SerialNo],2) LIKE '2F' AND LEN([SerialNo]) >= 8)
+WHERE (LEFT([SerialNo],2) LIKE 'FA' AND LEN([SerialNo]) = 6) OR (LEFT([SerialNo],2) LIKE '2F' AND LEN([SerialNo]) >= 8);
 
-SELECT
-	REPLACE(REPLACE(REPLACE(L.[LotNumber], ' ',''),'.',''),'_','') AS [SerialNo],
-	L.[DateOfManufacturing] AS [InstManfDate],
-	UPPP.[LotNumber] AS [PlungerLot],
-	ULLLL.[DateOfManufacturing] AS [PlungerDOM],
-	UPPPP.[PartNumber] AS [GasketPart]
+WITH [BirthLot] ([TopLotID], [BottomLot], [BottomPart])
+AS (
+	SELECT
+		[LotNumberID] AS [TopLotID],
+		[LotNumber] AS [BottomLot],
+		[PartNumber] AS [BottomPart]
+	FROM [ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
+	WHERE [Quantity]>0
+	UNION ALL
+	SELECT
+		U.[LotNumberId] AS [TopLotID],
+		D.[BottomLot] AS [BottomLot],
+		D.[BottomPart] AS [BottomPart]
+	FROM [BirthLot] D INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
+			ON L.[LotNumber] = U.[LotNumber]
+	WHERE U.[Quantity]>0
+)
+SELECT DISTINCT
+	REPLACE(REPLACE(REPLACE(TL.[LotNumber],'.',''),'_',''),' ','') AS [SerialNo],
+	TL.[DateOfManufacturing] AS [InstManfDate],
+	BL.[LotNumber] AS [PlungerLot],
+	BL.[DateOfManufacturing] AS [PlungerDOM],
+	U.[PartNumber] AS [GasketPart]
 INTO #plungerBirthed
-FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
-	ON P.[PartNumberId] = L.[PartNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
-		ON L.[LotNumberId] = U.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
-			ON U.[LotNumber] = UL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UP WITH(NOLOCK)
-				ON UL.[LotNumberId] = UP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULL WITH(NOLOCK)
-					ON UP.[LotNumber] = ULL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPP WITH(NOLOCK)
-						ON ULL.[LotNumberId] = UPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLL WITH(NOLOCK)
-							ON UPP.[LotNumber] = ULLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPP WITH(NOLOCK)
-								ON ULLL.[LotNumberId] = UPPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLLL WITH(NOLOCK)
-									ON UPPP.[LotNumber] = ULLLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPPP WITH(NOLOCK)
-										ON ULLLL.[LotNumberId] = UPPPP.[LotNumberId]
-WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0003','HTFA-SUB-0103','FLM2-ASY-0001R','HTFA-ASY-0003R') AND UPPPP.[PartNumber] IN ('FLM1-GAS-0009','FLM1-GAS-0018') AND 
-	UPPPP.[Quantity] > 0
+FROM [BirthLot] B
+	INNER JOIN [ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK) ON B.[TopLotID] = TL.[LotNumberId] 
+	INNER JOIN [ProductionWeb].[dbo].[Parts] TP WITH(NOLOCK) ON TP.[PartNumberId] = TL.[PartNumberId]
+	INNER JOIN [ProductionWeb].[dbo].[Lots] BL WITH(NOLOCK) ON B.[BottomLot] = BL.[LotNumber] 	
+	INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK) ON U.[LotNumberId] = BL.[LotNumberId]
+WHERE [BottomPart] = 'FLM1-SUB-0005' 
+	AND TP.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103') 
+	AND U.[PartNumber] IN ('FLM1-GAS-0009','FLM1-GAS-0018')
+	AND U.[Quantity]>0
 
 SELECT
 	S.[SerialNo],
