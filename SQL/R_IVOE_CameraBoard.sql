@@ -1,22 +1,34 @@
-SET NOCOUNT ON
+SET NOCOUNT ON;
 
-SELECT
-	REPLACE(REPLACE(REPLACE(L.[LotNumber],'.',''),'_',''),' ','') AS [SerialNo],
-	UPP.[PartNumber],
-    ULLLL.[LotNumber] AS [LotNumber],
-	ULLLL.[ActualLotSize]
+WITH [BirthLot] ([TopLotID], [BottomLot], [BottomPart])
+AS (
+	SELECT
+		[LotNumberID] AS [TopLotID],
+		[LotNumber] AS [BottomLot],
+		[PartNumber] AS [BottomPart]
+	FROM [ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
+	WHERE [Quantity]>0
+	UNION ALL
+	SELECT
+		U.[LotNumberId] AS [TopLotID],
+		D.[BottomLot] AS [BottomLot],
+		D.[BottomPart] AS [BottomPart]
+	FROM [BirthLot] D INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
+			ON L.[LotNumber] = U.[LotNumber]
+	WHERE U.[Quantity]>0
+)
+SELECT DISTINCT
+	REPLACE(REPLACE(REPLACE(TL.[LotNumber],'.',''),'_',''),' ','') AS [SerialNo],
+	B.[BottomLot] AS [LotNumber],
+	BL.[ActualLotSize]
 INTO #pcbaLotsInProd
-FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
-	ON P.[PartNumberId] = L.[PartNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
-		ON L.[LotNumberId] = U.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
-			ON U.[LotNumber] = UL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UP WITH(NOLOCK)
-				ON UL.[LotNumberId] = UP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULL WITH(NOLOCK)
-					ON UP.[LotNumber] = ULL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPP WITH(NOLOCK)
-						ON ULL.[LotNumberId] = UPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLL WITH(NOLOCK)
-							ON UPP.[LotNumber] = ULLL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] UPPP WITH(NOLOCK)
-								ON ULLL.[LotNumberId] = UPPP.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] ULLLL WITH(NOLOCK)
-									ON UPPP.[LotNumber] = ULLLL.[LotNumber]
-WHERE P.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103') AND UPPP.[PartNumber] = 'PCBA-SUB-0838' AND UPP.[Quantity] > 0 AND ULLL.[LotNumber] NOT LIKE 'N/A'
+FROM [BirthLot] B INNER JOIN [ProductionWeb].[dbo].[Lots] BL WITH(NOLOCK)
+	ON B.[BottomLot] = BL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK)
+		ON B.[TopLotID] = TL.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Parts] TP WITH(NOLOCK)
+			ON TP.[PartNumberId] = TL.[PartNumberId]
+WHERE TP.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103')
+	AND [BottomPart] = 'PCBA-SUB-0838' AND [BottomLot] != 'N/A'
 
 SELECT DISTINCT
 	L.[LotNumber],
