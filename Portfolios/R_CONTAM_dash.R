@@ -31,7 +31,7 @@ fontSize <- 20
 fontFace <- 'bold'
 
 # Create consistent palette for assays
-colVector <- c("#E28FE1","#DCC6ED","#6445A5","#DC7F6D","#A9EA3E","#B2EABB","#E3CB7B","#9F506F","#E9BECB","#E43C8C","#9CE99A","#ABC7E8","#E693AB","#E2E1EA",
+colVector <- c("#6445A5","#DC7F6D","#A9EA3E","#B2EABB","#E3CB7B","#9F506F","#E9BECB","#E43C8C","#9CE99A","#ABC7E8","#E693AB","#E2E1EA",
                "#93B274","#D234ED","#B254DF","#E8D5C4","#5AA8DF","#60AE4B","#E174B4","#E845B7","#E3EAB9","#658CDF","#E36782","#6077E6","#68EA7A","#B693B9",
                "#772CE8","#E6B33C","#6751E1","#E64154","#A8B344","#E375E4","#E39F60","#63EB47","#BB9DEA","#EAADE3","#ADDDE6","#55E7A3","#617962","#A3ECDE",
                "#AD7DE8","#E5AC99","#D7EA98","#B6EA73","#5CB797","#E646DD","#AA459D","#E2E63E","#E2C698","#A2864E","#5E6A89","#8C6AA7","#D9EFDE","#A5BDA6",
@@ -42,7 +42,9 @@ colVector <- c("#E28FE1","#DCC6ED","#6445A5","#DC7F6D","#A9EA3E","#B2EABB","#E3C
                "#79C846","#B2BFEA","#E9E470","#A8D3E7","#CFECE7","#61CDE9","#EBE8D1","#E86B36","#E47391","#B85DE4","#61EE66","#A9A5B6","#BDEDC8","#E8A192",
                "#A2854F","#A1E7AA","#A7B246","#62A6AF")
 assayNames <- sort(unique(c(as.character(subset(environ.df, ConStatus == 'Contamination')[,'Assay']), as.character(subset(person.df, ConStatus == 'Contamination')[,'Assay']), as.character(subset(pool.df, ConStatus == 'Contamination')[,'Assay']))))
-pal <- colVector[1:length(assayNames)]
+assayNames <- assayNames[assayNames != 'Adeno' & assayNames != 'Adeno2' & assayNames != 'HRV']
+assayNames <- c(assayNames, 'Adeno', 'Adeno2', 'HRV')
+pal <- c(colVector[1:(length(assayNames)-3)],'#000000','#5c5c5c', '#b80000')
 names(pal) <- assayNames 
 
 # Environmental charts ------------------------------------------------------------------------------------------------------------------------
@@ -106,7 +108,7 @@ p.cp.personnel <- ggplot(cps.person, aes(x=DateGroup, y=Cp)) + scale_y_continuou
 
 #Personnel Contam by Department
 department.count <- aggregateAndFillDateGroupGaps(calendar.mon, 'Month', personnel.count, c('Department', 'Assay'), startDate.mon, 'Record', 'sum', 0)
-p.department.count <- ggplot(department.count, aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90), legend.position="bottom") + labs(title='Personnel Contamination by Department', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Department) + guides(fill=guide_legend(nrow=4, by.row=TRUE))
+p.department.count <- ggplot(subset(department.count, Department != "TT"), aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90), legend.position="bottom") + labs(title='Personnel Contamination by Department', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Department) + guides(fill=guide_legend(nrow=4, by.row=TRUE))
 
 #personnel contamination rates
 person.agg <- aggregateAndFillDateGroupGaps(calendar.mon, 'Month', person.df, 'Key', startDate.mon, 'Record', 'sum', 0)
@@ -116,7 +118,7 @@ p.personnel.rate <- ggplot(person.rate,aes(x=DateGroup,y=Rate, group=1)) + geom_
 
 #positive contam counts
 positive.counts.person <- aggregateAndFillDateGroupGaps(calendar.mon, 'Month', personnel.count, c('Assay', 'Panel'), startDate.mon, 'Record', 'sum', 0)
-p.panel.personnel <- ggplot(positive.counts.person, aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90), legend.position="bottom") + labs(title='Positive Contamination Counts: Personnel', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Panel)  + guides(fill=guide_legend(nrow=4, by.row=TRUE))
+p.panel.personnel <- ggplot(subset(positive.counts.person, Panel == "RP"), aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90), legend.position="bottom") + labs(title='Positive Contamination Counts: Personnel', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Panel)  + guides(fill=guide_legend(nrow=4, by.row=TRUE))
 
 #overall personnel contam vs no contam
 #label individual pouch as contamination or no contamination - QUESTION: SHOULD THIS BE BASED ON NUMBER OF UNIQUE POUCHES RUN OR ASSAYS?
@@ -159,11 +161,15 @@ p.pool.rate <- ggplot(pool.rate,aes(x=DateGroup,y=Rate, group=1)) + geom_line(co
 poolNumber.count <- aggregateAndFillDateGroupGaps(calendar.mon, 'Month', pool.count, c('Pool', 'Assay'), startDate.mon, 'Record', 'sum', 0)
 poolNumber.count <- subset(poolNumber.count, Pool %in% 1:60)
 poolNumber.count$Pool <- as.numeric(as.character(poolNumber.count$Pool))
-p.pool.count <- ggplot(poolNumber.count, aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90), legend.position="bottom") + labs(title='Pool Contamination by Pool Number', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Pool) + guides(fill=guide_legend(nrow=4, by.row=TRUE))
+dates.pool.count <- unique(poolNumber.count$DateGroup)
+dateBreaks.pool.count <- dates.pool.count[seq(1,length(dates.pool.count), 2)]
+p.pool.count.1 <- ggplot(subset(poolNumber.count, Pool %in% 1:20), aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90, vjust=0.5), legend.position="bottom") + labs(title='Pool Contamination by Pool Number', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Pool) + scale_x_discrete(breaks=dateBreaks.pool.count) + guides(fill=guide_legend(nrow=4, by.row=TRUE))
+p.pool.count.2 <- ggplot(subset(poolNumber.count, Pool %in% 21:40), aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90, vjust=0.5), legend.position="bottom") + labs(title='Pool Contamination by Pool Number', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Pool) + scale_x_discrete(breaks=dateBreaks.pool.count) + guides(fill=guide_legend(nrow=4, by.row=TRUE))
+p.pool.count.3 <- ggplot(subset(poolNumber.count, Pool %in% 41:60), aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90, vjust=0.5), legend.position="bottom") + labs(title='Pool Contamination by Pool Number', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Pool) + scale_x_discrete(breaks=dateBreaks.pool.count) + guides(fill=guide_legend(nrow=4, by.row=TRUE))
 
 #Positive Contam counts
 positive.counts.pool <- aggregateAndFillDateGroupGaps(calendar.mon, 'Month', pool.count, c('Assay', 'Panel'), startDate.mon, 'Record', 'sum', 0)
-p.panel.pool <- ggplot(positive.counts.pool, aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90), legend.position="bottom") + labs(title='Positive Contamination Counts: Pool', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Panel)  + guides(fill=guide_legend(nrow=4, by.row=TRUE))
+p.panel.pool <- ggplot(positive.counts.pool, aes(x=DateGroup, y=Record, fill=Assay)) + geom_bar(stat="identity") + theme(plot.title=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace , color='black'), axis.text.x=element_text(angle=90), legend.position="bottom") + labs(title='Positive Contamination Counts: Pool', x='Date\n(Year-Month)', y='Count') + scale_fill_manual(values=pal, name='') + facet_wrap(~Panel) + guides(fill=guide_legend(nrow=4, by.row=TRUE))
 
 #overall personnel contam vs no contam
 #label individual pouch as contamination or no contamination - QUESTION: SHOULD THIS BE BASED ON NUMBER OF UNIQUE POUCHES RUN OR ASSAYS?
