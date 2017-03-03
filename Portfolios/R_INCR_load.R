@@ -48,4 +48,8 @@ queryText <- readLines("SQL/R_INCR_EarlyFailuresBySerialNumberFamily.sql")
 query <- paste(queryText,collapse="\n")
 serialbatches.df <- sqlQuery(PMScxn,query)
 
+queryText <- readLines("SQL/O_IMAN_InstShipments.sql")
+query <- paste(queryText,collapse="\n")
+instshipments.df <- sqlQuery(PMScxn,query)
+
 odbcClose(PMScxn)
