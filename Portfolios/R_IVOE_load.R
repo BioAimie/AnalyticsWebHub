@@ -57,10 +57,20 @@ query.charVec = readLines("SQL/R_IVOE_CameraBoard.sql")
 query = paste(query.charVec,collapse="\n")
 board.camera.df = sqlQuery(PMScxn,query)
 
-# get LED excitation failrues by lot
+# get LED excitation failures by lot
 query.charVec = readLines("SQL/R_IVOE_LEDExcitationError.sql")
 query = paste(query.charVec,collapse="\n")
 excitation.df = sqlQuery(PMScxn,query)
+
+# get seal bar alignment NCRs
+query.charVec = readLines("SQL/R_IVOE_SealBarAlignmentNCR.sql")
+query = paste(query.charVec,collapse="\n")
+sealBarNCR.df = sqlQuery(PMScxn,query)
+
+# get seal bar alignment RMAs
+query.charVec = readLines("SQL/R_IVOE_SealBarAlignmentRMA.sql")
+query = paste(query.charVec,collapse="\n")
+sealBarRMA.df = sqlQuery(PMScxn,query)
 
 # close remote connection
 close(PMScxn)

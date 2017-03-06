@@ -59,10 +59,12 @@ bladder.rate <- mergeCalSparseFrames(bladder.num.fill, bladder.denom.fill, c('Da
 bladder.rate[,'Key'] <- 'Failures/Lot Size in Field'
 bladder.count <- data.frame(DateGroup = bladder.num.fill[,'DateGroup'], Key = 'Count of Failures', RecordedValue = bladder.num.fill[,'RecordedValue'], Rate = bladder.num.fill[,'Record'])
 bladder.voe <- rbind(bladder.rate, bladder.count)
-x_position <- c('2015-40')
-annotations.bladder <- c('Heat Press Fix')
+x_dates <- c('2015-40', '2017-02')
+y_record <- c(0,0)
+annotations.bladder <- c('Heat Press Fix', '100% Qualification Screening')
+annot.bladder <- data.frame(DateGroup = x_dates, Record = y_record, Label = annotations.bladder)
 pal.bladder <- createPaletteOfVariableLength(bladder.voe, 'RecordedValue')
-p.bladder.voe <- ggplot(subset(bladder.voe, RecordedValue != 'NoFailure'), aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.bladder, name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nFailures at < 100 Run Hours/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(aes(label=annotations.bladder, x=x_position, y=0), angle=90, hjust=-0.5, size=4)
+p.bladder.voe <- ggplot(subset(bladder.voe, RecordedValue != 'NoFailure'), aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.bladder, name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nFailures at < 100 Run Hours/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = annot.bladder, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Record), angle=90, hjust=-0.25, size=4)
 # Window bladder lots with all failures, not just early failures... but maybe fill them differently
 bladder.all.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(bladderLots.df, Key=='EarlyFailuresInLot'), c('Key','RecordedValue','HoursBetweenBin'), '2015-01', 'AdjRecord', 'sum', 0)
 bladder.all.rate <- mergeCalSparseFrames(bladder.all.fail, bladder.denom.fill, c('DateGroup'), c('DateGroup'), 'AdjRecord', 'Record', 0)
@@ -70,7 +72,7 @@ bladder.all.rate$Key <- 'Failures/Lot Size in Field'
 bladder.all.count <- data.frame(DateGroup = bladder.all.fail[,'DateGroup'], Key = 'Count of Failures', RecordedValue = bladder.all.fail[,'RecordedValue'], HoursBetweenBin = bladder.all.fail[,'HoursBetweenBin'], Rate = bladder.all.fail[,'AdjRecord'])
 bladder.all.voe <- rbind(bladder.all.rate, bladder.all.count)
 bladder.all.voe$HoursBetweenBin <- factor(bladder.all.voe$HoursBetweenBin, levels = c('0-100','100-500','500-1000','1000+','Unknown'))
-p.bladder.all.voe <- ggplot(subset(bladder.all.voe, RecordedValue != 'NoFailure')[with(subset(bladder.all.voe, RecordedValue != 'NoFailure'), order(HoursBetweenBin)), ], aes(x=DateGroup, y=Rate, fill=HoursBetweenBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(bladder.all.voe, 'HoursBetweenBin'), name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nAll Failures/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(aes(label=annotations.bladder, x=x_position, y=0), angle=90, hjust=-0.5, size=4)
+p.bladder.all.voe <- ggplot(subset(bladder.all.voe, RecordedValue != 'NoFailure')[with(subset(bladder.all.voe, RecordedValue != 'NoFailure'), order(HoursBetweenBin)), ], aes(x=DateGroup, y=Rate, fill=HoursBetweenBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(bladder.all.voe, 'HoursBetweenBin'), name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nAll Failures/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = annot.bladder, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Record), angle=90, hjust=-0.25, size=4)
 
 # BOARD VoEs:
 # thermoboard
@@ -150,6 +152,16 @@ excitation.ordered[excitation.ordered$Key=='NoFailur','Key'] <- 'zNoFailure'
 pal.excitation <- createPaletteOfVariableLength(excitation.ordered, 'Key')
 pal.excitation[names(pal.excitation)=='zNoFailure'] <- '#FFFFFF'
 p.excitation.voe <- ggplot(excitation.ordered[with(excitation.ordered, order(Key)), ], aes(x=Lot, y=Record/LotSizeInField, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values = pal.excitation, name='Hours Run', labels=c('0-100','100-500','500-1000','1000+','Unknown','')) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=40, hjust=1)) + labs(title='LED Excitation Errors Reported by Bead Beater Lot Size in Field', x='Lot', y='7003 Complaints/Lot Size')
+
+# Seal bar alignment NCRs and RMAs
+# sealBarNCR.num.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', sealBarNCR.df, 'Version', '2015-01', 'Record', 'sum', 0)
+# sealBarRMA.num.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', sealBarRMA.df, 'Version', '2015-01', 'Record', 'sum', 0)
+# sealBar.voe = rbind(cbind(sealBarNCR.num.fill, Key='NCR'),cbind(sealBarRMA.num.fill, Key='RMA'));
+# sealBar.x_position <- c('2016-49')
+# annotations.sealBar <- c('Process Change')
+# pal.sealBar <- createPaletteOfVariableLength(sealBar.voe, 'Version')
+# p.sealBar.voe <- ggplot(sealBar.voe, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.sealBar, name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Seal bar alignment failures for new FA2.0 instruments', y='Failure Count', x='NCR Created Date, Manifold Manufacture Date\n(Year-Week)') + facet_wrap(~Key, ncol=1) + geom_text(aes(label=annotations.sealBar, x=sealBar.x_position, y=0), angle=90, hjust=-0.5, size=4)
+
 
 # #Thermoboard date settings
 # bigGroup <- 'Year'

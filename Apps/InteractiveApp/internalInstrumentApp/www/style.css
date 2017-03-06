@@ -39,9 +39,9 @@
 
 .modal-body{
 
-    height: 1000px;
+    height: 1200px;
    
-    overflow: auto;
+    /*overflow: auto; */
     /*overflow-x: auto;*/
     /*overflow-y: auto;*/
 
@@ -57,7 +57,7 @@
 	color:#CA2818 ;
 	background-color:black;
 	font-weight: bold;
-	
+	width: 250px;
 
 }
 

@@ -76,7 +76,10 @@ if(max(which(pareto[with(pareto, order(CumPercent)), 'CumPercent'] > 0.8)) <= 10
 final.qc.ver <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', finalQC.df, c('Version','RecordedValue'), startDate, 'Record', 'sum', 0)
 final.qc.rate <- mergeCalSparseFrames(final.qc.ver, instBuilt.ver, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, periods)
 p.final.qc.two <- ggplot(subset(final.qc.rate,RecordedValue %in% pareto[,'RecordedValue'] & Version == 'FA2.0'), aes(x=DateGroup, y=Rate, group=Version)) + geom_line() + geom_point(aes(x=DateGroup, y=Rate), data = subset(final.qc.rate,RecordedValue %in% pareto[,'RecordedValue'] & Version == 'FA2.0'), color='black') + facet_wrap(~RecordedValue, scale='free_y') + geom_hline(aes(yintercept=0.05), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='FA 2.0 NCRs in Final QC per Instruments Built (not released):\n FYI Limit = 5% of Instruments Built', x='Date\n(Year-Week)', y='4-week Rolling Average')
-p.final.qc.torch <- ggplot(subset(final.qc.rate,RecordedValue %in% pareto[,'RecordedValue'] & Version == 'Torch'), aes(x=DateGroup, y=Rate, group=Version)) + geom_line() + geom_point(aes(x=DateGroup, y=Rate), data = subset(final.qc.rate,RecordedValue %in% pareto[,'RecordedValue'] & Version == 'Torch'), color='black') + facet_wrap(~RecordedValue, scale='free_y') + geom_hline(aes(yintercept=0.05), color='blue', lty=2) + scale_y_continuous(labels=percent, limits=c(0,1)) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Torch NCRs in Final QC per Instruments Built (not released):\n FYI Limit = 5% of Instruments Built', x='Date\n(Year-Week)', y='4-week Rolling Average')
+final.qc.rate.torch <- subset(final.qc.rate,RecordedValue %in% pareto[,'RecordedValue'] & Version == 'Torch')
+#removing over 100% on 2016-22 to fix scale
+final.qc.rate.torch$Rate <- ifelse(as.character(final.qc.rate.torch$DateGroup) == '2016-22' & final.qc.rate.torch$Rate > 1, NA, final.qc.rate.torch$Rate) 
+p.final.qc.torch <- ggplot(final.qc.rate.torch, aes(x=DateGroup, y=Rate, group=Version)) + geom_line() + geom_point(aes(x=DateGroup, y=Rate), data = final.qc.rate.torch, color='black') + facet_wrap(~RecordedValue, scale='free_y') + geom_hline(aes(yintercept=0.05), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Torch NCRs in Final QC per Instruments Built (not released):\n FYI Limit = 5% of Instruments Built', x='Date\n(Year-Week)', y='4-week Rolling Average')
 
 # make some charts for Problem Area in instrument NCRs: pareto (stacked) and line charts
 wpfs.count <- with(wpfsNCR.df, aggregate(Record~Year+Week+Version+RecordedValue, FUN=sum))
@@ -100,10 +103,10 @@ wpfs.rate.all <- mergeCalSparseFrames(subset(wpfs.all, RecordedValue %in% pareto
 wpfs.rate.ver <- mergeCalSparseFrames(subset(wpfs.ver, RecordedValue %in% pareto[,'RecordedValue']), instBuilt.ver, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', NA, periods)
 wpfs.lims.all.blue <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.04)
 wpfs.lims.all.red <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 4, 'upper', 0.05)
-x_pos.wpfs <- c('2016-49')
-problemArea.annot <- c('Board')
-y_pos.wpfs <- c(0.35)
-text.annot <- c('CAPA 13210')
+x_pos.wpfs <- c('2016-49', '2017-02')
+problemArea.annot <- c('Board', 'Wire Harness')
+y_pos.wpfs <- c(0.35, 0.22)
+text.annot <- c('CAPA 13210', 'DX-CO-034917')
 annot.wpfs <- data.frame(DateGroup = x_pos.wpfs, Rate = y_pos.wpfs, RecordedValue = problemArea.annot, Text = text.annot)
 p.wpfs.all <- ggplot(subset(wpfs.lims.all.red,RecordedValue %in% pareto[,'RecordedValue']), aes(x=DateGroup, y=Rate, color=Color, group=RecordedValue)) + geom_line(color='black') + geom_point() + facet_wrap(~RecordedValue, scale='free_y') + scale_y_continuous(labels = percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instrument NCR Problem Area per Instruments Built (all Versions)', subtitle = 'FYI Limit = +3 standard deviations; Limit = +4 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average') + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_hline(data = wpfs.lims.all.blue, aes(yintercept=UL), color='blue', lty=2) + geom_hline(aes(yintercept=UL), color='red', lty=2) + geom_text(data = annot.wpfs, inherit.aes=FALSE, aes(x=DateGroup, y=Rate, label=Text))
 p.wpfs.two <- ggplot(subset(wpfs.rate.ver,Version=='FA2.0'), aes(x=DateGroup, y=Rate, group=Version)) + geom_line() + geom_point() + facet_wrap(~RecordedValue, scale='free_y') + scale_y_continuous(labels = percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='FA 2.0 NCRs per Instruments Built by Version', x='Date\n(Year-Week)', y='4-week Rolling Average')
@@ -165,11 +168,18 @@ earlyfailures.cust <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(
 earlyfailures.cust.rate <- mergeCalSparseFrames(earlyfailures.cust, instBuilt.all.alt, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 earlyfailures.cust.lims <- addStatsToSparseHandledData(earlyfailures.cust.rate, c('Key'), lagPeriods, TRUE, 3, 'upper')
 x_pos_cust_labels <- c('2015-13','2015-32','2015-45','2016-12','2016-27','2016-50')
-x_pos_cust <- c('2015-11','2015-32','2015-43','2016-10','2016-22','2017-01')
+x_pos_cust <- c('2015-11','2015-32','2015-43','2016-10','2016-22','2016-51')
 y_pos_cust <- c(0.045, 0.085, 0.16, 0.135, 0.05, 0.015)
 y2_cust <- max(earlyfailures.cust.lims[,'Rate'])
 fail.annotations.cust <- do.call(c, lapply(1:length(x_pos_cust), function(x) paste(strsplit(as.character(annotations.cust.df[annotations.cust.df$DateGroup %in% x_pos_cust, 'Annotation']),split = ',')[[x]], collapse='\n')))
 p.earlyfailures.cust <- ggplot(earlyfailures.cust.lims) + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2_cust), color='cyan', fill='white', alpha=0.2) + geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + geom_point(aes(x=DateGroup, y=Rate)) + geom_hline(aes(yintercept=UL), color='blue', lty='dashed') + labs(title='Customer Reported DOA/ELF per Instruments Built (not released):\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks.alt) + annotate("text",x=x_pos_cust_labels,y=y_pos_cust,label=fail.annotations.cust, size=5.25) + expand_limits(y=0.2)
+
+#alternate chart with instruments shipped as denominator......per Instrument SPC request
+instshipments.df$Key <- 'Instrument Shipments'
+inst.ship <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(instshipments.df, CustID != 'IDATEC'), c('Key'), startDate.alt, 'Record', 'sum', 1)
+earlyfailures.instship.rate <- mergeCalSparseFrames(earlyfailures.cust, inst.ship, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+earlyfailures.instship.lims <- addStatsToSparseHandledData(earlyfailures.instship.rate, c('Key'), lagPeriods, TRUE, 3, 'upper')
+p.earlyfailures.cust1 <- ggplot(earlyfailures.instship.lims) + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2_cust), color='cyan', fill='white', alpha=0.2) + geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + geom_point(aes(x=DateGroup, y=Rate)) + geom_hline(aes(yintercept=UL), color='blue', lty='dashed') + labs(title='Customer Reported DOA/ELF per Customer Instruments Shipped:\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks.alt) #+ annotate("text",x=x_pos_cust_labels,y=y_pos_cust,label=fail.annotations.cust, size=5.25) + expand_limits(y=0.2)
 
 # Make images for the web hub
 setwd(imgDir)

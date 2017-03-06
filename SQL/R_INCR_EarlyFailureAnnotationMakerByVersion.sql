@@ -1,22 +1,32 @@
 SET NOCOUNT ON
 
 SELECT 
+	REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.','') AS [LotNo],
+	IIF(LEFT(P.[PartNumber],4) IN ('FLM2','HTFA'), SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 8),
+		SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 6)) AS [SerialNo],
+	P.[PartNumber],
+	L.[DateOfManufacturing],
+	L.[VersionId],
+	IIF(L.[VersionId] IN ('IP','01','02','03','05','FrNew'), 1, 0) AS [New]
+INTO #cleanSerials
+FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
+	ON L.[PartNumberId] = P.[PartNumberId]
+WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001%' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%' OR P.[PartNumber] = 'HTFA-SUB-0103') 
+
+SELECT 
 	[SerialNo],
 	MIN([DateOfManufacturing]) AS [DateOfManufacturing]
 INTO #birthDate
 FROM
 (
 	SELECT 
-		REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.','') AS [LotNo],
-		IIF(LEFT(P.[PartNumber],4) IN ('FLM2','HTFA'), SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 8),
-			SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 6)) AS [SerialNo],
-		P.[PartNumber],
-		L.[DateOfManufacturing],
-		L.[VersionId],
-		IIF(L.[VersionId] IN ('IP','01','02','03'), 1, 0) AS [New]
-	FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
-		ON L.[PartNumberId] = P.[PartNumberId]
-	WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001%' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%' OR P.[PartNumber] = 'HTFA-SUB-0103') AND [DateOfManufacturing] > CONVERT(DATETIME, '2014-06-01')
+		[LotNo],
+		IIF([SerialNo] LIKE '%R', SUBSTRING([SerialNo],1, PATINDEX('%R',[SerialNo])-1), [SerialNo]) AS [SerialNo],
+		[PartNumber],
+		[DateOfManufacturing],
+		[VersionId],
+		[New] 
+	FROM #cleanSerials
 ) T
 WHERE [New] = 1
 GROUP BY [SerialNo]
@@ -704,5 +714,5 @@ SELECT DISTINCT
              ), 2, 1000) AS [Annotation]
 FROM #labels L2
 
-DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts, #complaintsCollapsed,
+DROP TABLE #cleanSerials, #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure, #complaints, #combined, #labels, #bfdxParts, #complaintsCollapsed,
 	#AllWeeks, #Calendar, #WeeksAgg, #WeeksGrouped, #WeeksLagged
