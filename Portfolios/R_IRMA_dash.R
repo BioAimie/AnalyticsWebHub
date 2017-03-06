@@ -294,6 +294,11 @@ ef.serv.lead.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', leadEFse
 ef.serv.lead.rate <- mergeCalSparseFrames(ef.serv.lead.fill, refurbServiced.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', NA)
 p.badservice <- ggplot(ef.serv.lead.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + facet_wrap(~Key) + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',size=fontSize,face=fontFace), legend.position='bottom') + scale_x_discrete(breaks=dateBreaks) + guides(fill=guide_legend(nrow=3, byrow=TRUE)) + labs(title='Customer Reported Failure Mode in Early Life Failures:\nBy Prior Service Date of Instrument', x='Prior Service Date\n(Year-Week)', y='Failures/Refurb Instruments Serviced') + scale_fill_manual(values=pal.ef, name='')
 
+# field install base
+install.base <- with(installed.df, aggregate(Record~Version+Region, FUN=sum))
+p.fieldinstallbase <- ggplot(install.base, aes(x=Region, y=Record, fill=Region)) + geom_bar(stat='identity') + scale_fill_manual(name='', values=createPaletteOfVariableLength(install.base, 'Region')) + facet_wrap(~Version, scales = 'free_y') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20), plot.title = element_text(hjust = 0.5)) + labs(title = 'Field Installed Base of Instruments', x = 'Geographic Region', y ='Instruments')
+p.fieldinstallbase.pouch <- ggplot(subset(install.base, Version != 'Torch Base'), aes(x=Region, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(name='', values=createPaletteOfVariableLength(install.base, 'Version')) + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20), plot.title = element_text(hjust = 0.5)) + labs(title = 'Field Installed Base of Pouch Running Units', x = 'Geographic Region', y ='Instruments')
+
 # add code to plot the cumulative average hours run between failures in the install base
 hours.df[,'YearMonth'] <- with(hours.df, ifelse(Month < 10, paste(Year,'-0',Month,sep=''), paste(Year,'-',Month,sep='')))
 yearMonths <- unique(hours.df[,c('YearMonth')])
