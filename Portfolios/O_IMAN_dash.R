@@ -51,7 +51,7 @@ shipTerr <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','
 shipTerr <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipTerr, c('SalesTerritory'), startString.month, 'Record', 'sum', 0)
 
 #Order factors
-shipTerr$SalesTerritory <- factor(shipTerr$SalesTerritory, levels = c('Central','Great Lakes','Mid Atlantic','North East','South East','West','International','Defense','House','Other'), ordered=TRUE)
+shipTerr$SalesTerritory <- factor(shipTerr$SalesTerritory, levels = c('Central','Great Lakes','Mid Atlantic','North East','South East','West','International','Defense','House','Other', 'NAM'), ordered=TRUE)
 shipTerr <- shipTerr[with(shipTerr, order(SalesTerritory)), ]
 
 # Make Chart
