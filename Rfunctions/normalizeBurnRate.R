@@ -58,6 +58,7 @@ normalizeBurnRate <- function(calFrame, dataFrame, filterCol, filter, panelType=
     
     gap.finder <- merge(gap.finder, holes, by.x='Index', by.y='Holes', all.x=TRUE)
     gap.finder[is.na(gap.finder$Count), 'Count'] <- 0
+    if(length(gap.finder$Index) < 5) { return() }
     last.gap <- max(which(sapply(5:length(gap.finder$Index), function(x) sum(gap.finder[(x-4):x,'Count'])) == 5)) + 4  
     
     if(is.infinite(last.gap)) {
