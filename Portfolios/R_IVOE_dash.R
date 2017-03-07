@@ -129,7 +129,7 @@ p.board.valve.field <- ggplot(board.valve.field.rate, aes(x=DateGroup, y=Rate, f
 p.board.valve.total <- ggplot(board.valve.total, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Type, ncol=1, scale='free_y') + scale_fill_manual(values=createPaletteOfVariableLength(board.valve.total,'Key'), name='', labels=c('NCR','RMA')) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Valve Board Failures', x='Date of Manufacturing\n(Year-Week)', y='Failure Count, Failure Rate')
 
 # Lid latch failures per RMAs shipped
-rmas.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week',rmaShipped.df, c('Key'), "2015-10", 'Record', 'sum', 0)
+rmas.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', rmaShipped.df, c('Key'), "2015-10", 'Record', 'sum', 0)
 lids.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', lids.df, c('Key'), "2015-10", 'Record', 'sum', 0)
 if(length(unique(lids.fill[,'Key']))==1) {
   
