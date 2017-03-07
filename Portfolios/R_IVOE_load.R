@@ -23,7 +23,7 @@ query = paste(query.charVec,collapse="\n")
 lids.df = sqlQuery(PMScxn,query)
 
 # get number of RMAs shipped
-query.charVec = readLines("SQL/R_IVOE_RMAsShipped.sql")
+query.charVec = readLines("SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql")
 query = paste(query.charVec,collapse="\n")
 rmaShipped.df = sqlQuery(PMScxn,query)
 
