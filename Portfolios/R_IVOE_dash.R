@@ -16,6 +16,7 @@ library(dateManip)
 # load the data from SQL that's needed
 source('Portfolios/R_IVOE_load.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
+source('Rfunctions/makeTimeStamp.R')
 
 # establish some properties used throughout the code- these are kept up top to facilitate changes
 periods <- 4
@@ -196,6 +197,7 @@ for(i in 1:length(plots)) {
   
   png(file=imgName, width=1200, height=800, units='px')
   print(eval(parse(text = plots[i])))
+  makeTimeStamp(author='Data Science')
   dev.off()
 }
 
