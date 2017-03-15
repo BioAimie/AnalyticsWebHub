@@ -144,7 +144,9 @@ SELECT
 	B2.[ServiceDate],
 	B2.[SODate],
 	B2.[ShippingDate],
-	B2.[QCDate]
+	B2.[QCDate],
+	C2.[LoanerRMADate],
+	IIF(C2.[LoanerRMADate] IS NULL OR C2.[LoanerRMADate] < B2.[QCDate] OR C2.[LoanerRMADate] > B2.[SODate] OR C2.[LoanerRMADate] > B2.[ShippingDate], B2.[QCDate], C2.[LoanerRMADate]) AS [CorrectedLoanerDate]
 INTO #Master
 FROM 
 (
@@ -180,6 +182,15 @@ FROM
 		[InitialCloseDate]
 ) A2 LEFT JOIN #Props B2
 	ON A2.[TicketId] = B2.[TicketId]
+LEFT JOIN 
+(
+	SELECT 
+		[TicketId],
+		CAST([RecordedValue] AS DATE) AS [LoanerRMADate]
+	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
+	WHERE [PropertyName] LIKE 'Loaner RMA Completed'
+) C2
+	ON A2.[TicketId] = C2.[TicketId] 
 
 SELECT
 	[Part],
@@ -196,7 +207,9 @@ SELECT
 	[ServiceDate],
 	DATEDIFF(day, [ServiceDate], [QCDate]) AS [DaysInQC], 
 	[QCDate],
-	DATEDIFF(day, [QCDate], [SODate]) AS [DaysToSalesOrder],
+	DATEDIFF(day, [QCDate], [CorrectedLoanerDate]) AS [DaysInLoanerRMA],
+	[CorrectedLoanerDate], 
+	DATEDIFF(day, [CorrectedLoanerDate], [SODate]) AS [DaysToSalesOrder],
 	[SODate],
 	DATEDIFF(day, [SODate], [ShippingDate]) AS [DaysToShip],
 	[ShippingDate],
@@ -204,7 +217,7 @@ SELECT
 INTO #Final
 FROM #Master
 
-SELECT 
+SELECT  
 	YEAR([OpenDate]) AS [YearOpen],
 	MONTH([OpenDate]) AS [MonthOpen],
 	DATEPART(ww, [OpenDate]) AS [WeekOpen],
@@ -223,6 +236,7 @@ SELECT
 	IIF([DaysInQuarantine/Decon] < 0, 0, [DaysInQuarantine/Decon]) AS [DaysInQuarantine/Decon],
 	IIF([DaysInService] < 0, 0, [DaysInService]) AS [DaysInService],
 	IIF([DaysInQC] < 0, 0, [DaysInQC]) AS [DaysInQC],
+	IIF([DaysInLoanerRMA] < 0, 0, [DaysInLoanerRMA]) AS [DaysInLoanerRMA],
 	IIF([DaysToSalesOrder] < 0, 0, [DaysToSalesOrder]) AS [DaysToSalesOrder],
 	IIF([DaysToShip] < 0, 0, [DaysToShip]) AS [DaysToShip],
 	1 AS [Record] 
