@@ -31,7 +31,7 @@ SELECT
 	[RecordedValue]
 INTO #properties
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] IN ('RMA Title','RMA Type','Complaint Number','Hours Run','Service Completed') AND [TicketId] IN (SELECT [TicketId] FROM #consider)
+WHERE [PropertyName] IN ('RMA Title','RMA Type','Complaint Number','Hours Run','Service Completed','System Failure') AND [TicketId] IN (SELECT [TicketId] FROM #consider)
 
 SELECT
 	[TicketId],
@@ -63,6 +63,7 @@ SELECT
 		IIF(ISNUMERIC(P.[Complaint]) = 1 AND P.[Title] LIKE '%demo%', 1, 
 		IIF(ISNUMERIC(P.[Complaint]) = 1 AND P.[Type] LIKE '%No Failure', 1, 0))) AS [StripComplaintFlag], 
 	IIF(P.[Type] LIKE '%- Failure%', 1, 0) AS [TypeFlag],
+	IIF([FailCheck] = 'True', 1, 0) AS [FailCheck],
 	IIF(I.[CustFail] IN ('SDOA','DOA','ELF','SELF'), 1, 0) AS [CustFlag]
 INTO #flagged
 FROM
@@ -93,6 +94,7 @@ FROM
 		[TicketId],
 		[RMA Title] AS [Title],
 		[RMA Type] AS [Type],
+		[System Failure] AS [FailCheck],
 		[Complaint Number] AS [Complaint],
 		[Hours Run] AS [HoursRun],
 		[Service Completed] AS [ServiceDate]
@@ -105,6 +107,7 @@ FROM
 		(
 			[RMA Title],
 			[RMA Type],
+			[System Failure],
 			[Complaint Number],
 			[Hours Run],
 			[Service Completed]
@@ -130,11 +133,11 @@ FROM
 	ON I.[TicketId] = W.[TicketId]
 WHERE (LEFT([SerialNo],2) IN ('FA','2F','HT','TM') OR [Part Number] LIKE 'HTFA-%') AND [ServiceReq] = 1
 
-SELECT 
+SELECT
 	[TicketId]
 INTO #complaintsReal
-FROM #flagged 
-WHERE [ComplaintFlag] = 1 AND [TitleFlag] = 0 AND ([CustFlag] = 0 OR [CustFlag] IS NULL) AND ([TypeFlag] = 0 OR [TypeFlag] IS NULL) AND ([RCFail] = 0 OR [RCFail] IS NULL) AND [StripComplaintFlag] = 0
+FROM #flagged
+WHERE [ComplaintFlag] = 1 AND [TitleFlag] = 0 AND ([CustFlag] = 0 OR [CustFlag] IS NULL) AND ([TypeFlag] = 0 OR [TypeFlag] IS NULL) AND ([RCFail] = 0 OR [RCFail] IS NULL) AND ([FailCheck] = 0 OR [FailCheck] IS NULL) AND [StripComplaintFlag] = 0
 
 SELECT
 	F.[TicketId],
