@@ -1,3 +1,5 @@
+SET NOCOUNT ON
+
 SELECT 
 	[SerialNo],
 	s.[ItemID],
@@ -57,20 +59,15 @@ SELECT
 			[SalesTerritoryID]))))))) AS [SalesTerritory],
 	[SalesSource],
 	CASE
-		WHEN [SalesSource] IN ('REG Trade ADDON', 'RRA Cap Lease', 'FP OpLease', 'FP CapLeas', 'OPLease/Flex', 'Inst OpLease', 'RRA Op Lease', 
-			'Sale', 'Inst CapLease', 'RRA') AND [ShipToCountryID] LIKE 'USA' THEN 'Domestic Sale'
-		WHEN [SalesSource] IN ('REG Trade ADDON', 'RRA Cap Lease', 'FP OpLease', 'FP CapLeas', 'OPLease/Flex', 'Inst OpLease', 'RRA Op Lease', 
-			'Sale', 'Inst CapLease', 'RRA') AND [SalesTerritoryID] LIKE 'International' THEN 'International Sale'
-		WHEN [SalesSource] IN ('FOC Trade WAR', 'REG Trade WAR', 'FP CapLeas Trad', 'RRA Op TradeUp', 'RRA Cap TradeUp', 'FP OpLeas Trade', 'FOC Trade NOWAR',
-			'REG Trade NOWAR', 'InstOpLease TU', 'Inst CapLease Trade', 'Inst OpLease Trade') THEN 'Trade-Up'
+		WHEN [SalesSource] IN ('BFDXInst') THEN 'BFDx'
+		WHEN [SalesSource] IN ('Sale') THEN 'Sale'
+		WHEN [SalesSource] IN ('EXTW', 'MFGW', 'NONW', 'Loaner CSA/RSA', 'Loaner - RMA','Loaner - MTA','Loaner - Beta P') THEN 'Loaner'
+		WHEN [SalesSource] IN ('EAP PermRepl', 'EXTW Perm Rep' , 'FP CapLeas PR', 'FP OpLease PR', 'Inst OpLease PR', 'Loan CSA/RSA PR', 'MFGW Perm Rep', 'NONW Perm Rep', 'OPLease/Flex Pr', 'RRA CapLeas PR', 'RRA OpLease PR', 'Sale Perm Rep', 'STRental PR', 'PermRepl', 'InstOpLease PR','Loaner RMA PR','RRA PR') THEN 'Replacements'
 		WHEN [SalesSource] IN ('Loaner - EAP') THEN 'EAP'
-		WHEN [SalesSource] IN ('Loaner RMA PR','Loan CSA/RSA PR','Loaner Beta PR', 'FP CapLeas PR', 'OPLease/Flex PR', 'RRA CapLeas PR', 'RRA OpLease PR', 
-			'InstOpLease PR', 'FP OpLease PR','PermRepl', 'EAP PermRepl', 'NONW Perm Rep', 'STRental PR', 'RRA PR', 'MFGW Perm Rep', 'EXTW Perm Rep', 
-			'DEMO FSE PR', 'BFDXInst PR', 'Sale Perm Rep','Inst CapLeas PR','Loaner MTA PR') THEN 'Replacement'
-		WHEN [SalesSource] IN ('DEMO - FSE','DEMO - DIST') THEN 'Demo'
-		WHEN [SalesSource] IN ('Loaner - MTA', 'Loaner CSA/RSA', 'Loaner - RMA','Loaner - Beta') THEN 'Loaner'
-		WHEN [SalesSource] IN ('BFDXInst','MFGW', 'EXTW', 'NONW') THEN 'Internal'
-		WHEN [SalesSource] IN ('STRental') THEN 'Short Term Rental'
+		WHEN [SalesSource] IN ('FP OpLeas Trade', 'InstOpLease TU', 'REG Trade ADDON', 'REG Trade NOWAR', 'REG Trade WAR', 'RRA CAP TradeUp' , 'FOC Trade WAR', 'RRA Op TradeUp','FP CapLeas Trad') THEN 'Trade-Up'
+		WHEN [SalesSource] IN ('FP CapLeas',  'FP OpLease', 'Inst OpLease', 'RRA Op Lease', 'STRental', 'OPLease/Flex') THEN 'Rental/Flex/Lease'
+		WHEN [SalesSource] IN ('Loan CSA/RSA', 'Loaner-MTA') THEN 'Study Instruments'
+		WHEN [SalesSource] IN ('Donation') THEN 'Donation'
 		ELSE 'Other'
 	END AS [SalesType],
 	[Record]
