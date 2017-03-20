@@ -78,11 +78,9 @@ if(intBa > 10) {
   intBa <- 10
 }
 
-KeyColors <- createPaletteOfVariableLength(pouch.pareto.status, 'Key')
-
 p.Last120Days.pouch <- ggplot(pouch.pareto.status, aes(x=MEQ, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_y_continuous(breaks=pretty_breaks(n=intBa)) +
   facet_wrap(~Status, ncol=1) + xlab('Pouch MEQs with NCRs') + ylab('Count of NCRs') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90,vjust=0.5, color='black',size=20), 
-  axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Pouch MEQ NCRs') + scale_fill_manual(values=KeyColors)
+  axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Pouch MEQ NCRs') + scale_fill_manual(values=createPaletteOfVariableLength(pouch.pareto.status, 'Key'), name='')
 
 #-------------------------------------------Pareto of Pouch MEQs by NCR Type and Status-----------------------------------------
 pouch.pareto.type <- with(subset(pouch.pareto, as.character(Key) != '120 Day (net)'), aggregate(Record~MEQ+Status+Type, FUN=sum))
@@ -231,7 +229,7 @@ if(intBb > 10) {
 
 p.Last120Days.array <- ggplot(array.pareto.status, aes(x=MEQ, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_y_continuous(breaks=pretty_breaks(n=intBb)) +
   facet_wrap(~Status, ncol=1) + xlab('Array MEQs with NCRs') + ylab('Count of NCRs') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90,vjust=0.5, color='black',size=20), 
-  axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Array MEQ NCRs') + scale_fill_manual(values=KeyColors)
+  axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Array MEQ NCRs') + scale_fill_manual(values=createPaletteOfVariableLength(array.pareto.status, 'Key'), name='')
 
 #-------------------------------------------Pareto of Array MEQs by NCR Type and Status-----------------------------------------
 array.pareto.type <- with(subset(array.pareto, as.character(Key) != '120 Day (net)'), aggregate(Record~MEQ+Status+Type, FUN=sum))
@@ -322,14 +320,18 @@ p.WhereFound.array <- ggplot(array.where.mon, aes(x=DateGroup, y=Record, fill=Wh
 
 #----------------------------------------Monthly count of NCRs per BuildYear--------------------------------------
 array.build.mon <- subset(array.ncr, as.character(WhereFound) == 'Pouch Manufacture')
-array.build.mon <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', array.build.mon, 'BuildYear', startstring.month, 'Record','sum',0)
-
-array.build.pal <- createPaletteOfVariableLength(array.build.mon, 'BuildYear')
-
-p.BuildYear.array <- ggplot(array.build.mon, aes(x=DateGroup, y=Record, fill=BuildYear)) + geom_bar(stat='identity', position='stack') + 
-  theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, hjust=1,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  labs(title='Array MEQ NCRs by Build Year\nFound in Pouch Manufacturing', x='Date\n(Year-Month)', y='Count of NCRs') + scale_y_continuous(breaks=pretty_breaks(n=intB1.num)) +
-  scale_fill_manual(values=array.build.pal)
+array.build.mon$DateGroup <- with(array.build.mon, ifelse(Month < 10, paste0(Year,'-0', Month), paste0(Year,'-', Month)))
+if(nrow(subset(array.build.mon, DateGroup >= startstring.month)) > 0) {
+  array.build.mon <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', array.build.mon, 'BuildYear', startstring.month, 'Record','sum',0)
+  array.build.pal <- createPaletteOfVariableLength(array.build.mon, 'BuildYear')
+  p.BuildYear.array <- ggplot(array.build.mon, aes(x=DateGroup, y=Record, fill=BuildYear)) + geom_bar(stat='identity', position='stack') + 
+    theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, hjust=1,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
+    labs(title='Array MEQ NCRs by Build Year\nFound in Pouch Manufacturing', x='Date\n(Year-Month)', y='Count of NCRs') + scale_y_continuous(breaks=pretty_breaks(n=intB1.num)) +
+    scale_fill_manual(values=array.build.pal)
+} else {
+  emptyPlot <- data.frame(DateGroup = as.character(unique(subset(calendar.month, DateGroup >= startstring.month)[,'DateGroup'])), Record = 0)
+  p.BuildYear.array <- ggplot(emptyPlot, aes(x=DateGroup, y=Record)) + geom_bar(stat='identity') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90, hjust=1,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + labs(title='Array MEQ NCRs by Build Year\nFound in Pouch Manufacturing', x='Date\n(Year-Month)', y='Count of NCRs')
+}
 
 #----------------------------------------Top Failure + SubFailure Categories in last 60 days Pareto ---------------------------------------------
 array.fail <- with(subset(array.ncr, CreatedDate >= D90), aggregate(Record~FailCat+SubFailCat, FUN=sum))
@@ -378,7 +380,7 @@ if (nrow(sarray.pareto) > 0) {
   
   p.Last120Days.saarray <- ggplot(sarray.pareto.status, aes(x=MEQ, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_y_continuous(breaks=pretty_breaks(n=intBc)) +
     facet_wrap(~Status, ncol=1) + xlab('Semi-Automated Array MEQs with NCRs') + ylab('Count of NCRs') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90,vjust=0.5, color='black',size=20), 
-    axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Semi-Automated Array MEQ NCRs') + scale_fill_manual(values=KeyColors)
+    axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Semi-Automated Array MEQ NCRs') + scale_fill_manual(values= createPaletteOfVariableLength(sarray.pareto.status, 'Key'), name='')
   
 } else {
   p.Last120Days.saarray <- ggplot() + geom_bar(stat='identity') + xlab('Semi-Automated Array MEQs with NCRs') + ylab('Count of NCRs') + 
