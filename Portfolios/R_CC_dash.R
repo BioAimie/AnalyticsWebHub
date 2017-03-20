@@ -45,10 +45,10 @@ pouches.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c(
 complaints.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(Year = failures.df[,'Year'], Week = failures.df[,'Week'], Key = 'AllFailures', Record = failures.df[,'Record']), c('Key'), startDate, 'Record', 'sum', 0)
 complaints.all.rate <- mergeCalSparseFrames(complaints.all, pouches.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods) 
 complaints.all.lims <- addStatsToSparseHandledData(complaints.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
-x_pos <- c('2016-12')
-complaints.annotations <- c('CI-14747')
-y_pos <- complaints.all.lims[(complaints.all.lims[,'DateGroup']) %in% x_pos, 'Rate'] + 0.002
-p.complaints.all <- ggplot(complaints.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Complaints per Pouches Shipped', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average') + annotate("text",x=x_pos,y=y_pos,label=complaints.annotations, size=4)
+# x_pos <- c('2016-12')
+# complaints.annotations <- c('CI-14747')
+# y_pos <- complaints.all.lims[(complaints.all.lims[,'DateGroup']) %in% x_pos, 'Rate'] + 0.002
+p.complaints.all <- ggplot(complaints.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Complaints per Pouches Shipped', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average') #+ annotate("text",x=x_pos,y=y_pos,label=complaints.annotations, size=4)
 p.complaints.all.hist <- ggplot(complaints.all.lims, aes(x=Rate)) + geom_histogram(aes(y=(..count../sum(..count..)))) + scale_x_continuous(labels=percent) + coord_flip() + labs(x='Proportion', y='') + theme(plot.margin=unit(c(1.45,1,0.2,0.5), 'cm'), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(hjust=1, angle=90), axis.text=element_text(color='black', face=fontFace, size=fontSize))
 complaints.all.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df, c('Key'), startDate, 'Record', 'sum', 0)
 startDate.16 <- findStartDate(calendar.df, 'Week', 16, 0)
@@ -104,10 +104,10 @@ p.chemistry.panel <- ggplot(chemistry.panel.lims, aes(x=DateGroup, y=Rate, group
 pouch.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Pouch'), c('Key'), startDate, 'Record', 'sum', 0)
 pouch.all.rate <- mergeCalSparseFrames(pouch.all, pouches.all, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
 pouch.all.lims <- addStatsToSparseHandledData(pouch.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
-x_positions <- c('2016-12')
-pouch.annotations <- c('CI-14747')
-y_positions <- pouch.all.lims[(pouch.all.lims[,'DateGroup']) %in% x_positions, 'Rate'] + 0.002
-p.pouch.all <- ggplot(pouch.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Pouch Complaints per Pouches Shipped', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average') + annotate("text",x=x_positions,y=y_positions,label=pouch.annotations, size=4)
+# x_positions <- c('2016-12')
+# pouch.annotations <- c('CI-14747')
+# y_positions <- pouch.all.lims[(pouch.all.lims[,'DateGroup']) %in% x_positions, 'Rate'] + 0.002
+p.pouch.all <- ggplot(pouch.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Pouch Complaints per Pouches Shipped', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average') #+ annotate("text",x=x_positions,y=y_positions,label=pouch.annotations, size=4)
 p.pouch.all.hist <- ggplot(pouch.all.lims, aes(x=Rate)) + geom_histogram(aes(y=(..count../sum(..count..)))) + scale_x_continuous(labels=percent) + coord_flip() + labs(x='Proportion', y='') + theme(plot.margin=unit(c(1.45,1,0.2,0.5), 'cm'), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(hjust=1, angle=90), axis.text=element_text(color='black', face=fontFace, size=fontSize))
 pouch.all.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Pouch'), c('RecordedValue'), startDate, 'Record', 'sum', NA)
 pouch.all.version.count <- pouch.all.version[pouch.all.version[,'DateGroup'] >= startDate.16, ]
