@@ -1,43 +1,56 @@
 SET NOCOUNT ON
 
 SELECT 
-	[SerialNo],
+	s.[TranID],
+	REPLACE(REPLACE(REPLACE(REPLACE(s.[SerialNo], ' ',''),'.',''),'_',''),'-','') AS [SerialNo],
 	s.[ItemID],
 	s.[WhseID],
-	[CustID],
-	[CustName],
-	[ShipToCountryId],
-	[TranType],
-	[ShipDate], 
-	[SalesSource],
-    [CurrentCustClassID],
-	IIF([SalesTerritoryID] IS NULL, 'Other', [SalesTerritoryID]) AS [SalesTerritoryID],
+	t.[CustID],
+	t.[CustName],
+	t.[ShipToCountryId],
+	i.[TranType],
+	t.[ShipDate], 
+	i.[TranDate],
+	t.[SalesSource],
+    t.[CurrentCustClassID],
+	IIF(t.[SalesTerritoryID] IS NULL, 'Other', [SalesTerritoryID]) AS [SalesTerritoryID],
 	1 AS [Record]
 INTO #Shipments
-FROM [SQL1-RO].[mas500_app].[dbo].[vdvSerialTransactions] s LEFT JOIN [SQL1-RO].[mas500_app].[dbo].[vdvShipmentLine] t
-       ON s.[TranID] = t.[TranID]
-WHERE (([TranType] LIKE 'SH') OR ([TranType] IN ('IS','SA') AND [DistQty]=-1))
-       AND t.[ItemID] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0001','HTFA-ASY-0003','FLM1-ASY-0001R','FLM2-ASY-0001R','HTFA-ASY-0003R','HTFA-ASY-0001R')
-       AND s.[ItemID] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0001','HTFA-ASY-0003','FLM1-ASY-0001R','FLM2-ASY-0001R','HTFA-ASY-0003R','HTFA-ASY-0001R') 
+FROM 
+(
+	SELECT *
+	FROM [SQL1-RO].[mas500_app].[dbo].[vdvSerialTransactions]
+	WHERE [ItemID] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0001','HTFA-ASY-0003','FLM1-ASY-0001R','FLM2-ASY-0001R','HTFA-ASY-0003R','HTFA-ASY-0001R') 
+) s
+LEFT JOIN [SQL1-RO].[mas500_app].[dbo].[vdvInventoryTran] i ON s.[TranKey] = i.[TranKey]
+LEFT JOIN 
+(
+	SELECT *
+	FROM [SQL1-RO].[mas500_app].[dbo].[vdvShipmentLine]
+	WHERE [ItemID] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0001','HTFA-ASY-0003','FLM1-ASY-0001R','FLM2-ASY-0001R','HTFA-ASY-0003R','HTFA-ASY-0001R') 
+) t ON s.[TranID] = t.[TranID]
+WHERE ((i.[TranType] LIKE 'SH') OR (i.[TranType] IN ('IS','SA') AND i.[TranQty] < 0))
 GROUP BY 
-	[ShipDate], 
-	[TranType], 
+	t.[ShipDate], 
+	i.[TranDate],
+	i.[TranType], 
 	s.[WhseID], 
 	s.[ItemID],
-	[SalesTerritoryID],
-	[CustID],
-	[CustName],
-	[CurrentCustClassID], 
-	[SerialNo], 
+	t.[SalesTerritoryID],
+	t.[CustID],
+	t.[CustName],
+	t.[CurrentCustClassID], 
+	s.[SerialNo], 
 	s.[TranID], 
-	[ShipToCountryId], 
-	[SalesSource]
+	t.[ShipToCountryId], 
+	t.[SalesSource]
 
 SELECT 
-	YEAR([ShipDate]) AS [Year],
-	MONTH([ShipDate]) AS [Month],
-	DATEPART(ww, [ShipDate]) AS [Week],
-	[ShipDate],
+	IIF([SerialNo] LIKE '%R', SUBSTRING([SerialNo],1, PATINDEX('%R',[SerialNo])-1), [SerialNo]) AS [SerialNo],
+	YEAR([TranDate]) AS [Year],
+	MONTH([TranDate]) AS [Month],
+	DATEPART(ww, [TranDate]) AS [Week],
+	[TranDate] AS [ShipDate],
 	[ItemID],
 	CASE
 		WHEN [ItemID] LIKE 'FLM1-ASY-0001' THEN 'FA1.5'
@@ -82,7 +95,28 @@ SELECT
 		ELSE 'Other'
 	END AS [SalesType],
 	[Record]
+INTO #Master
 FROM #Shipments
 
-DROP TABLE #Shipments
+SELECT
+	ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [ShipDate]) AS [ShipOrder],
+	[SerialNo],
+	[Year],
+	[Month],
+	[Week],
+	[ShipDate],
+	[ItemID],
+	[Product],
+	[CustID],
+	[CustName],
+	[CustClass],
+	[Country],
+	[SalesTerritoryID],
+	[SalesTerritory],
+	[SalesSource],
+	[SalesType],
+	[Record]
+FROM #Master
+ORDER BY [SerialNo] 
 
+DROP TABLE #Shipments, #Master

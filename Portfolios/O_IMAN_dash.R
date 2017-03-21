@@ -28,7 +28,8 @@ startString.month <- findStartDate(calendar.month, 'Month', 13, 0)
 startString.week <- findStartDate(calendar.week, 'Week', 54, 4)
 
 # ----------------------------New Instrument Shipments and Refurb Conversions by Sales Source per Month-----------------------------------------
-shipSource <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module'), select=c('Product','SalesType','Year','Month','Record'))
+newinstruments <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module') & ShipOrder == 1)
+shipSource <- subset(newinstruments, select=c('Product','SalesType','Year','Month','Record'))
 shipSource <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipSource, c('SalesType'), startString.month, 'Record', 'sum', 0)
 refurb <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Key'), startString.month, 'Record', 'sum', 0)
 colnames(refurb)[colnames(refurb) == 'Key'] <- 'SalesType'
@@ -47,7 +48,7 @@ p.Ship.SalesType <- ggplot(ship.refurb, aes(x=DateGroup, y=Record, fill=SalesTyp
   scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
 # -----------------------------New Instrument Shipments by Territory per Month-------------------------------------------
-shipTerr <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module'), select=c('Product','SalesTerritory','Year','Month','Record')) 
+shipTerr <- subset(newinstruments, select=c('Product','SalesTerritory','Year','Month','Record')) 
 shipTerr <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipTerr, c('SalesTerritory'), startString.month, 'Record', 'sum', 0)
 
 #Order factors
@@ -63,7 +64,7 @@ p.Ship.Territory <- ggplot(data=shipTerr, aes(x=DateGroup, y=Record, fill=SalesT
   scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
 #----------------------------------New Instrument Shipments by Version------------------------------------------------------------
-shipVer <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module'), select=c('Product','Year','Month','Record')) 
+shipVer <- subset(newinstruments, select=c('Product','Year','Month','Record')) 
 shipVer <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipVer, c('Product'), startString.month, 'Record', 'sum', 0)
 
 #Order factors
