@@ -43,26 +43,15 @@ SELECT *
 FROM #TicketsB
 
 SELECT 
-	[TicketID],
-	MAX([TicketString]) AS [TicketString],
-	YEAR(MAX([CreatedDate])) AS [Year],
-	MONTH(MAX([CreatedDate])) AS [Month],
-	DATEPART(ww, MAX([CreatedDate])) AS [Week],
-	[RecordedValue] AS [FailedPart]
-INTO #Fail
+	YEAR([CreatedDate]) AS [Year],
+	MONTH([CreatedDate]) AS [Month],
+	DATEPART(ww, [CreatedDate]) AS [Week],
+	REPLACE([RecordedValue],',','-') AS [FailureCat],
+	1 AS [Record] 
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Parts Affected' AND [PropertyName] LIKE 'Part Affected' 
-	AND [TicketID] IN (SELECT [TicketID] FROM #Tickets)
-	AND [RecordedValue] NOT LIKE 'N/A' AND [RecordedValue] NOT LIKE 'NA'
-GROUP BY [TicketID], [RecordedValue]
+WHERE [ObjectName] LIKE 'Failure Details' AND [PropertyName] LIKE 'Failure Category' 
+	AND [TicketId] IN (SELECT [TicketId] FROM #Tickets)
+	AND [RecordedValue] IS NOT NULL
+ORDER BY [CreatedDate]
 
-SELECT
-	[Year],
-	[Month],
-	[Week],
-	UPPER([FailedPart]) AS [FailedPart],
-	1 AS [Record]
-FROM #Fail f 
-ORDER BY [TicketString]
-
-DROP TABLE #TicketsA, #MasClassParts, #TicketsB, #Raw, #Tickets, #Fail, #bomParts
+DROP TABLE #bomParts, #MasClassParts, #Raw, #Tickets, #TicketsA, #TicketsB
