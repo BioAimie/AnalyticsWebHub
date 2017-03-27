@@ -1,7 +1,7 @@
 SET NOCOUNT ON
 
 SELECT
-	[SerialNo],
+	IIF(LEFT([SerialNo],3) = 'KTM', SUBSTRING([SerialNo], 2, 8), [SerialNo]) AS [SerialNo],
 	CAST(MIN([TranDate]) AS DATE) AS [BreakDate]
 INTO #location
 FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
