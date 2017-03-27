@@ -216,11 +216,11 @@ failures.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df,
 failures.rate <- mergeCalSparseFrames(failures.fill, ships.fill, c('DateGroup','Department'),c('DateGroup','Key'), 'Record', 'Record', 0, periods)
 failures.lim <- addStatsToSparseHandledData(failures.rate, c('Department'), lagPeriods, TRUE, 3, 'upper')
 # annotations for early failure rate
-x_positions <- c('2016-08')
-fail.annotations <- c('CAPA-13226')
-y_positions <- max(failures.lim[as.character(failures.lim[,'DateGroup']) %in% x_positions, 'UL']) + 0.02
+# x_positions <- c('2016-08')
+# fail.annotations <- c('CAPA-13226')
+# y_positions <- max(failures.lim[as.character(failures.lim[,'DateGroup']) %in% x_positions, 'UL']) + 0.02
 pal.fail <- createPaletteOfVariableLength(failures.lim, 'Key')
-p.failures.all <- ggplot(failures.lim, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Department, ncol=1) + scale_fill_manual(values=pal.fail) + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nLimit = +3 standard deviations',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=UL), color='red', lty=2) + annotate("text",x=x_positions,y=y_positions,label=fail.annotations, size=4)
+p.failures.all <- ggplot(failures.lim, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Department, ncol=1) + scale_fill_manual(values=pal.fail) + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nLimit = +3 standard deviations',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=UL), color='red', lty=2) #+ annotate("text",x=x_positions,y=y_positions,label=fail.annotations, size=4)
 
 # create charts for early failures per instruments shipped - by version and department
 failures.fill.version <-  aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department','Version'), startDate, 'Record', 'sum', 0)
@@ -233,7 +233,9 @@ p.failures.version <- ggplot(failures.rate.verison, aes(x=DateGroup, y=Rate, fil
 failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), startDate, 'Record', 'sum', 0)
 failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
 p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='black', lty=2)
-
+start.noroll <- findStartDate(calendar.df, 'Week', 53, 0)
+p.earlyfailures.count <- ggplot(subset(failures.agg, DateGroup >=start.noroll), aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg, 'Key'), name='') + labs(title='Count of Early Failures',x='Reported Date\n(Year-Week)', y='Count') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks)
+  
 # create the charts for early failures per instruments shipped in a month (non-rolling) for each instrument version
 calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
 startMonth <- findStartDate(calendar.month, 'Month', 12, 0)
