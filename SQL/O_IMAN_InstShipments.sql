@@ -2,7 +2,7 @@ SET NOCOUNT ON
 
 SELECT 
 	s.[TranID],
-	REPLACE(REPLACE(REPLACE(REPLACE(s.[SerialNo], ' ',''),'.',''),'_',''),'-','') AS [SerialNo],
+	UPPER(REPLACE(REPLACE(REPLACE(REPLACE(s.[SerialNo], ' ',''),'.',''),'_',''),'-','')) AS [SerialNo],
 	s.[ItemID],
 	s.[WhseID],
 	t.[CustID],
