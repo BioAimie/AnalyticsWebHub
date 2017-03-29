@@ -28,7 +28,8 @@ startString.month <- findStartDate(calendar.month, 'Month', 13, 0)
 startString.week <- findStartDate(calendar.week, 'Week', 54, 4)
 
 # ----------------------------New Instrument Shipments and Refurb Conversions by Sales Source per Month-----------------------------------------
-shipSource <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module'), select=c('Product','SalesType','Year','Month','Record'))
+newinstruments <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module') & ShipOrder == 1)
+shipSource <- subset(newinstruments, select=c('Product','SalesType','Year','Month','Record'))
 shipSource <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipSource, c('SalesType'), startString.month, 'Record', 'sum', 0)
 refurb <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Key'), startString.month, 'Record', 'sum', 0)
 colnames(refurb)[colnames(refurb) == 'Key'] <- 'SalesType'
@@ -47,7 +48,7 @@ p.Ship.SalesType <- ggplot(ship.refurb, aes(x=DateGroup, y=Record, fill=SalesTyp
   scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
 # -----------------------------New Instrument Shipments by Territory per Month-------------------------------------------
-shipTerr <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module'), select=c('Product','SalesTerritory','Year','Month','Record')) 
+shipTerr <- subset(newinstruments, select=c('Product','SalesTerritory','Year','Month','Record')) 
 shipTerr <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipTerr, c('SalesTerritory'), startString.month, 'Record', 'sum', 0)
 
 #Order factors
@@ -63,7 +64,7 @@ p.Ship.Territory <- ggplot(data=shipTerr, aes(x=DateGroup, y=Record, fill=SalesT
   scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
 #----------------------------------New Instrument Shipments by Version------------------------------------------------------------
-shipVer <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module'), select=c('Product','Year','Month','Record')) 
+shipVer <- subset(newinstruments, select=c('Product','Year','Month','Record')) 
 shipVer <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipVer, c('Product'), startString.month, 'Record', 'sum', 0)
 
 #Order factors
@@ -162,29 +163,26 @@ p.ProblemArea <- ggplot(problem.ncr, aes(x=ProblemArea, y=Rate, fill=DateGroup))
   ggtitle('Instrument NCRs - Problem Area')
 
 #-------------------------------------------------Failed Part-----------------------------------------------------------------
-failed.ncr <- aggregateAndFillDateGroupGaps(calendar.month, 'Month',failedParts.df,'FailedPart',mon,'Record','sum',0)
-failed.ncr <- merge(failed.ncr, partNames.df, by.x = 'FailedPart', by.y = 'PartNumber', all.x = TRUE)
-failed.ncr <- with(failed.ncr, aggregate(Record~Name+DateGroup, FUN=sum))
+failed.ncr <- aggregateAndFillDateGroupGaps(calendar.month, 'Month',failCats.df,'FailureCat',mon,'Record','sum',0)
 
 #find top ten
-failedtop <- with(failed.ncr, aggregate(as.formula(Record~Name), FUN=sum))
+failedtop <- with(failed.ncr, aggregate(as.formula(Record~FailureCat), FUN=sum))
 failedtop <- failedtop[with(failedtop, order(-Record)),]
-topAreas <- as.character(head(failedtop, 10)[,'Name'])
+topAreas <- as.character(head(failedtop, 10)[,'FailureCat'])
 
-failed.ncr <- subset(failed.ncr, Name %in% topAreas)
+failed.ncr <- subset(failed.ncr, FailureCat %in% topAreas)
 failed.ncr <- merge(failed.ncr, denom.df, by='DateGroup')
 failed.ncr$Rate <- failed.ncr$Record.x / failed.ncr$Record.y
 
 #Reorder factors 
-failed.ncr$Name <- factor(failed.ncr$Name, levels = topAreas, ordered=TRUE)
-failed.ncr <- failed.ncr[with(failed.ncr, order(Name)), ]
+failed.ncr$FailureCat <- factor(failed.ncr$FailureCat, levels = topAreas, ordered=TRUE)
 
-p.FailedParts <- ggplot(failed.ncr, aes(x=Name, y=Rate, fill=DateGroup)) + geom_bar(stat="identity", position='dodge') + 
+p.FailureCategories <- ggplot(failed.ncr, aes(x=FailureCat, y=Rate, fill=DateGroup)) + geom_bar(stat="identity", position='dodge') + 
   scale_y_continuous(labels=percent, breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30)) +
   scale_fill_manual(values=createPaletteOfVariableLength(failed.ncr, 'DateGroup')) +
-  xlab('Top 10 Failed Parts') + ylab('Percent of Instruments Released') + theme(text=element_text(size=20, face='bold'), 
-  axis.text.x=element_text(angle=90,vjust=0.5, color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
-  ggtitle('Instrument NCRs - Failed Part')
+  xlab('Top 10 Failure Categories') + ylab('% of Instruments Released') + theme(text=element_text(size=20, face='bold'), 
+  axis.text.x=element_text(angle=70,hjust=1, vjust=1, color='black',size=16), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
+  ggtitle('Instrument NCRs - Failure Category')
 
 #----------------------------------------------------------------------------------------------------------------------------------------------
 # Export Images for the Web Hub
