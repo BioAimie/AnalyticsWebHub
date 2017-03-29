@@ -21,6 +21,7 @@ source('Rfunctions/makeTimeStamp.R')
 # establish some properties used throughout the code- these are kept up top to facilitate changes
 periods <- 4
 lagPeriods <- 4
+wireharness.numCharts = 3
 
 # use '2014-51' as the start date so that the 4-week rolling trend starts in week 1 of 2015
 startYear <- 2014
@@ -171,6 +172,39 @@ sealBarNCRAnnotation.df = data.frame(x=c('2016-49','2016-49',as.character(afterC
 pal.sealBar <- createPaletteOfVariableLength(sealBar.voe, 'Version')
 p.sealBar.voe <- ggplot(sealBar.voe, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.sealBar, name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Seal bar alignment failures for new FA2.0 instruments', y='Failure Count', x='Manifold Date of Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1) #+ geom_text(aes(label=annotations.sealBar, x=sealBar.x_position, y=0), angle=90, hjust=-0.5, size=4)
 p.sealBar.voe <- p.sealBar.voe + geom_text(data=sealBarNCRAnnotation.df, inherit.aes=FALSE, aes(x=x, y=2, label=label), hjust=0, angle=90, size=4)
+
+# Calendar for wire harness:
+months = 24
+wireharness.calendar.df <- createCalendarLikeMicrosoft(startYear, 'Month')
+wireharness.startDate <- findStartDate(wireharness.calendar.df, 'Month', months, periods)
+wireharness.seqBreak <- 3
+wireharness.dates = as.character(unique(wireharness.calendar.df[wireharness.calendar.df[,'DateGroup'] >= wireharness.startDate,'DateGroup']))
+wireharness.dateBreaks <- sort(wireharness.dates)[seq(1,length(wireharness.dates), wireharness.seqBreak)]
+
+# Wire harness NCR count
+wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'Record', 'sum', 0)
+wireharnessNCR.maxrecord = max(wireharnessNCR.fill$Record);
+wireharness.parts = sort(unique(wireharnessNCR.fill$PartAffected));
+wireharness.partsPerChart = ceiling(length(wireharness.parts)/wireharness.numCharts);
+for(i in 0:(length(wireharness.parts)-1) %/% wireharness.partsPerChart){
+  parts=wireharness.parts[(i*wireharness.partsPerChart+1):(i*wireharness.partsPerChart+wireharness.partsPerChart)];
+  wireharnessNCR.filter = subset(wireharnessNCR.df, PartAffected %in% parts);
+  wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.filter, c('PartAffected'), startDate, 'Record', 'sum', 0)
+  assign(paste("p.wireharnessNCR.count",i+1,sep=""),
+         ggplot(wireharnessNCR.fill, aes(x=DateGroup, y=Record, group=PartAffected)) + geom_bar(color='black', stat='identity') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.maxrecord)) + facet_wrap(~PartAffected) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCRs - Count of NCRs', x='Wire Harness Manufacture Date (Year-Month)', y='Count of NCRs')
+  );
+}
+
+# Wire harness NCR quantity affected
+wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
+wireharnessNCR.maxrecord = max(wireharnessNCR.fill$QuantityAffected);
+for(i in 0:(length(wireharness.parts)-1) %/% wireharness.partsPerChart){
+  wireharnessNCR.filter = subset(wireharnessNCR.df, PartAffected %in% wireharness.parts[(i*wireharness.partsPerChart+1):(i*wireharness.partsPerChart+wireharness.partsPerChart)]);
+  wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.filter, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
+  assign(paste("p.wireharnessNCR.quantity.affected",i+1,sep=""),
+         ggplot(wireharnessNCR.fill, aes(x=DateGroup, y=QuantityAffected, group=PartAffected)) + geom_bar(color='black', stat='identity') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.maxrecord)) + facet_wrap(~PartAffected) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCRs - Quantity Affected', x='Wire Harness Manufacture Date (Year-Month)', y='Quantity affected')
+  );
+}
 
 
 # #Thermoboard date settings
