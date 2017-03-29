@@ -72,5 +72,10 @@ query.charVec = readLines("SQL/R_IVOE_SealBarAlignmentRMA.sql")
 query = paste(query.charVec,collapse="\n")
 sealBarRMA.df = sqlQuery(PMScxn,query)
 
+# get wire harness NCRs
+query.charVec = readLines("SQL/R_IVOE_WireHarnessNCR.sql")
+query = paste(query.charVec,collapse="\n")
+wireharnessNCR.df = sqlQuery(PMScxn,query)
+
 # close remote connection
 close(PMScxn)
