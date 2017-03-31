@@ -27,6 +27,8 @@ startString.month <- findStartDate(calendar.month, 'Month', 13, 0)
 # Find start date for Year-Week charts with rolling rate
 startString.week <- findStartDate(calendar.week, 'Week', 54, 4)
 
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 # ----------------------------New Instrument Shipments and Refurb Conversions by Sales Source per Month-----------------------------------------
 newinstruments <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module') & ShipOrder == 1)
 shipSource <- subset(newinstruments, select=c('Product','SalesType','Year','Month','Record'))
