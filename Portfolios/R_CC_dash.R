@@ -38,6 +38,8 @@ dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= start
 dateBreaks.3yr <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= threeyr,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= threeyr,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= threeyr,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # ------------------------------------------------------ OVERVIEW CHARTS ---------------------------------------------------------------------

@@ -21,6 +21,8 @@ calendar.week <- createCalendarLikeMicrosoft(year(Sys.Date())-2, 'Week')
 startString.week <- findStartDate(calendar.week, 'Week', 54, 5)
 calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
 
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 #----------------------------------Instruments Thru Service During Previous Week ----------------------------------------------------------------------------------------------
 
 service.df$Key <- paste(service.df$Disposition, service.df$Version, sep=" ")
