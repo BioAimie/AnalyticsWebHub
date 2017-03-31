@@ -56,6 +56,8 @@ faivLine.imr$UCL <- with(faivLine.imr, HistMean + 5*HistSD)
 seqBreak <- 12
 fontSize <- 20
 fontFace <- 'bold'
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # make IMR charts by equipment

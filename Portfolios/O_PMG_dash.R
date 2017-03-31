@@ -21,6 +21,8 @@ lagPeriods <- 4
 calendar.week <- createCalendarLikeMicrosoft(2015, 'Week')
 calendar.month <- createCalendarLikeMicrosoft(2015, 'Month')
 
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 #--------------------------------Prepare the data------------------------------------------------------------------------------------------------------
 
 MeqNCR.df <- merge(NCR.df,Meq.df, by.x='PartAffected', by.y='ComponentItemID')

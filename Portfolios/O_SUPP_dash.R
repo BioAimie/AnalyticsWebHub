@@ -17,6 +17,7 @@ source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 
 calendar.week <- createCalendarLikeMicrosoft(2007, 'Week')
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
 
 #Find suppliers who have dropped below 90% acceptance rate in last 90 days (3 months)
 

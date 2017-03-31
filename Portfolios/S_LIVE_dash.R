@@ -20,6 +20,8 @@ calendar.quarter <- createCalendarLikeMicrosoft(2014, 'Quarter')
 start <- findStartDate(calendar.month, 'Month', 12,0)
 start.quarter <- findStartDate(calendar.quarter, 'Quarter', 5)
 
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 #limit scope of data to 1 year              
 recentCust <- subset(firsts.df, as.Date(InstrumentSale) >= Sys.Date()-365)
 
