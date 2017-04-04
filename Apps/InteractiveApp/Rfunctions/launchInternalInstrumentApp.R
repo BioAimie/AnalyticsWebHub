@@ -60,33 +60,52 @@ if(wday(Sys.Date()) == 4){
 	alert.location.frames[["pouchqc"]] <- location.frames[["pouchqc"]][which(location.frames[["pouchqc"]]$Date >= date.ranges[["7"]][1]), ]
 	
 	from <-"Anna.Hoffee@biofiredx.com"
-	to <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com")
-	
+	dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Lisa.Ogden@biofiredx.com", "Bartek.Ksok@biofiredx.com", "Shane.Woodhouse@biofiredx.com" )
+	qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Emily.Fernandez@biofiredx.com", "Kristel.Borsos@biofiredx.com", "Dana.Saif@biofiredx.com", "Kimon.Clarke@biofiredx.com")
+
 	mailControl <- list(smtpServer="webmail.biofiredx.com")
 	subject.names <- list("pouchqc" = "Pouch QC", "dungeon"="Dungeon")
 	
 	for( l in c("dungeon", "pouchqc")){
 			serial.numbers <- unique(alert.location.frames[[l]]$SerialNo)
 			lapply(serial.numbers, calculateAlerts, alert.location.frames[[l]], l)
-			
+			print(l)
 			##### now write the results in an email ######
 			if(length(alerts.output[[l]][["20percent"]]) > 0 & length(alerts.output[[l]][["3consecutive"]])){ #both kinds of alerts
 				subject <- paste0("Weekly ", subject.names[[l]], " Suspect Instrument Alert")
 				body <- capture.output(cat("The following instrument(s) had at least 5 runs and a 20% failure rate in the last seven days: \n\n ", paste0(alerts.output[[l]][["20percent"]], collapse=", "), "\n\nThe following instrument(s) had 3 consecutive failed runs in less than 5 runs in the last seven days: \n\n ", paste0(alerts.output[[l]][["3consecutive"]], collapse=", ")))      
-				for(person in to){
-					sendmail(from=from, to=person, subject=subject, msg=body, control=mailControl)
+				if( l == "dungeon"){
+					for(person in dungeon.people){
+							sendmail(from=from, to=person, subject=subject, msg=body, control=mailControl)
+					}
+				}else if( l == "pouchqc"){
+					for(qcperson in qc.people){
+							sendmail(from=from, to=qcperson, subject=subject, msg=body, control=mailControl)
+					}
 				}
 			}else if(length(alerts.output[[l]][["20percent"]]) > 0 & length(alerts.output[[l]][["3consecutive"]]) == 0 ){ # just 20% alerts
 				subject <- paste0("Weekly ", subject.names[[l]], " Suspect Instrument Alert")
 				body <- capture.output(cat("The following instrument(s) had at least 5 runs and a 20% failure rate in the last seven days: \n\n ", paste0(alerts.output[[l]][["20percent"]], collapse=", ")))
-				for(person in to){
-					sendmail(from=from, to=person, subject=subject, msg=body, control=mailControl)
+				if( l == "dungeon"){
+					for(person in dungeon.people){
+							sendmail(from=from, to=person, subject=subject, msg=body, control=mailControl)
+					}
+				}else if( l == "pouchqc"){
+					for(qcperson in qc.people){
+							sendmail(from=from, to=qcperson, subject=subject, msg=body, control=mailControl)
+					}
 				}
 			}else if(length(alerts.output[[l]][["20percent"]]) == 0 & length(alerts.output[[l]][["3consecutive"]]) > 0){ # just 3 consecutive failure alerts 
 				subject <- paste0("Weekly ", subject.names[[l]], " Suspect Instrument Alert")
 				body <- capture.output(cat("The following instrument(s) had 3 consecutive failed runs in less than 5 runs in the last seven days: \n\n ", paste0(alerts.output[[l]][["3consecutive"]], collapse=", ")))      
-				for(person in to){
-					sendmail(from=from, to=person, subject=subject, msg=body, control=mailControl)
+				if( l == "dungeon"){
+					for(person in dungeon.people){
+							sendmail(from=from, to=person, subject=subject, msg=body, control=mailControl)
+					}
+				}else if( l == "pouchqc"){
+					for(qcperson in qc.people){
+							sendmail(from=from, to=qcperson, subject=subject, msg=body, control=mailControl)
+					}
 				}
 
 			}
@@ -95,7 +114,7 @@ if(wday(Sys.Date()) == 4){
 }
 
 
-
+ 
 # launch the app
 runApp('internalInstrumentApp', port = 4038,
        launch.browser = getOption('shiny.launch.browser', interactive()), host = getOption('shiny.host', '10.1.23.96'))

@@ -61,11 +61,19 @@ SELECT
 	CASE
 		WHEN [SalesSource] IN ('BFDXInst') THEN 'BFDx'
 		WHEN [SalesSource] IN ('Sale') THEN 'Sale'
+<<<<<<< HEAD
+		WHEN [SalesSource] IN ('EXTW', 'MFGW', 'NONW') THEN 'Loaner'
+		WHEN [SalesSource] IN ('EAP PermRepl', 'EXTW Perm Rep' , 'FP CapLeas PR', 'FP OpLease PR', 'Inst OpLease PR', 'Loan CSA/RSA PR', 'MFGW Perm Rep', 'NONW Perm Rep', 'OPLease/Flex Pr', 'RRA CapLeas PR', 'RRA OpLease PR', 'Sale Perm Rep', 'STRental PR', 'PermRepl') THEN 'Replacements'
+		WHEN [SalesSource] IN ('Loaner - EAP') THEN 'EAP'
+		WHEN [SalesSource] IN ('FP OpLeas Trade', 'InstOpLease TU', 'REG Trade ADDON', 'REG Trade NOWAR', 'REG Trade WAR', 'RRA CAP TradeUp' , 'FOC Trade WAR') THEN 'Trade-Up'
+		WHEN [SalesSource] IN ('FP CapLeas',  'FP OpLease', 'Inst OpLease', 'RRA Op Lease', 'STRental') THEN 'Rental/Flex/Lease'
+=======
 		WHEN [SalesSource] IN ('EXTW', 'MFGW', 'NONW', 'Loaner CSA/RSA', 'Loaner - RMA','Loaner - MTA','Loaner - Beta P') THEN 'Loaner'
 		WHEN [SalesSource] IN ('EAP PermRepl', 'EXTW Perm Rep' , 'FP CapLeas PR', 'FP OpLease PR', 'Inst OpLease PR', 'Loan CSA/RSA PR', 'MFGW Perm Rep', 'NONW Perm Rep', 'OPLease/Flex Pr', 'RRA CapLeas PR', 'RRA OpLease PR', 'Sale Perm Rep', 'STRental PR', 'PermRepl', 'InstOpLease PR','Loaner RMA PR','RRA PR') THEN 'Replacements'
 		WHEN [SalesSource] IN ('Loaner - EAP') THEN 'EAP'
 		WHEN [SalesSource] IN ('FP OpLeas Trade', 'InstOpLease TU', 'REG Trade ADDON', 'REG Trade NOWAR', 'REG Trade WAR', 'RRA CAP TradeUp' , 'FOC Trade WAR', 'RRA Op TradeUp','FP CapLeas Trad') THEN 'Trade-Up'
 		WHEN [SalesSource] IN ('FP CapLeas',  'FP OpLease', 'Inst OpLease', 'RRA Op Lease', 'STRental', 'OPLease/Flex') THEN 'Rental/Flex/Lease'
+>>>>>>> 66066e0a8874b46b13c3dcb4afdf125b9b0c9a59
 		WHEN [SalesSource] IN ('Loan CSA/RSA', 'Loaner-MTA') THEN 'Study Instruments'
 		WHEN [SalesSource] IN ('Donation') THEN 'Donation'
 		ELSE 'Other'
@@ -73,5 +81,6 @@ SELECT
 	[Record]
 FROM #Shipments
 ORDER BY [ShipDate]
+
 
 DROP TABLE #Shipments
