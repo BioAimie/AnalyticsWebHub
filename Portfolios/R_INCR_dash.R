@@ -58,6 +58,12 @@ ncr.rate.ver$CRate[as.character(ncr.rate.ver$DateGroup) %in% fix.dategroup & as.
 removed.points <- data.frame(DateGroup = c('2016-21','2016-22'), Version = 'Torch Module', Point = 5)
 p.ncr.rate.ver <- ggplot(subset(ncr.rate.ver, Version %in% c('FA2.0', 'Torch Module', 'Torch Base')), aes(x=DateGroup, y=CRate, group=Version)) + geom_line(color='black') + facet_wrap(~Version, ncol=1, scale='free_y') + geom_point(color='black') + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instrument NCRs per Instruments Built by Version', subtitle ='(x indicates data point above axis limit)', x='Date\n(Year-Week)', y='4-week Rolling Average') + geom_point(data=removed.points, inherit.aes=FALSE, aes(x=DateGroup, y=Point), shape=4) 
 
+# make a chart for the incoming inspection 
+incomingInspection.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', incomingInspection.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
+incomingInspection.rate <- mergeCalSparseFrames(incomingInspection.all, instNCR.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0)
+p.ncr.incoming.inspection <- ggplot(incomingInspection.rate, aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill='cornflowerblue') + geom_hline(yintercept=.25, col="green", linetype="dashed", size=1.3) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Percent of NCRs found in Incoming Inspection \n Goal=25% ' , y='Percent', x='Date \n (Year-Week)') + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent)
+ 
+
 # make some charts for NCRs that are found in Final QC: pareto (stacked) and line charts
 final.qc.count <- with(finalQC.df, aggregate(Record~Year+Week+Version+RecordedValue, FUN=sum))
 final.qc.count[,'DateGroup'] <- with(final.qc.count, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))

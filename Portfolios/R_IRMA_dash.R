@@ -232,7 +232,23 @@ p.failures.version <- ggplot(failures.rate.verison, aes(x=DateGroup, y=Rate, fil
 # early failures by version and department and type
 failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), startDate, 'Record', 'sum', 0)
 failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
-p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='black', lty=2)
+# add a ytd line
+failures.agg$ytd <- rep(NA, nrow(failures.agg))
+ships.fill.version$ytd <- rep(NA, nrow(ships.fill.version))
+for(department in unique(failures.agg.rate$Department)){  # loop through the departments and versions so the ytd is calculated in the correct groups 
+	for(version in c('FA2.0', 'Torch')){
+  	for(dategroup in unique(failures.agg$DateGroup)) {
+    	if(dategroup >= '2017-01') {
+      	numerator <- sum(subset(failures.agg, DateGroup >= '2017-01' & DateGroup <= dategroup & Department == department & Version == version)$Record, na.rm=TRUE)
+        denominator <- sum(subset(ships.fill.version, DateGroup >= '2017-01' & DateGroup <= dategroup & Key == department & Version == version)$Record, na.rm=TRUE)
+        ytd <- numerator/denominator
+        failures.agg.rate[which(failures.agg.rate$Department == department & failures.agg.rate$Version == version & failures.agg.rate$DateGroup == dategroup), 'ytd'] <- ytd
+      }
+  	}
+	}
+}
+
+p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_line(data=failures.agg.rate, aes(x=DateGroup, y=ytd, group=1), size=1.25, linetype=2, colour="black") + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='darkgreen', lty=2)
 
 # create the charts for early failures per instruments shipped in a month (non-rolling) for each instrument version
 calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')

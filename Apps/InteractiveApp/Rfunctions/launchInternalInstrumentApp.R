@@ -68,7 +68,7 @@ if(wday(Sys.Date()) == 4){
 	for( l in c("dungeon", "pouchqc")){
 			serial.numbers <- unique(alert.location.frames[[l]]$SerialNo)
 			lapply(serial.numbers, calculateAlerts, alert.location.frames[[l]], l)
-			
+			print(l)
 			##### now write the results in an email ######
 			if(length(alerts.output[[l]][["20percent"]]) > 0 & length(alerts.output[[l]][["3consecutive"]])){ #both kinds of alerts
 				subject <- paste0("Weekly ", subject.names[[l]], " Suspect Instrument Alert")

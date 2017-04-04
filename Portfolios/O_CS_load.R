@@ -23,4 +23,8 @@ queryText <- readLines("SQL/O_CS_ComplaintsSummary.sql")
 query <- paste(queryText,collapse="\n")
 complaints.df <- sqlQuery(PMScxn,query)
 
+queryText <- readLines("SQL/O_CS_ServiceCenterReceived.sql")
+query <- paste(queryText,collapse="\n")
+serviceCenter.df <- sqlQuery(PMScxn,query)
+
 odbcClose(PMScxn)
