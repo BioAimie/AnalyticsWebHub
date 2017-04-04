@@ -43,17 +43,23 @@ p.FilmArrayProduction <- ggplot(subset(instreleased, DateGroup >= beg), aes(x=Da
 newinstruments <- subset(shipments.inst, ShipOrder == 1 & Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module'))
 shipSource <- subset(newinstruments, select=c('Product','SalesType','Year','Month','Record'))
 shipSource <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipSource, c('SalesType'), start.month, 'Record', 'sum', 0)
-refurb <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Key'), start.month, 'Record', 'sum', 0)
-colnames(refurb)[colnames(refurb) == 'Key'] <- 'SalesType'
-ship.refurb <- rbind(shipSource, refurb)
+if(nrow(subset(refurbConv.df, TranDate >= Sys.Date()-365)) > 0) {
+  refurb <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Key'), start.month, 'Record', 'sum', 0)
+  colnames(refurb)[colnames(refurb) == 'Key'] <- 'SalesType'
+  ship.refurb <- rbind(shipSource, refurb)
+} else {
+  ship.refurb <- shipSource
+}
 ship.refurb$SalesType <- factor(ship.refurb$SalesType, levels = c('Domestic Sale','International Sale','Trade-Up','Refurb Conversion','EAP','Replacement','Loaner','Demo','Short Term Rental','Internal','Other'))
 p.Ship.SalesType <- ggplot(ship.refurb, aes(x=DateGroup, y=Record, fill=SalesType)) + geom_bar(stat="identity", position="stack") + labs(title = 'New Instrument Shipments by Sales Type', subtitle = 'Including Refurb Conversions, FA 1.5, FA 2.0, and Torch', x = 'Date\n(Year-Month)', y = 'Shipments') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, vjust=0.5,color='black', size=fontSize), axis.text.y=element_text(hjust=1, color='black', size=fontSize), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + scale_fill_manual(values=createPaletteOfVariableLength(ship.refurb, 'SalesType'), name='Sales Type') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
 # New Instrument Shipments by Version (IMAN chart)
 shipVer <- subset(newinstruments, select=c('Product','Year','Month','Record')) 
 shipVer <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipVer, c('Product'), start.month, 'Record', 'sum', 0)
-refurb.ver <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Product'), start.month, 'Record', 'sum', 0)
-shipVer <- rbind(shipVer, refurb.ver)
+if(nrow(subset(refurbConv.df, TranDate >= Sys.Date()-365)) > 0) {
+  refurb.ver <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Product'), start.month, 'Record', 'sum', 0)  
+  shipVer <- rbind(shipVer, refurb.ver)
+}
 shipVer$Product <- factor(shipVer$Product, levels = c('FA1.5', 'FA2.0', 'Torch Module', 'Torch Base'))
 p.Ship.Version <- ggplot(shipVer, aes(x=DateGroup, y=Record, fill=Product)) + geom_bar(stat="identity", position="stack") + labs(title = 'New Instrument Shipments by Version', subtitle = 'FA 1.5, FA 2.0, and Torch', x= 'Date\n(Year-Month)', y='Shipments') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=fontSize), axis.text.y=element_text(hjust=1, color='black', size=fontSize), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + scale_fill_manual(values=createPaletteOfVariableLength(shipVer, 'Product'), name='Version') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
 
