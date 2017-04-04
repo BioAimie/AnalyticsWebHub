@@ -32,6 +32,8 @@ seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(1,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # Optics Calibration ------------------------------------------------------------------------------------------------

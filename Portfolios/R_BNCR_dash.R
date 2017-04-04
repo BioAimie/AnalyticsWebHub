@@ -11,12 +11,13 @@ library(scales)
 library(lubridate)
 library(RColorBrewer)
 library(devtools)
-install_github('dateManip','BioAimie')
+install_github('BioAimie/dateManip')
 library(dateManip)
 
 # load the necessary files and functions that are user-created
 source('Portfolios/R_BNCR_load.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
+source('Rfunctions/makeTimeStamp.R')
 
 # establish some properties used throughout the code- these are kept up top to facilitate changes
 periods <- 4
@@ -33,6 +34,8 @@ seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # All BioReagent NCRs per Pouches Manufactured (final pouch product)
@@ -104,6 +107,7 @@ for(i in 1:length(plots)) {
   
   png(file=imgName, width=1200, height=800, units='px')
   print(eval(parse(text = plots[i])))
+  makeTimeStamp(author='Data Science')
   dev.off()
 }
 

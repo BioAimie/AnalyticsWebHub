@@ -21,6 +21,8 @@ lagPeriods <- 4
 calendar.week <- createCalendarLikeMicrosoft(2015, 'Week')
 calendar.month <- createCalendarLikeMicrosoft(2015, 'Month')
 
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 #--------------------------------Prepare the data------------------------------------------------------------------------------------------------------
 
 MeqNCR.df <- merge(NCR.df,Meq.df, by.x='PartAffected', by.y='ComponentItemID')
@@ -78,11 +80,9 @@ if(intBa > 10) {
   intBa <- 10
 }
 
-KeyColors <- createPaletteOfVariableLength(pouch.pareto.status, 'Key')
-
 p.Last120Days.pouch <- ggplot(pouch.pareto.status, aes(x=MEQ, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_y_continuous(breaks=pretty_breaks(n=intBa)) +
   facet_wrap(~Status, ncol=1) + xlab('Pouch MEQs with NCRs') + ylab('Count of NCRs') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90,vjust=0.5, color='black',size=20), 
-  axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Pouch MEQ NCRs') + scale_fill_manual(values=KeyColors)
+  axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Pouch MEQ NCRs') + scale_fill_manual(values=createPaletteOfVariableLength(pouch.pareto.status, 'Key'), name='')
 
 #-------------------------------------------Pareto of Pouch MEQs by NCR Type and Status-----------------------------------------
 pouch.pareto.type <- with(subset(pouch.pareto, as.character(Key) != '120 Day (net)'), aggregate(Record~MEQ+Status+Type, FUN=sum))
@@ -231,7 +231,7 @@ if(intBb > 10) {
 
 p.Last120Days.array <- ggplot(array.pareto.status, aes(x=MEQ, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_y_continuous(breaks=pretty_breaks(n=intBb)) +
   facet_wrap(~Status, ncol=1) + xlab('Array MEQs with NCRs') + ylab('Count of NCRs') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90,vjust=0.5, color='black',size=20), 
-  axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Array MEQ NCRs') + scale_fill_manual(values=KeyColors)
+  axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Array MEQ NCRs') + scale_fill_manual(values=createPaletteOfVariableLength(array.pareto.status, 'Key'), name='')
 
 #-------------------------------------------Pareto of Array MEQs by NCR Type and Status-----------------------------------------
 array.pareto.type <- with(subset(array.pareto, as.character(Key) != '120 Day (net)'), aggregate(Record~MEQ+Status+Type, FUN=sum))
@@ -382,7 +382,7 @@ if (nrow(sarray.pareto) > 0) {
   
   p.Last120Days.saarray <- ggplot(sarray.pareto.status, aes(x=MEQ, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_y_continuous(breaks=pretty_breaks(n=intBc)) +
     facet_wrap(~Status, ncol=1) + xlab('Semi-Automated Array MEQs with NCRs') + ylab('Count of NCRs') + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(angle=90,vjust=0.5, color='black',size=20), 
-    axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Semi-Automated Array MEQ NCRs') + scale_fill_manual(values=KeyColors)
+    axis.text.y=element_text(hjust=1, color='black', size=20)) + ggtitle('Semi-Automated Array MEQ NCRs') + scale_fill_manual(values= createPaletteOfVariableLength(sarray.pareto.status, 'Key'), name='')
   
 } else {
   p.Last120Days.saarray <- ggplot() + geom_bar(stat='identity') + xlab('Semi-Automated Array MEQs with NCRs') + ylab('Count of NCRs') + 

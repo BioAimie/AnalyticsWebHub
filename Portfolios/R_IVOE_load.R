@@ -23,7 +23,7 @@ query = paste(query.charVec,collapse="\n")
 lids.df = sqlQuery(PMScxn,query)
 
 # get number of RMAs shipped
-query.charVec = readLines("SQL/R_IVOE_RMAsShipped.sql")
+query.charVec = readLines("SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql")
 query = paste(query.charVec,collapse="\n")
 rmaShipped.df = sqlQuery(PMScxn,query)
 
@@ -57,10 +57,25 @@ query.charVec = readLines("SQL/R_IVOE_CameraBoard.sql")
 query = paste(query.charVec,collapse="\n")
 board.camera.df = sqlQuery(PMScxn,query)
 
-# get LED excitation failrues by lot
+# get LED excitation failures by lot
 query.charVec = readLines("SQL/R_IVOE_LEDExcitationError.sql")
 query = paste(query.charVec,collapse="\n")
 excitation.df = sqlQuery(PMScxn,query)
+
+# get seal bar alignment NCRs
+query.charVec = readLines("SQL/R_IVOE_SealBarAlignmentNCR.sql")
+query = paste(query.charVec,collapse="\n")
+sealBarNCR.df = sqlQuery(PMScxn,query)
+
+# get seal bar alignment RMAs
+query.charVec = readLines("SQL/R_IVOE_SealBarAlignmentRMA.sql")
+query = paste(query.charVec,collapse="\n")
+sealBarRMA.df = sqlQuery(PMScxn,query)
+
+# get wire harness NCRs
+query.charVec = readLines("SQL/R_IVOE_WireHarnessNCR.sql")
+query = paste(query.charVec,collapse="\n")
+wireharnessNCR.df = sqlQuery(PMScxn,query)
 
 # close remote connection
 close(PMScxn)

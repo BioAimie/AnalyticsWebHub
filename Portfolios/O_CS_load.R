@@ -23,6 +23,17 @@ queryText <- readLines("SQL/O_CS_ComplaintsSummary.sql")
 query <- paste(queryText,collapse="\n")
 complaints.df <- sqlQuery(PMScxn,query)
 
+<<<<<<< HEAD
+=======
+queryText <- readLines("SQL/O_CS_LoanerRMA.sql")
+query <- paste(queryText,collapse="\n")
+loaners.df <- sqlQuery(PMScxn,query)
+
+queryText <- readLines("SQL/O_CS_CustomerAccounts.sql")
+query <- paste(queryText,collapse="\n")
+acct.df <- sqlQuery(PMScxn,query)
+
+>>>>>>> 66066e0a8874b46b13c3dcb4afdf125b9b0c9a59
 queryText <- readLines("SQL/O_CS_ServiceCenterReceived.sql")
 query <- paste(queryText,collapse="\n")
 serviceCenter.df <- sqlQuery(PMScxn,query)

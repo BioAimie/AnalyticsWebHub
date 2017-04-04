@@ -1,22 +1,32 @@
 SET NOCOUNT ON
 
 SELECT 
+	REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.','') AS [LotNo],
+	IIF(LEFT(P.[PartNumber],4) IN ('FLM2','HTFA'), SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 8),
+		SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 6)) AS [SerialNo],
+	P.[PartNumber],
+	L.[DateOfManufacturing],
+	L.[VersionId],
+	IIF(L.[VersionId] IN ('IP','01','02','03','05','FrNew'), 1, 0) AS [New]
+INTO #cleanSerials
+FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
+	ON L.[PartNumberId] = P.[PartNumberId]
+WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001%' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%' OR P.[PartNumber] = 'HTFA-SUB-0103') 
+
+SELECT 
 	[SerialNo],
 	MIN([DateOfManufacturing]) AS [DateOfManufacturing]
 INTO #birthDate
 FROM
 (
 	SELECT 
-		REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.','') AS [LotNo],
-		IIF(LEFT(P.[PartNumber],4) IN ('FLM2','HTFA'), SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 8),
-			SUBSTRING(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber],' ',''),'_',''),'-',''),'.',''), 1, 6)) AS [SerialNo],
-		P.[PartNumber],
-		L.[DateOfManufacturing],
-		L.[VersionId],
-		IIF(L.[VersionId] IN ('IP','01','02','03'), 1, 0) AS [New]
-	FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
-		ON L.[PartNumberId] = P.[PartNumberId]
-	WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001%' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%' OR P.[PartNumber] = 'HTFA-SUB-0103') AND [DateOfManufacturing] > CONVERT(DATETIME, '2014-06-01')
+		[LotNo],
+		IIF([SerialNo] LIKE '%R', SUBSTRING([SerialNo],1, PATINDEX('%R',[SerialNo])-1), [SerialNo]) AS [SerialNo],
+		[PartNumber],
+		[DateOfManufacturing],
+		[VersionId],
+		[New] 
+	FROM #cleanSerials
 ) T
 WHERE [New] = 1
 GROUP BY [SerialNo]
@@ -110,12 +120,21 @@ SELECT
 	IIF([CustFailType] IN ('DOA','ELF'), 1, 0) AS [CustFailTypeProd],
 	IIF(CAST([HoursRun] AS FLOAT) < 100.0001, 1, 0) AS [HoursRunLow],
 	IIF([Title] LIKE '% error%' OR [Title] LIKE '% fail%' OR [Title] LIKE '%DOA%' OR [Title] LIKE '%ELF%',1, 0) AS [TitleFail],
-	IIF(ISNUMERIC([Complaint])=1, 1, 0) AS [Complaint]
+	IIF(ISNUMERIC([Complaint])=1, 1, 0) AS [Complaint],
+	IIF(ISNUMERIC(F.[Complaint]) = 1 AND F.[Title] LIKE '%loaner%', 1,
+		IIF(ISNUMERIC(F.[Complaint]) = 1 AND F.[Title] LIKE '%demo%', 1, 
+		IIF(ISNUMERIC(F.[Complaint]) = 1 AND F.[Type] LIKE '%No Failure', 1, 0))) AS [StripComplaintFlag]
 INTO #flaggedForFailures
 FROM #birthDate B INNER JOIN #partInfoPiv P
 	ON B.[SerialNo] = P.[SerialNo] LEFT JOIN #freePropPiv F
 		ON P.[TicketId] = F.[TicketId]
 WHERE [HoursRun] NOT LIKE 'N%A' AND [HoursRun] IS NOT NULL
+
+SELECT
+	[TicketId]
+INTO #complaintsReal
+FROM #flaggedForFailures
+WHERE [Complaint] = 1 AND [TitleFail] = 0 AND ([CustFailTypeProd] = 0 OR [CustFailTypeProd] IS NULL) AND ([FailureType] = 0 OR [FailureType] IS NULL) AND ([FailCheck] = 0 OR [FailCheck] IS NULL) AND [StripComplaintFlag] = 0
 
 SELECT 
 	IIF(LEFT([SerialNo],2) LIKE 'TM', CONCAT('K',[SerialNo]), [SerialNo]) AS [SerialNo], 
@@ -124,7 +143,7 @@ SELECT
 	[BirthDate],
 	YEAR([BirthDate]) AS [Year],
 	DATEPART(ww,[BirthDate]) AS [Week],
-	[TicketId],
+	F.[TicketId],
 	[TicketString],
 	[CreatedDate],
 	[HoursRun],
@@ -134,9 +153,10 @@ SELECT
 		IIF([CustFailTypeProd] = 1 AND [HoursRunLow] = 1, 1,
 		IIF([CustFailTypeProd] = 1 AND [HoursRun] IS NULL, 1,
 		IIF([TitleFail] = 1 AND [HoursRunLow] = 1, 1, 
-		IIF([Complaint] = 1 AND [Title] NOT LIKE '%loaner%' AND [HoursRunLow] = 1, 1, 0)))))) AS [Failure]
+		IIF(C.[TicketId] IS NOT NULL AND [HoursRunLow] = 1, 1, 0)))))) AS [Failure]
 INTO #master
-FROM #flaggedForFailures
+FROM #flaggedForFailures F LEFT JOIN #complaintsReal C
+	ON F.[TicketId] = C.[TicketId]
 
 SELECT 
 	[SerialNo],
@@ -181,4 +201,4 @@ SELECT
 FROM #firstFailure
 WHERE [CustReportFailure] = 1
 
-DROP TABLE #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure
+DROP TABLE #cleanSerials, #birthDate, #partInfo, #freePropPivrops, #partInfoPiv, #freePropPiv, #flaggedForFailures, #master, #firstFailure

@@ -24,6 +24,7 @@ dungInsts <- dungInsts[as.character(dungInsts$Owner)=='IDATEC', ]
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/capacityUtilized.R')
 source('Rfunctions/findRunsToKeep.R')
+source('Rfunctions/makeTimeStamp.R')
 
 # establish some properties used throughout the code- these are kept up top to facilitate changes
 periods <- 4
@@ -39,6 +40,8 @@ seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # Consolidate data from FA1.0 AND FA2.0 DBs, then find the runs to keep using the list of instruments provided by Shane and the findRunsToKeep function
@@ -127,6 +130,7 @@ for(i in 1:length(plots)) {
   
   png(file=imgName, width=1200, height=800, units='px')
   print(eval(parse(text = plots[i])))
+  makeTimeStamp(author='Data Science')
   dev.off()
 }
 

@@ -16,10 +16,12 @@ library(dateManip)
 # load the data from SQL that's needed
 source('Portfolios/R_IVOE_load.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
+source('Rfunctions/makeTimeStamp.R')
 
 # establish some properties used throughout the code- these are kept up top to facilitate changes
 periods <- 4
 lagPeriods <- 4
+wireharness.numCharts = 3
 
 # use '2014-51' as the start date so that the 4-week rolling trend starts in week 1 of 2015
 startYear <- 2014
@@ -59,10 +61,12 @@ bladder.rate <- mergeCalSparseFrames(bladder.num.fill, bladder.denom.fill, c('Da
 bladder.rate[,'Key'] <- 'Failures/Lot Size in Field'
 bladder.count <- data.frame(DateGroup = bladder.num.fill[,'DateGroup'], Key = 'Count of Failures', RecordedValue = bladder.num.fill[,'RecordedValue'], Rate = bladder.num.fill[,'Record'])
 bladder.voe <- rbind(bladder.rate, bladder.count)
-x_position <- c('2015-40')
-annotations.bladder <- c('Heat Press Fix')
+x_dates <- c('2015-40', '2017-02')
+y_record <- c(0,0)
+annotations.bladder <- c('                    Heat Press Fix', '100% Qualification Screen')
+annot.bladder <- data.frame(DateGroup = x_dates, Record = y_record, Label = annotations.bladder)
 pal.bladder <- createPaletteOfVariableLength(bladder.voe, 'RecordedValue')
-p.bladder.voe <- ggplot(subset(bladder.voe, RecordedValue != 'NoFailure'), aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.bladder, name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nFailures at < 100 Run Hours/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(aes(label=annotations.bladder, x=x_position, y=0), angle=90, hjust=-0.5, size=4)
+p.bladder.voe <- ggplot(subset(bladder.voe, RecordedValue != 'NoFailure'), aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.bladder, name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nFailures at < 100 Run Hours/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = annot.bladder, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Record), angle=90, hjust=0, size=6, fontface='bold')
 # Window bladder lots with all failures, not just early failures... but maybe fill them differently
 bladder.all.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(bladderLots.df, Key=='EarlyFailuresInLot'), c('Key','RecordedValue','HoursBetweenBin'), '2015-01', 'AdjRecord', 'sum', 0)
 bladder.all.rate <- mergeCalSparseFrames(bladder.all.fail, bladder.denom.fill, c('DateGroup'), c('DateGroup'), 'AdjRecord', 'Record', 0)
@@ -70,7 +74,7 @@ bladder.all.rate$Key <- 'Failures/Lot Size in Field'
 bladder.all.count <- data.frame(DateGroup = bladder.all.fail[,'DateGroup'], Key = 'Count of Failures', RecordedValue = bladder.all.fail[,'RecordedValue'], HoursBetweenBin = bladder.all.fail[,'HoursBetweenBin'], Rate = bladder.all.fail[,'AdjRecord'])
 bladder.all.voe <- rbind(bladder.all.rate, bladder.all.count)
 bladder.all.voe$HoursBetweenBin <- factor(bladder.all.voe$HoursBetweenBin, levels = c('0-100','100-500','500-1000','1000+','Unknown'))
-p.bladder.all.voe <- ggplot(subset(bladder.all.voe, RecordedValue != 'NoFailure')[with(subset(bladder.all.voe, RecordedValue != 'NoFailure'), order(HoursBetweenBin)), ], aes(x=DateGroup, y=Rate, fill=HoursBetweenBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(bladder.all.voe, 'HoursBetweenBin'), name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nAll Failures/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(aes(label=annotations.bladder, x=x_position, y=0), angle=90, hjust=-0.5, size=4)
+p.bladder.all.voe <- ggplot(subset(bladder.all.voe, RecordedValue != 'NoFailure')[with(subset(bladder.all.voe, RecordedValue != 'NoFailure'), order(HoursBetweenBin)), ], aes(x=DateGroup, y=Rate, fill=HoursBetweenBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(bladder.all.voe, 'HoursBetweenBin'), name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nAll Failures/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = annot.bladder, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Record), angle=90, hjust=0, size=6, fontface='bold')
 
 # BOARD VoEs:
 # thermoboard
@@ -127,7 +131,7 @@ p.board.valve.field <- ggplot(board.valve.field.rate, aes(x=DateGroup, y=Rate, f
 p.board.valve.total <- ggplot(board.valve.total, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Type, ncol=1, scale='free_y') + scale_fill_manual(values=createPaletteOfVariableLength(board.valve.total,'Key'), name='', labels=c('NCR','RMA')) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Valve Board Failures', x='Date of Manufacturing\n(Year-Week)', y='Failure Count, Failure Rate')
 
 # Lid latch failures per RMAs shipped
-rmas.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week',rmaShipped.df, c('Key'), "2015-10", 'Record', 'sum', 0)
+rmas.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', rmaShipped.df, c('Key'), "2015-10", 'Record', 'sum', 0)
 lids.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', lids.df, c('Key'), "2015-10", 'Record', 'sum', 0)
 if(length(unique(lids.fill[,'Key']))==1) {
   
@@ -150,6 +154,58 @@ excitation.ordered[excitation.ordered$Key=='NoFailur','Key'] <- 'zNoFailure'
 pal.excitation <- createPaletteOfVariableLength(excitation.ordered, 'Key')
 pal.excitation[names(pal.excitation)=='zNoFailure'] <- '#FFFFFF'
 p.excitation.voe <- ggplot(excitation.ordered[with(excitation.ordered, order(Key)), ], aes(x=Lot, y=Record/LotSizeInField, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values = pal.excitation, name='Hours Run', labels=c('0-100','100-500','500-1000','1000+','Unknown','')) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=40, hjust=1)) + labs(title='LED Excitation Errors Reported by Bead Beater Lot Size in Field', x='Lot', y='7003 Complaints/Lot Size')
+
+# Seal bar alignment NCRs and RMAs
+sealBarNCR.num.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', sealBarNCR.df, 'Version', '2015-01', 'Record', 'sum', 0)
+sealBarRMA.num.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', sealBarRMA.df, 'Version', '2015-01', 'Record', 'sum', 0)
+sealBar.voe = rbind(cbind(sealBarNCR.num.fill, Key='NCR'),cbind(sealBarRMA.num.fill, Key='RMA'));
+#sealBar.voe$Key = as.character(sealBar.voe$Key);
+sealBar.x_position <- c('2016-49')
+annotations.sealBar <- c('Process Change')
+afterChangeNCR = subset(sealBarNCR.df, DateOfManufacturing>'2016-11-30');
+afterChangeNCR$Date = as.Date(afterChangeNCR$DateOfManufacturing);
+afterChangeNCR = merge(afterChangeNCR,calendar.df,by="Date")
+afterChangeNCRAgg = aggregate(list(TicketStrings=as.character(afterChangeNCR$TicketString)), by=list(DateGroup=afterChangeNCR$DateGroup), FUN=function(tickets){ paste(tickets,collapse=", ") })
+#sealBar.x_position = c(sealBar.x_position, afterChangeNCR$DateGroup);
+#annotations.sealBar = c(annotations.sealBar, as.character(afterChangeNCR$TicketString));
+sealBarNCRAnnotation.df = data.frame(x=c('2016-49','2016-49',as.character(afterChangeNCRAgg$DateGroup)), label=c('Process Change','Process Change',afterChangeNCRAgg$TicketStrings), Key=c("RMA",rep("NCR",nrow(afterChangeNCRAgg)+1)), stringsAsFactors = FALSE);
+pal.sealBar <- createPaletteOfVariableLength(sealBar.voe, 'Version')
+p.sealBar.voe <- ggplot(sealBar.voe, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.sealBar, name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Seal bar alignment failures for new FA2.0 instruments', y='Failure Count', x='Manifold Date of Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1) #+ geom_text(aes(label=annotations.sealBar, x=sealBar.x_position, y=0), angle=90, hjust=-0.5, size=4)
+p.sealBar.voe <- p.sealBar.voe + geom_text(data=sealBarNCRAnnotation.df, inherit.aes=FALSE, aes(x=x, y=2, label=label), hjust=0, angle=90, size=4)
+
+# Calendar for wire harness:
+months = 24
+wireharness.calendar.df <- createCalendarLikeMicrosoft(startYear, 'Month')
+wireharness.startDate <- findStartDate(wireharness.calendar.df, 'Month', months, periods)
+wireharness.seqBreak <- 3
+wireharness.dates = as.character(unique(wireharness.calendar.df[wireharness.calendar.df[,'DateGroup'] >= wireharness.startDate,'DateGroup']))
+wireharness.dateBreaks <- sort(wireharness.dates)[seq(1,length(wireharness.dates), wireharness.seqBreak)]
+
+# Wire harness NCR count
+wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'Record', 'sum', 0)
+wireharnessNCR.maxrecord = max(wireharnessNCR.fill$Record);
+wireharness.parts = sort(unique(wireharnessNCR.fill$PartAffected));
+wireharness.partsPerChart = ceiling(length(wireharness.parts)/wireharness.numCharts);
+for(i in 0:(length(wireharness.parts)-1) %/% wireharness.partsPerChart){
+  parts=wireharness.parts[(i*wireharness.partsPerChart+1):(i*wireharness.partsPerChart+wireharness.partsPerChart)];
+  wireharnessNCR.filter = subset(wireharnessNCR.df, PartAffected %in% parts);
+  wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.filter, c('PartAffected'), startDate, 'Record', 'sum', 0)
+  assign(paste("p.wireharnessNCR.count",i+1,sep=""),
+         ggplot(wireharnessNCR.fill, aes(x=DateGroup, y=Record, group=PartAffected)) + geom_bar(color='black', stat='identity') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.maxrecord)) + facet_wrap(~PartAffected) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCRs - Count of NCRs', x='Wire Harness Manufacture Date (Year-Month)', y='Count of NCRs')
+  );
+}
+
+# Wire harness NCR quantity affected
+wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
+wireharnessNCR.maxrecord = max(wireharnessNCR.fill$QuantityAffected);
+for(i in 0:(length(wireharness.parts)-1) %/% wireharness.partsPerChart){
+  wireharnessNCR.filter = subset(wireharnessNCR.df, PartAffected %in% wireharness.parts[(i*wireharness.partsPerChart+1):(i*wireharness.partsPerChart+wireharness.partsPerChart)]);
+  wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.filter, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
+  assign(paste("p.wireharnessNCR.quantity.affected",i+1,sep=""),
+         ggplot(wireharnessNCR.fill, aes(x=DateGroup, y=QuantityAffected, group=PartAffected)) + geom_bar(color='black', stat='identity') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.maxrecord)) + facet_wrap(~PartAffected) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCRs - Quantity Affected', x='Wire Harness Manufacture Date (Year-Month)', y='Quantity affected')
+  );
+}
+
 
 # #Thermoboard date settings
 # bigGroup <- 'Year'
@@ -184,6 +240,7 @@ for(i in 1:length(plots)) {
   
   png(file=imgName, width=1200, height=800, units='px')
   print(eval(parse(text = plots[i])))
+  makeTimeStamp(author='Data Science')
   dev.off()
 }
 

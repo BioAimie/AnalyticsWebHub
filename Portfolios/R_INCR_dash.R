@@ -35,6 +35,8 @@ seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
+theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
+
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # create some high-level charts that are overall NCR rate per all instruments built, and then by version
@@ -174,11 +176,19 @@ earlyfailures.cust <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(
 earlyfailures.cust.rate <- mergeCalSparseFrames(earlyfailures.cust, instBuilt.all.alt, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 earlyfailures.cust.lims <- addStatsToSparseHandledData(earlyfailures.cust.rate, c('Key'), lagPeriods, TRUE, 3, 'upper')
 x_pos_cust_labels <- c('2015-13','2015-32','2015-45','2016-12','2016-27','2016-50')
-x_pos_cust <- c('2015-11','2015-32','2015-43','2016-10','2016-22','2017-01')
+x_pos_cust <- c('2015-11','2015-32','2015-43','2016-10','2016-22','2016-51')
 y_pos_cust <- c(0.045, 0.085, 0.16, 0.135, 0.05, 0.015)
 y2_cust <- max(earlyfailures.cust.lims[,'Rate'])
 fail.annotations.cust <- do.call(c, lapply(1:length(x_pos_cust), function(x) paste(strsplit(as.character(annotations.cust.df[annotations.cust.df$DateGroup %in% x_pos_cust, 'Annotation']),split = ',')[[x]], collapse='\n')))
 p.earlyfailures.cust <- ggplot(earlyfailures.cust.lims) + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2_cust), color='cyan', fill='white', alpha=0.2) + geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + geom_point(aes(x=DateGroup, y=Rate)) + geom_hline(aes(yintercept=UL), color='blue', lty='dashed') + labs(title='Customer Reported DOA/ELF per Instruments Built (not released):\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks.alt) + annotate("text",x=x_pos_cust_labels,y=y_pos_cust,label=fail.annotations.cust, size=5.25) + expand_limits(y=0.2)
+
+#alternate chart with instruments shipped as denominator......per Instrument SPC request
+instshipments.df$Key <- 'Instrument Shipments'
+inst.ship <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(instshipments.df, CustID != 'IDATEC'), c('Key'), startDate.alt, 'Record', 'sum', 1)
+earlyfailures.instship.rate <- mergeCalSparseFrames(earlyfailures.cust, inst.ship, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
+earlyfailures.instship.lims <- addStatsToSparseHandledData(earlyfailures.instship.rate, c('Key'), lagPeriods, TRUE, 3, 'upper')
+p.earlyfailures.custship <- ggplot(earlyfailures.instship.lims) + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2_cust), color='cyan', fill='white', alpha=0.2) + geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + geom_point(aes(x=DateGroup, y=Rate)) + geom_hline(aes(yintercept=UL), color='blue', lty='dashed') + labs(title='Customer Reported DOA/ELF per Customer Instruments Shipped:\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks.alt) + annotate("text",x=x_pos_cust_labels,y=y_pos_cust,label=fail.annotations.cust, size=5.25) + expand_limits(y=0.2)
+p.customershipments.denom <- ggplot(inst.ship, aes(x=DateGroup, y=Record)) + geom_bar(stat='identity', fill='cornflowerblue') + labs(title='Customer Instrument Shipments', x='Date\n(Year-Week)', y='Instruments') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, vjust=0.5)) + scale_x_discrete(breaks=dateBreaks.alt)
 
 # Make images for the web hub
 setwd(imgDir)

@@ -1,54 +1,63 @@
+--This query uses Production Web to find out when an instrument was passed or released from QC.
+
 SET NOCOUNT ON
 
-SELECT *
-INTO #Serial
-FROM [SQL1-RO].[mas500_app].[dbo].[vdvSerialTransactions] WITH(NOLOCK)
-WHERE [ItemID] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0001','HTFA-ASY-0003')
-
-SELECT *
-INTO #Inven
-FROM [SQL1-RO].[mas500_app].[dbo].[vdvInventoryTran] WITH(NOLOCK)
-WHERE [ItemID] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0001','HTFA-ASY-0003')
-
+SELECT 
+	[PartNumber],
+	IIF([SerialNo] LIKE 'K%R', SUBSTRING([SerialNo], 2, PATINDEX('%R', [SerialNo])-2),
+		IIF([SerialNo] LIKE '%R', SUBSTRING([SerialNo], 1, PATINDEX('%R',[SerialNo])-1), 
+		IIF([SerialNo] LIKE 'K%', SUBSTRING([SerialNo], 2, LEN([SerialNo])), [SerialNo]))) AS [SerialNo],
+	[LotNumber],
+	[DateOfManufacturing],
+	[TimeOfChange],
+	[Value] AS [QCState]
+INTO #Lots
+FROM
+(
+	SELECT 
+		[PartNumber],
+		UPPER(REPLACE(REPLACE(REPLACE(REPLACE([LotNumber],' ',''),'_',''),'-',''),'.','')) AS [SerialNo],
+		[LotNumber],
+		[DateOfManufacturing],
+		[TimeOfChange],
+		[Value] 
+	FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) RIGHT JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+		ON P.[PartNumberId] = L.[PartNumberId]
+		LEFT JOIN [ProductionWeb].[dbo].[QcStatusHistories] Q WITH(NOLOCK) 
+			ON L.[LotNumberId] = Q.[LotNumberId]
+			LEFT JOIN [ProductionWeb].[dbo].[StatusHistories] S WITH(NOLOCK)
+				ON Q.[StatusHistoryId] = S.[StatusHistoryId]
+				LEFT JOIN [ProductionWeb].[dbo].[QcStates] QS WITH(NOLOCK)
+					ON Q.[QcStateId] = QS.[QcStateId]
+	WHERE [PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0001','HTFA-ASY-0003')
+) A
+ORDER BY [SerialNo], [TimeOfChange]
 
 SELECT 
-	ROW_NUMBER() OVER (PARTITION BY [SerialNo] ORDER BY [TranDate]) AS [Row],
+	[PartNumber],
 	[SerialNo],
-	[TranDate],
-	s.[WhseID],
-	[TranQty]
-INTO #Rows
-FROM #Serial s LEFT JOIN #Inven i
-	ON s.[InvtTranKey] = i.[InvtTranKey]
-ORDER BY [SerialNo]
+	[DateOfManufacturing],
+	[TimeOfChange] 
+INTO #Master
+FROM 
+(
+	SELECT 
+		ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [TimeOfChange] DESC) AS [Row],
+		*
+	FROM #Lots
+) A
+WHERE [Row] = 1 AND [QCState] IN ('Released', 'Passed')
+ORDER BY [TimeOfChange]
 
 SELECT 
-	[SerialNo]
-INTO #Serials
-FROM #Rows
-WHERE [Row] = 1 AND [WhseID] LIKE 'IFSTK'
+	YEAR([TimeOfChange]) AS [Year],
+	MONTH([TimeOfChange]) AS [Month],
+	IIF([PartNumber] LIKE 'FLM1-%', 'FA1.5',
+		IIF([PartNumber] LIKE 'FLM2-%', 'FA2.0',
+		IIF([PartNumber] LIKE 'HTFA-ASY-0001%', 'Torch Base',
+		IIF([PartNumber] LIKE 'HTFA-ASY-0003%', 'Torch Module', [PartNumber])))) AS [Version],
+	'Instruments Released' AS [Key],
+	1 AS [Record] 
+FROM #Master
 
-SELECT 
-	[SerialNo],
-	MIN([TranDate]) AS [Date],
-	IIF(LEFT(s.[ItemID],4) LIKE 'FLM2','FA2.0',
-		IIF(LEFT(s.[ItemID],4) LIKE 'FLM1','FA1.5',
-		IIF(s.[ItemID] LIKE 'HTFA-ASY-0001','Torch Base',
-		IIF(s.[ItemID] LIKE 'HTFA-ASY-0003', 'Torch Module',s.[ItemID])))) AS [Version]
-INTO #Stock
-FROM #Serial s LEFT JOIN #Inven i
-	ON s.[InvtTranKey] = i.[InvtTranKey]
-WHERE s.[WhseID] LIKE 'STOCK' AND [TranQty] > 0 
-	AND [SerialNo] IN (SELECT * FROM #Serials)
-GROUP BY [SerialNo], s.[ItemID]
-
-SELECT
-	YEAR([Date]) AS [Year],
-	MONTH([Date]) AS [Month],
-	[SerialNo], 
-	[Version],
-	1 AS [Record]
-FROM #Stock
-ORDER BY [Year],[Month]
-
-DROP TABLE #Serial, #Inven, #Stock, #Rows, #Serials
+DROP TABLE #Lots, #Master

@@ -84,5 +84,16 @@ query.charVec <- readLines('SQL/R_IRMA_serialShipAndReturnByDate.sql')
 query <- paste(query.charVec,collapse="\n")
 track.df <- sqlQuery(PMScxn,query)
 
+# get install base data from MAS
+queryText <- readLines("SQL/R_IRMA_FieldInstallBase.sql")
+query <- paste(queryText,collapse="\n")
+installed.df <- sqlQuery(PMScxn,query)
+
+# get early failure RMAs for computers/laptops/Torch base
+queryText <- readLines("SQL/R_IRMA_ComputerEarlyFailure.sql")
+query <- paste(queryText,collapse="\n")
+computerEF.df <- sqlQuery(PMScxn,query)
+
+
 # close remote connection
 odbcClose(PMScxn)
