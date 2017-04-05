@@ -237,7 +237,7 @@ p.failures.version <- ggplot(failures.rate.verison, aes(x=DateGroup, y=Rate, fil
 # early failures by version and department and type
 failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), startDate, 'Record', 'sum', 0)
 failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
-<<<<<<< HEAD
+
 # add a ytd line
 failures.agg$ytd <- rep(NA, nrow(failures.agg))
 ships.fill.version$ytd <- rep(NA, nrow(ships.fill.version))
@@ -255,14 +255,10 @@ for(department in unique(failures.agg.rate$Department)){  # loop through the dep
 }
 
 p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_line(data=failures.agg.rate, aes(x=DateGroup, y=ytd, group=1), size=1.25, linetype=2, colour="black") + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='darkgreen', lty=2)
-=======
 p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='black', lty=2)
 start.noroll <- findStartDate(calendar.df, 'Week', 53, 0)
 p.earlyfailures.count <- ggplot(subset(failures.agg, DateGroup >=start.noroll), aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg, 'Key'), name='') + labs(title='Count of Early Failures',x='Reported Date\n(Year-Week)', y='Count') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks)
 
->>>>>>> 66066e0a8874b46b13c3dcb4afdf125b9b0c9a59
-
-  
 # create the charts for early failures per instruments shipped in a month (non-rolling) for each instrument version
 calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
 startMonth <- findStartDate(calendar.month, 'Month', 12, 0)
@@ -301,10 +297,9 @@ computerEF.agg.rate = mergeCalSparseFrames(subset(computerEF.agg, Version!='FA1.
 computerEF.agg.merge = merge(computerEF.agg.rate, computerEF.agg, by=c('DateGroup','Version'))
 p.computerEF.month <- ggplot(computerEF.fail.month, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(computerEF.fail.month, 'Key'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + scale_y_continuous(label=percent) + theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Computer Early Failure Rates by Month', x='Date\n(Year-Month)', y='Failures/New Instruments Shipped (Count shown above)') + geom_text(data=subset(computerEF.agg.merge,Record>0), aes(x=DateGroup, y=Rate+computerEF.textShift, label=Record), inherit.aes=FALSE) 
 
-
 # create the chart of top ten failed parts in the last 90 days
 rootCause.agg <- with(rootCause.df, aggregate(cbind(thirtyDay, netSixtyDay, netNinetyDay, Record)~FailedPartDesc, FUN=sum))
-rootCause.agg[,'FailedPartDesc'] <- factor(rootCause.agg[,'FailedPartDesc'], levels=rootCause.agg[with(rootCause.agg, order(Record, decreasing = TRUE)), 'FailedPartDesc'])
+rootCause.agg[,'FailedPartDesc'] <- factor(rootCause.agg[,'FailedPartDesc'], levels=unique(rootCause.agg[with(rootCause.agg, order(Record, decreasing = TRUE)), 'FailedPartDesc']))
 rootCause.trim <- rootCause.agg[with(rootCause.agg, order(Record, decreasing = TRUE)), ][1:10, ]
 rootCause.trim.30 <- rootCause.trim[,c('FailedPartDesc','thirtyDay')]; rootCause.trim.30[,'Key'] <- 'Thirty Day'
 rootCause.trim.60 <- rootCause.trim[,c('FailedPartDesc','netSixtyDay')]; rootCause.trim.60[,'Key'] <- 'Sixty Day (net)'
@@ -314,7 +309,7 @@ colnames(rootCause.trim.60)[grep('Day', colnames(rootCause.trim.60))] <- 'Record
 colnames(rootCause.trim.90)[grep('Day', colnames(rootCause.trim.90))] <- 'Record'
 rootCause.trim <- rbind(rootCause.trim.30, rootCause.trim.60, rootCause.trim.90)
 rootCause.trim <- merge(rootCause.trim, with(rootCause.trim, aggregate(Record~FailedPartDesc, FUN=sum)), by='FailedPartDesc')
-rootCause.trim[,'FailedPartDesc'] <- factor(rootCause.trim[,'FailedPartDesc'], levels=rootCause.trim[with(rootCause.trim, order(Record.y)), 'FailedPartDesc'])
+rootCause.trim[,'FailedPartDesc'] <- factor(rootCause.trim[,'FailedPartDesc'], levels=unique(rootCause.trim[with(rootCause.trim, order(Record.y)), 'FailedPartDesc']))
 pal.rootCause <- createPaletteOfVariableLength(rootCause.trim, 'Key')
 p.rootcause <- ggplot(rootCause.trim[with(rootCause.trim, order(Key)), ], aes(x=FailedPartDesc, y=Record.x, fill=Key)) + geom_bar(stat='identity') + labs(title='Last 90 Days: Top Ten Failed Parts', x='Failed Part', y='Count of Occurrences') + coord_flip() + scale_fill_manual(values = pal.rootCause)
 
@@ -391,7 +386,6 @@ instShip.ver.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instShip
 p.denom.pouchesShipped <- ggplot(pouches.fill, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(pouches.fill, 'Key'), guide=FALSE) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='Pouches Shipped', y='Pouches Shipped', x='Ship Date\n(Year-Week)')
 p.denom.rmasShipped <- ggplot(rmasShip.fill, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(rmasShip.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='RMAs Shipped by Version', y='Instruments Shipped', x='Ship Date\n(Year-Week)')
 p.denom.newInstShipped <- ggplot(subset(instShip.ver.fill, Key=='Production'), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(instShip.ver.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='New Instruments Shipped by Version', y='New Instruments Shipped', x='Ship Date\n(Year-Week)')
-
 
 # Send alert to DJ Holden if new computer ELF/DOA received
 computerEFFilename = '../lastComputerEFTicket.rda'
