@@ -62,10 +62,9 @@ p.ncr.rate.ver <- ggplot(subset(ncr.rate.ver, Version %in% c('FA2.0', 'Torch Mod
 
 # make a chart for the incoming inspection 
 incomingInspection.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', incomingInspection.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
-incomingInspection.rate <- mergeCalSparseFrames(incomingInspection.all, instNCR.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0)
-p.ncr.incoming.inspection <- ggplot(incomingInspection.rate, aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill='cornflowerblue') + geom_hline(yintercept=.25, col="green", linetype="dashed", size=1.3) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Percent of NCRs found in Incoming Inspection \n Goal=25% ' , y='Percent', x='Date \n (Year-Week)') + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent)
+incomingInspection.rate <- mergeCalSparseFrames(incomingInspection.all, instNCRs.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0)
+p.ncr.incoming.inspection <- ggplot(incomingInspection.rate, aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill='cornflowerblue') + geom_hline(yintercept=.25, col="green", linetype="dashed", size=1.3) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Percent of NCRs Found in Incoming Inspection \n Goal=25% ' , y='Percent', x='Date \n (Year-Week)') + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent)
  
-
 # make some charts for NCRs that are found in Final QC: pareto (stacked) and line charts
 final.qc.count <- with(finalQC.df, aggregate(Record~Year+Week+Version+RecordedValue, FUN=sum))
 final.qc.count[,'DateGroup'] <- with(final.qc.count, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))

@@ -48,16 +48,13 @@ queryText <- readLines("SQL/R_INCR_EarlyFailuresBySerialNumberFamily.sql")
 query <- paste(queryText,collapse="\n")
 serialbatches.df <- sqlQuery(PMScxn,query)
 
-<<<<<<< HEAD
 # Load ncr incoming inspection data 
 queryText <- readLines("SQL/R_INCR_IncomingInspection.sql")
 query <- paste(queryText,collapse="\n")
 incomingInspection.df <- sqlQuery(PMScxn,query)
 
-=======
 queryText <- readLines("SQL/O_IMAN_InstShipments.sql")
 query <- paste(queryText,collapse="\n")
 instshipments.df <- sqlQuery(PMScxn,query)
->>>>>>> 66066e0a8874b46b13c3dcb4afdf125b9b0c9a59
 
 odbcClose(PMScxn)
