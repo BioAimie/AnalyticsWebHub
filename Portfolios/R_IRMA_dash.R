@@ -54,7 +54,7 @@ x.val <- which(as.character(unique(reliability.lim[,'DateGroup'])) == validateDa
 # x_positions <- c('2015-37')
 # reliability.annotations <- c('Heat\nPress\nFix')
 # y_positions <- reliability.lim[as.character(reliability.lim[,'DateGroup']) %in% x_positions, 'Rate'] - 140
-p.reliability <- ggplot(reliability.lim, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), name='Key', guide=FALSE) + expand_limits(y=0) + geom_hline(aes(yintercept=LL), color='red', lty='dashed') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks) + labs(title='Pouches Shipped per Complaint RMA:\nLimit = -2 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average')
+p.reliability <- ggplot(reliability.lim, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), name='Key', guide=FALSE) + expand_limits(y=0) + geom_hline(aes(yintercept=LL), color='red', lty='dashed') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks) + labs(title='Pouches Shipped per Complaint RMA:\nLimit = -2 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average') + geom_hline(aes(yintercept=1500), color='forestgreen', lty='dashed')
 
 # remake this reliability chart, but lag the pouches shipped by 4 weeks (i.e. use pouches shipped 4 weeks ago per complaints this week)
 startDate.lag <- findStartDate(calendar.df, 'Week', weeks+4, periods)
@@ -237,7 +237,6 @@ p.failures.version <- ggplot(failures.rate.verison, aes(x=DateGroup, y=Rate, fil
 # early failures by version and department and type
 failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), startDate, 'Record', 'sum', 0)
 failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
-
 # add a ytd line
 failures.agg$ytd <- rep(NA, nrow(failures.agg))
 ships.fill.version$ytd <- rep(NA, nrow(ships.fill.version))
@@ -253,9 +252,7 @@ for(department in unique(failures.agg.rate$Department)){  # loop through the dep
   	}
 	}
 }
-
 p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_line(data=failures.agg.rate, aes(x=DateGroup, y=ytd, group=1), size=1.25, linetype=2, colour="black") + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='darkgreen', lty=2)
-p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='black', lty=2)
 start.noroll <- findStartDate(calendar.df, 'Week', 53, 0)
 p.earlyfailures.count <- ggplot(subset(failures.agg, DateGroup >=start.noroll), aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg, 'Key'), name='') + labs(title='Count of Early Failures',x='Reported Date\n(Year-Week)', y='Count') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks)
 
