@@ -73,7 +73,7 @@ colnames(temp.agg)[3] <- 'RollingAvg'
 ship15 <- merge(ship15, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
 ship15$Key <- factor(ship15$Key, levels=shipLevels)
 p.Refurb1.5Shipments <- ggplot(ship15, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(ship15, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(text=element_text(size=20, face='bold'), axis.text.x=element_text(vjust=0.5,color='black',size=20, angle = 90), axis.text.y=element_text(hjust=1, color='black', size=20), plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5)) + labs(title = 'Refurbished FA 1.5 Shipments', subtitle = '4 Week Moving Average', x = 'Date\n(Year-Week)', y ='Shipments') + scale_x_discrete(breaks=dateBreaks)
-  
+
 #---FLM2-ASY-0002R
 ship20 <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', subset(refurbShip.df, Product == 'FA2.0R'), c('Product', 'Key'), startString.week, 'Record', 'sum', 0)
 ship20 <- ship20[order(ship20$DateGroup), ]

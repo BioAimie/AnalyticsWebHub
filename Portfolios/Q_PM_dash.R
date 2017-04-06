@@ -115,11 +115,14 @@ p.faivLineWater.ltd <- ggplot(faivLineWater.imr.ltd, aes(x=Observation, y=Result
 lsd.burst <- unique(burst.df[,'Date'])[order(unique(burst.df[,'Date']), decreasing = TRUE)][1:7]
 points.lsd.burst <- nrow(burst.df[burst.df$Date %in% lsd.burst, ])
 burst.imr.lsd <- analyzeOrderIMR(burst.df, 'Result', 'DateOpened', points.lsd.burst, 3, 'GroupName', byEquipment = TRUE)
-burst.imr.lsd[,'LineKey'] <- as.numeric(substring(as.character(burst.imr.lsd[,'Equipment']), 12, 12))
+#burst.imr.lsd[,'LineKey'] <- as.numeric(substring(as.character(burst.imr.lsd[,'Equipment']), 12, 12))
+burst.imr.lsd[,'LineKey'] <- as.numeric(substring(as.character(burst.imr.lsd[,'Equipment']), 12, 13))
 
-lines <- unique(as.character(burst.imr.lsd[,'Equipment']))[order(unique(as.character(burst.imr.lsd[,'Equipment'])))]
-lines <- as.numeric(substring(lines, 12, 12))
-line.breaks <- lines[seq(2, length(lines), 2)]
+# lines <- unique(as.character(burst.imr.lsd[,'Equipment']))[order(unique(as.character(burst.imr.lsd[,'Equipment'])))]
+# lines <- as.numeric(substring(lines, 12, 12))
+# line.breaks <- lines[seq(2, length(lines), 2)]
+lines <- sort(unique(burst.imr.lsd[,'LineKey']))
+line.breaks <- lines[seq(as.integer(length(lines) / 3), length(lines), as.integer(length(lines) / 3))]
 
 lsd.hydra <- unique(hydration.df[,'Date'])[order(unique(hydration.df[,'Date']), decreasing = TRUE)][1:7]
 points.lsd.hydra <- nrow(hydration.df[hydration.df$Date %in% lsd.hydra, ])
