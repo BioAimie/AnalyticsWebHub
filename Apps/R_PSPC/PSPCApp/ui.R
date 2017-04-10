@@ -4,6 +4,7 @@ library(shinysky)
 library(DT)
 library(stringr)
 
+shinyUI(
 dashboardPage( 
   dashboardHeader(title='Pouch SPC Anomaly Dashboard', titleWidth = 350),
   dashboardSidebar(width = 350,
@@ -17,9 +18,9 @@ dashboardPage(
       br(),
       br(),
       br(),
-      tags$div(actionButton('refresh', 'Refresh Data'), style = "margin-left: 20px;"), 
+      tags$div(actionButton('refresh', 'Refresh Data'), style = "margin-left: 20px; color: black;"), 
       br(),
-      tags$div(actionButton('curator', 'Pouch SPC Curator'), style = "margin-left: 20px;", onclick ="window.open('http://google.com', '_blank')")
+      tags$div(actionButton('curator', 'Pouch SPC Curator'), style = "margin-left: 20px; color: black;", onclick ="window.open('http://google.com', '_blank')")
     )
   ),
   dashboardBody(
@@ -159,3 +160,4 @@ dashboardPage(
     ) #end tabItems
   ) #end dashboardBody
 ) #end shinyUI
+)
