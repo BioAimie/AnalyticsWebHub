@@ -1,5 +1,5 @@
 #Load in data for Pouch SPC app
-setwd('~/WebHub/AnalyticsWebHub/Apps/R_PSPC/PSCPApp')
+setwd('~/WebHub/AnalyticsWebHub/Apps/R_PSPC/PSPCApp')
 
 library(RODBC)
 library(dateManip)
