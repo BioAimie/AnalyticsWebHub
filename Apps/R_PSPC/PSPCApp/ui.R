@@ -20,7 +20,7 @@ dashboardPage(
       br(),
       tags$div(actionButton('refresh', 'Refresh Data'), style = "margin-left: 20px; color: black;"), 
       br(),
-      tags$div(actionButton('curator', 'Pouch SPC Curator'), style = "margin-left: 20px; color: black;", onclick ="window.open('http://google.com', '_blank')")
+      tags$div(actionButton('curator', 'Pouch SPC Curator'), style = "margin-left: 20px; color: black;", onclick ="window.open('http://10.1.23.96:3032', '_blank')")
     )
   ),
   dashboardBody(
