@@ -1,5 +1,5 @@
 #Load in data for Pouch SPC app
-
+setwd('~/WebHub/AnalyticsWebHub/Apps/R_PSPC/PSPCApp')
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS1_LOC")
 

@@ -1,6 +1,7 @@
 # set the working directory
-setwd('~/WebHub/AnalyticsWebHub')
-source('Apps/R_PSPC/PSPCApp/main.R')
+setwd('~/WebHub/AnalyticsWebHub/Apps/R_PSPC/PSPCApp')
+source('main.R')
 library(shiny)
-runApp('Apps/R_PSPC/PSPCApp/', port = 4040,
+
+runApp(port = 3030,
        launch.browser = getOption('shiny.launch.browser', interactive()), host = getOption('shiny.host', '10.1.23.96'))
