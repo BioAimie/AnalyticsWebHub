@@ -461,7 +461,8 @@ FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1
 					ON ie1.[PouchSerialNumber] = tm1.[PouchSerialNumber] LEFT JOIN #versions v1
 						ON ie1.[SerialNo] = v1.[SerialNo]
 
-SELECT * 
+SELECT *
+INTO #errors
 FROM 
 	( 
 		SELECT * 
@@ -472,4 +473,49 @@ FROM
 	)aft
 
 
-DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cptm, #cpAvg,  #tmAvg, #cptm1, #cpAvg1, #tmAvg1, #version1, #version2, #allVersions, #versions 
+select 
+	[TicketString],
+	[RecordedValue] as [QCDate]
+into #serviceDates
+from [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] with(nolock)
+where [Tracker] like 'RMA' and [ObjectName] like 'QC Check' and [PropertyName] like 'QC Date'
+order by [TicketString]
+
+
+select
+	[TicketString], 
+	[RecordedValue] as [SerialNo]
+into #partNumbers
+from [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] with(nolock) 
+where [Tracker] like 'RMA' and [ObjectName] like 'Part Information' and [PropertyName] like 'Lot/Serial Number'
+
+
+select 
+	[SerialNo],
+	max([QCDate]) as [LastServiceDate]
+into #mostRecentServiceDates 
+from #partNumbers p inner join #serviceDates s 
+	on p.[TicketString] = s.[TicketString]
+where [QCDate] is not NULL 
+group by [SerialNo]
+
+
+select 
+	e.[Date], 
+	e.[SerialNo], 
+	e.[Protocol],
+	e.[Version], 
+	e.[InstrumentError], 
+	e.[SoftwareError],
+	e.[PouchLeak],
+	e.[PCR2], 
+	e.[PCR1], 
+	e.[yeast], 
+	e.[Cp], 
+	e.[Tm], 
+	m.[LastServiceDate]
+from #errors e left join #mostRecentServiceDates m 
+	on e.[SerialNo] = m.[SerialNo]
+
+
+DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cptm, #cpAvg,  #tmAvg, #cptm1, #cpAvg1, #tmAvg1, #version1, #version2, #allVersions, #versions, #serviceDates, #partNumbers, #mostRecentServiceDates, #errors
