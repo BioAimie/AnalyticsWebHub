@@ -122,3 +122,7 @@ if(wday(Sys.Date()) == 4){
 	}
 
 }
+
+
+runApp('internalInstrumentApp', port = 4038,
+       launch.browser = getOption('shiny.launch.browser', interactive()), host = getOption('shiny.host', '10.1.23.96'))
