@@ -18,3 +18,4 @@ C:\Users\pms_user\Documents\WebHub\AnalyticsWebHub\Apps\R_PSPC\PSPC\PSPC\bin\Mic
 C:\Users\pms_user\Documents\WebHub\AnalyticsWebHub\Apps\R_PSPC\PSPC\PSPC\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
 C:\Users\pms_user\Documents\WebHub\AnalyticsWebHub\Apps\R_PSPC\PSPC\PSPC\obj\Release\PSPC.dll
 C:\Users\pms_user\Documents\WebHub\AnalyticsWebHub\Apps\R_PSPC\PSPC\PSPC\obj\Release\PSPC.pdb
+C:\Users\pms_user\Documents\WebHub\AnalyticsWebHub\Apps\R_PSPC\PSPC\PSPC\obj\Release\PSPC.csprojResolveAssemblyReference.cache
