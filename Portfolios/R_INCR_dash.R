@@ -49,8 +49,8 @@ instNCRs.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instNCRs.df, 
 ncr.rate.all <- mergeCalSparseFrames(instNCRs.all, instBuilt.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 ncr.rate.ver <- mergeCalSparseFrames(instNCRs.ver, instBuilt.ver, c('DateGroup','VersionGroup'), c('DateGroup','Version'), 'Record', 'Record', NA, periods)
 ncr.lims.all <- addStatsToSparseHandledData(ncr.rate.all, c('Key'), lagPeriods, TRUE, 2, 'upper')
-x_positions <- c('2016-23','2016-39', '2016-51')
-rate.all.annotations <- c('Bead Beater Rework-CAPA 13262,\nTorch Build Ramp','Process Change\n1 NCR/Lot', 'Manifold-DX-DCN-33636,DX-CO-35011\nPCB-CAPA 13210')
+x_positions <- c('2016-23','2016-51')
+rate.all.annotations <- c('Bead Beater Rework-CAPA 13262,\nTorch Build Ramp', 'Manifold-DX-DCN-33636,DX-CO-35011\nPCB-CAPA 13210')
 y_positions <- ncr.lims.all[(ncr.lims.all[,'DateGroup']) %in% x_positions, 'Rate'] + 0.4
 p.ncr.rate.all <- ggplot(ncr.lims.all, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point() + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Rate of Instrument NCRs per Instruments Built (not released):\n FYI Limit = +2 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average') + annotate("text",x=x_positions,y=y_positions,label=rate.all.annotations, size=6)
 #fixed scale in torch module chart 
