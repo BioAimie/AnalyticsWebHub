@@ -14,7 +14,6 @@ source("Rfunctions\\loadInternalInstrumentApp.R")
 
 
 
-
 calculateAlerts <- function(serial.num, alert.frame, location){
 	
 		 
@@ -67,11 +66,11 @@ if(wday(Sys.Date()) == 4){
 	alert.location.frames[["pouchqc"]] <- subset(location.frames[["pouchqc"]], Date >= date.ranges[["7"]][1] & (LastServiceDate < date.ranges[["7"]][1] | is.na(LastServiceDate)))
 	
 	from <-"Anna.Hoffee@biofiredx.com"
-	#dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Lisa.Ogden@biofiredx.com", "Bartek.Ksok@biofiredx.com", "Shane.Woodhouse@biofiredx.com" )
-	#qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Emily.Fernandez@biofiredx.com", "Kristel.Borsos@biofiredx.com", "Dana.Saif@biofiredx.com", "Kimon.Clarke@biofiredx.com")
+	dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Lisa.Ogden@biofiredx.com", "Bartek.Ksok@biofiredx.com", "Shane.Woodhouse@biofiredx.com" )
+	qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Emily.Fernandez@biofiredx.com", "Kristel.Borsos@biofiredx.com", "Dana.Saif@biofiredx.com", "Kimon.Clarke@biofiredx.com")
 
-	dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com")
-	qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com")
+	#dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com")
+	#qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com")
 	
 	mailControl <- list(smtpServer="webmail.biofiredx.com")
 	subject.names <- list("pouchqc" = "Pouch QC", "dungeon"="Dungeon")
@@ -81,7 +80,7 @@ if(wday(Sys.Date()) == 4){
 			lapply(serial.numbers, calculateAlerts, alert.location.frames[[l]], l)
 			print(l)
 			##### now write the results in an email ######
-			if(length(alerts.output[[l]][["20percent"]]) > 0 & length(alerts.output[[l]][["3consecutive"]])){ #both kinds of alerts
+			if(length(alerts.output[[l]][["20percent"]]) > 0 & length(alerts.output[[l]][["3consecutive"]]) > 0){ #both kinds of alerts
 				subject <- paste0("Weekly ", subject.names[[l]], " Suspect Instrument Alert")
 				body <- capture.output(cat("The following instrument(s) had at least 5 runs and a 20% failure rate in the last seven days: \n\n ", paste0(alerts.output[[l]][["20percent"]], collapse=", "), "\n\nThe following instrument(s) had 3 consecutive failed runs in less than 5 runs in the last seven days: \n\n ", paste0(alerts.output[[l]][["3consecutive"]], collapse=", ")))      
 				if( l == "dungeon"){
@@ -126,3 +125,6 @@ if(wday(Sys.Date()) == 4){
 
 runApp('internalInstrumentApp', port = 4038,
        launch.browser = getOption('shiny.launch.browser', interactive()), host = getOption('shiny.host', '10.1.23.96'))
+
+
+
