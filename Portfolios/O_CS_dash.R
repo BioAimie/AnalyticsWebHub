@@ -16,7 +16,6 @@ library(gridExtra)
 
 # load the data from SQL
 source('Portfolios/O_CS_load.R')
-
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 
@@ -613,10 +612,10 @@ if(avgDaysInQC.cur > 2) {
 } else { 
   curTableFill.f <- c(curTableFill.f, 'green')
 }
-if(avgDaysInShip.cur > 1) {
-  curTableFill.f <- c(curTableFill.f, 'red')
-} else { 
+if(is.na(avgDaysInShip.cur) | avgDaysInShip.cur <= 1) {
   curTableFill.f <- c(curTableFill.f, 'green')
+} else { 
+  curTableFill.f <- c(curTableFill.f, 'red')
 } 
 tt3 <- ttheme_minimal(
   core=list(bg_params = list(fill = curTableFill.f, alpha = 0.5, col=1),
