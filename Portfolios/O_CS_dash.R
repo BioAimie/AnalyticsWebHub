@@ -343,37 +343,37 @@ table.RMASaltLake <- data.frame('PhaseofRMA' = c('Receiving',
                                              format(avgDaysInSO.year, digits=3),
                                              format(avgDaysInShip.year, digits=3)))
 colnames(table.RMASaltLake) <- c('Phase of RMA', 'Days Per Process -\nGoal', 'Current Month', 'Previous Month', 'Delta', 'Average Days For\nPrevious 1 Year')
-if(avgDaysinReceiving.cur >= 6) {
+if(!is.na(avgDaysinReceiving.cur) & avgDaysinReceiving.cur >= 6) {
   curTableFill <- 'red'
 } else {
   curTableFill <- 'green'
 }
-if(avgDaysInQuarantineDecon.cur > 2) {
+if(!is.na(avgDaysInQuarantineDecon.cur) & avgDaysInQuarantineDecon.cur > 2) {
   curTableFill <- c(curTableFill, 'red')
 } else {
   curTableFill <- c(curTableFill, 'green')
 }
-if(avgDaysInService.cur > 4) {
+if(!is.na(avgDaysInService.cur) & avgDaysInService.cur > 4) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 }
-if(avgDaysInQC.cur > 2) {
+if(!is.na(avgDaysInQC.cur) & avgDaysInQC.cur > 2) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 }
-if(avgDaysInLoaner.cur >= 1) {
+if(!is.na(avgDaysInLoaner.cur) & avgDaysInLoaner.cur >= 1) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 } 
-if(avgDaysInSO.cur > 1) {
+if(!is.na(avgDaysInSO.cur) & avgDaysInSO.cur > 1) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 } 
-if(avgDaysInShip.cur > 1) {
+if(!is.na(avgDaysInShip.cur) & avgDaysInShip.cur > 1) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
@@ -472,37 +472,37 @@ table.RMASaltLake.prev <- data.frame('PhaseofRMA' = c('Receiving',
                                                                   format(avgDaysInSO.year, digits=3),
                                                                   format(avgDaysInShip.year, digits=3)))
 colnames(table.RMASaltLake.prev) <- c('Phase of RMA', 'Days Per Process -\nGoal', 'Current Month', 'Previous Month', 'Delta', 'Average Days For\nPrevious 1 Year')
-if(avgDaysinReceiving.cur >= 6) {
+if(!is.na(avgDaysinReceiving.cur) & avgDaysinReceiving.cur >= 6) {
   prevTableFill <- 'red'
 } else {
   prevTableFill <- 'green'
 }
-if(avgDaysInQuarantineDecon.cur > 2) {
+if(!is.na(avgDaysInQuarantineDecon.cur) & avgDaysInQuarantineDecon.cur > 2) {
   prevTableFill <- c(prevTableFill, 'red')
 } else {
   prevTableFill <- c(prevTableFill, 'green')
 }
-if(avgDaysInService.cur > 4) {
+if(!is.na(avgDaysInService.cur) & avgDaysInService.cur > 4) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 }
-if(avgDaysInQC.cur > 2) {
+if(!is.na(avgDaysInQC.cur) & avgDaysInQC.cur > 2) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 }
-if(avgDaysInLoaner.cur >= 1) {
+if(!is.na(avgDaysInLoaner.cur) & avgDaysInLoaner.cur >= 1) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 } 
-if(avgDaysInSO.cur > 1) {
+if(!is.na(avgDaysInSO.cur) & avgDaysInSO.cur > 1) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 } 
-if(avgDaysInShip.cur > 1) {
+if(!is.na(avgDaysInShip.cur) & avgDaysInShip.cur > 1) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
@@ -592,22 +592,22 @@ table.RMAFlorence <- data.frame('PhaseofRMA' = c('Receiving',
                                                                   format(avgDaysInQC.year, digits=3),
                                                                   format(avgDaysInShip.year, digits=3)))
 colnames(table.RMAFlorence) <- c('Phase of RMA', 'Days Per Process -\nGoal', 'Current Month', 'Previous Month', 'Delta', 'Average Days For\nPrevious 1 Year')
-if(avgDaysinReceiving.cur >= 6) {
+if(!is.na(avgDaysinReceiving.cur) & avgDaysinReceiving.cur >= 6) {
   curTableFill.f <- 'red'
 } else {
   curTableFill.f <- 'green'
 }
-if(avgDaysInQuarantineDecon.cur > 2) {
+if(!is.na(avgDaysInQuarantineDecon.cur) & avgDaysInQuarantineDecon.cur > 2) {
   curTableFill.f <- c(curTableFill.f, 'red')
 } else {
   curTableFill.f <- c(curTableFill.f, 'green')
 }
-if(avgDaysInService.cur > 4) {
+if(!is.na(avgDaysInService.cur) & avgDaysInService.cur > 4) {
   curTableFill.f <- c(curTableFill.f, 'red')
 } else { 
   curTableFill.f <- c(curTableFill.f, 'green')
 }
-if(avgDaysInQC.cur > 2) {
+if(!is.na(avgDaysInQC.cur) & avgDaysInQC.cur > 2) {
   curTableFill.f <- c(curTableFill.f, 'red')
 } else { 
   curTableFill.f <- c(curTableFill.f, 'green')
@@ -681,27 +681,27 @@ table.RMAFlorence.prev <- data.frame('PhaseofRMA' = c('Receiving',
                                                                        format(avgDaysInQC.year, digits=3),
                                                                        format(avgDaysInShip.year, digits=3)))
 colnames(table.RMAFlorence.prev) <- c('Phase of RMA', 'Days Per Process -\nGoal', 'Current Month', 'Previous Month', 'Delta', 'Average Days For\nPrevious 1 Year')
-if(avgDaysinReceiving.cur >= 6) {
+if(!is.na(avgDaysinReceiving.cur) & avgDaysinReceiving.cur >= 6) {
   prevTableFill.f <- 'red'
 } else {
   prevTableFill.f <- 'green'
 }
-if(avgDaysInQuarantineDecon.cur > 2) {
+if(!is.na(avgDaysInQuarantineDecon.cur) & avgDaysInQuarantineDecon.cur > 2) {
   prevTableFill.f <- c(prevTableFill.f, 'red')
 } else {
   prevTableFill.f <- c(prevTableFill.f, 'green')
 }
-if(avgDaysInService.cur > 4) {
+if(!is.na(avgDaysInService.cur) & avgDaysInService.cur > 4) {
   prevTableFill.f <- c(prevTableFill.f, 'red')
 } else { 
   prevTableFill.f <- c(prevTableFill.f, 'green')
 }
-if(avgDaysInQC.cur > 2) {
+if(!is.na(avgDaysInQC.cur) & avgDaysInQC.cur > 2) {
   prevTableFill.f <- c(prevTableFill.f, 'red')
 } else { 
   prevTableFill.f <- c(prevTableFill.f, 'green')
 }
-if(avgDaysInShip.cur > 1) {
+if(!is.na(avgDaysInShip.cur) & avgDaysInShip.cur > 1) {
   prevTableFill.f <- c(prevTableFill.f, 'red')
 } else { 
   prevTableFill.f <- c(prevTableFill.f, 'green')
@@ -819,6 +819,53 @@ p.CustomerOpenedRMA <- ggplot(custOpenedRMA, aes(DateGroup, y=Record, fill=Part)
 #prev month freeze
 p.CustomerOpenedRMA.Prev <- ggplot(subset(custOpenedRMA, DateGroup <= lastMonth), aes(DateGroup, y=Record, fill=Part)) + geom_bar(stat='identity') + geom_line(inherit.aes=FALSE, aes(x=DateGroup, y=RollingAvg, group=1)) + geom_point(inherit.aes=FALSE, aes(x=DateGroup, y=RollingAvg, group=1)) + scale_fill_manual(name='RMA Type', values = createPaletteOfVariableLength(openedRMA, 'Part')) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Opened Customer RMAs', subtitle = paste('Rolling Average for', prevMonthName, ':', format(unique(subset(custOpenedRMA, DateGroup == lastMonth)[,'RollingAvg']), digits=3)), x = 'Date\n(Year-Month)', y ='Number of RMAs\n4-Month Rolling Average Line') + geom_text(data = subset(custOpenedRMA.agg, DateGroup <= lastMonth), inherit.aes = FALSE, aes(x=DateGroup, y=Record, label=Record), size=5, vjust=-0.5) 
 
+# Customer RMAs by version
+custRMA.version <- subset(rmas.df, (Type == 'Customer - Failure' | Type == 'Customer - No failure'))
+colnames(custRMA.version)[colnames(custRMA.version)=='YearOpen'] <- 'Year'
+colnames(custRMA.version)[colnames(custRMA.version)=='MonthOpen'] <- 'Month'
+custIRMA.ver <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(custRMA.version, Part == 'Instrument'), 'Version', startString.monthRoll, 'Record', 'sum', 0)
+temp.agg <- subset(custIRMA.ver, Version == 'FA 1.5')
+l <- length(temp.agg$DateGroup)
+temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
+colnames(temp.agg)[4] <- 'RollingAvg'
+custIRMA.ver <- merge(custIRMA.ver, subset(temp.agg, select=c('DateGroup', 'Version', 'RollingAvg')), by=c('DateGroup','Version'), all.x=TRUE)
+temp.agg <- subset(custIRMA.ver, Version == 'FA 2.0', select = c('DateGroup', 'Version', 'Record'))
+l <- length(temp.agg$DateGroup)
+temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
+colnames(temp.agg)[4] <- 'RollingAvg'
+custIRMA.ver$RollingAvg[custIRMA.ver$Version == 'FA 2.0'] <- c(NA, NA, NA, temp.agg$RollingAvg)
+temp.agg <- subset(custIRMA.ver, Version == 'Torch', select = c('DateGroup', 'Version', 'Record'))
+l <- length(temp.agg$DateGroup)
+temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
+colnames(temp.agg)[4] <- 'RollingAvg'
+custIRMA.ver$RollingAvg[custIRMA.ver$Version == 'Torch'] <- c(NA, NA, NA, temp.agg$RollingAvg)
+custIRMA.ver <- subset(custIRMA.ver, !is.na(RollingAvg))
+custIRMA.ver$facetHeader[custIRMA.ver$Version == 'FA 1.5'] <- paste0('FA 1.5\n4 Month Rolling Average = ', subset(custIRMA.ver, DateGroup == currentMonth & Version == 'FA 1.5')[,'RollingAvg'])
+custIRMA.ver$facetHeader[custIRMA.ver$Version == 'FA 2.0'] <- paste0('FA 2.0\n4 Month Rolling Average = ', subset(custIRMA.ver, DateGroup == currentMonth & Version == 'FA 2.0')[,'RollingAvg'])
+custIRMA.ver$facetHeader[custIRMA.ver$Version == 'Torch'] <- paste0('Torch\n4 Month Rolling Average = ', subset(custIRMA.ver, DateGroup == currentMonth & Version == 'Torch')[,'RollingAvg'])
+p.custInstRMA <- ggplot(custIRMA.ver, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + facet_wrap(~facetHeader) + scale_fill_manual(guide=FALSE, values=createPaletteOfVariableLength(custIRMA.ver, 'Version')) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) + geom_text(aes(label=Record), vjust=-0.5, size=4, fontface='bold') + labs(title='Customer Instrument RMAs Opened', x='Date\n(Year-Month)', y='RMAs Opened')
+custCRMA.ver <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(custRMA.version, Part == 'Computer'), 'Version', startString.monthRoll, 'Record', 'sum', 0)
+temp.agg <- subset(custCRMA.ver, Version == 'FA 1.5')
+l <- length(temp.agg$DateGroup)
+temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
+colnames(temp.agg)[4] <- 'RollingAvg'
+custCRMA.ver <- merge(custCRMA.ver, subset(temp.agg, select=c('DateGroup', 'Version', 'RollingAvg')), by=c('DateGroup','Version'), all.x=TRUE)
+temp.agg <- subset(custCRMA.ver, Version == 'FA 2.0', select = c('DateGroup', 'Version', 'Record'))
+l <- length(temp.agg$DateGroup)
+temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
+colnames(temp.agg)[4] <- 'RollingAvg'
+custCRMA.ver$RollingAvg[custCRMA.ver$Version == 'FA 2.0'] <- c(NA, NA, NA, temp.agg$RollingAvg)
+temp.agg <- subset(custCRMA.ver, Version == 'Torch', select = c('DateGroup', 'Version', 'Record'))
+l <- length(temp.agg$DateGroup)
+temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
+colnames(temp.agg)[4] <- 'RollingAvg'
+custCRMA.ver$RollingAvg[custCRMA.ver$Version == 'Torch'] <- c(NA, NA, NA, temp.agg$RollingAvg)
+custCRMA.ver <- subset(custCRMA.ver, !is.na(RollingAvg))
+custCRMA.ver$facetHeader[custCRMA.ver$Version == 'FA 1.5'] <- paste0('FA 1.5\n4 Month Rolling Average = ', subset(custCRMA.ver, DateGroup == currentMonth & Version == 'FA 1.5')[,'RollingAvg'])
+custCRMA.ver$facetHeader[custCRMA.ver$Version == 'FA 2.0'] <- paste0('FA 2.0\n4 Month Rolling Average = ', subset(custCRMA.ver, DateGroup == currentMonth & Version == 'FA 2.0')[,'RollingAvg'])
+custCRMA.ver$facetHeader[custCRMA.ver$Version == 'Torch'] <- paste0('Torch\n4 Month Rolling Average = ', subset(custCRMA.ver, DateGroup == currentMonth & Version == 'Torch')[,'RollingAvg'])
+p.custCompRMA <- ggplot(custCRMA.ver, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + facet_wrap(~facetHeader) + scale_fill_manual(guide=FALSE, values=createPaletteOfVariableLength(custCRMA.ver, 'Version')) + theme(axis.text.x = element_text(angle = 90, vjust=0.5)) + geom_text(aes(label=Record), vjust=-0.5, size=4, fontface='bold') + labs(title='Customer Computer RMAs Opened', x='Date\n(Year-Month)', y='RMAs Opened')
+
 # Rate of Loaner RMA acceptance / all US customer RMAs
 loaner.yes <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(loaners.df, Loaner == 'Yes'), 'Key', startString.month3yr, 'Record', 'sum', 0) 
 allcustRMA <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', loaners.df, 'Key', startString.month3yr, 'Record', 'sum', 0)
@@ -916,11 +963,17 @@ pdf("CustomerSupport.pdf", width = 11, height = 8)
 for(i in 1:length(plots)) {
   print(get(plots[i]))
 }
+grid.newpage()
 grid.draw(g1)
+grid.newpage()
 grid.draw(g3)
+grid.newpage()
 grid.draw(table1)
+grid.newpage()
 grid.draw(table2)
+grid.newpage()
 grid.draw(table3)
+grid.newpage()
 grid.draw(table4)
 dev.off()
 

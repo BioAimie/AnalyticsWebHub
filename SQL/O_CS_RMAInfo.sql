@@ -1,3 +1,5 @@
+SET NOCOUNT ON
+
 SELECT 
 	[TicketId],
 	[TicketString],
@@ -134,6 +136,7 @@ SELECT
 	[CreatedDate],
 	[InitialCloseDate], 
 	MIN([Part]) AS [Part],
+	MIN([PartNo]) AS [PartNo],
 	MAX([Disposition]) AS [Disposition]
 INTO #Disposition
 FROM 
@@ -145,10 +148,12 @@ FROM
 		[CreatedDate],
 		[InitialCloseDate], 
 		IIF([PartNo] LIKE 'FLM%-ASY-0001%', 'Instrument',
+			IIF([PartNo] LIKE 'HTFA-ASY-0001%', 'Computer',
 			IIF([PartNo] LIKE 'HTFA-ASY-000%', 'Instrument',
 			IIF([PartNo] LIKE 'HTFA-SUB-0103', 'Instrument', 
 			IIF([PartNo] LIKE 'COMP-%', 'Computer', 
-			IIF([PartNo] LIKE 'RFIT-%', 'Pouch', 'Accessory'))))) AS [Part],
+			IIF([PartNo] LIKE 'RFIT-%', 'Pouch', 'Accessory')))))) AS [Part],
+		UPPER([PartNo]) AS [PartNo],
 		[Disposition]
 	FROM #PartInfo
 ) E
@@ -163,6 +168,20 @@ SELECT
 	A2.[TicketId],
 	ISNULL(A2.[TicketString], B2.[TicketString]) AS [TicketString],
 	A2.[Part],
+	CASE
+		WHEN A2.[PartNo] LIKE 'FLM1-%' THEN 'FA 1.5'
+		WHEN A2.[PartNo] LIKE 'FLM2-%' THEN 'FA 2.0'
+		WHEN A2.[PartNo] LIKE 'HTFA%' THEN 'Torch'
+		WHEN A2.[PartNo] LIKE 'COMP-CPU-%' THEN 'FA 1.5'
+		WHEN A2.[PartNo] LIKE 'COMP-GEN-%' THEN 'FA 1.5'
+		WHEN A2.[PartNo] IN ('COMP-SUB-0002','COMP-SUB-0005','COMP-SUB-0006','COMP-SUB-0010','COMP-SUB-0014',
+		'COMP-SUB-0015','COMP-SUB-0018','COMP-SUB-0020') THEN 'FA 1.5'
+		WHEN A2.[PartNo] LIKE 'COMP-SUB-0016%' THEN 'FA 1.5'
+		WHEN A2.[PartNo] LIKE 'COMP-SUB-0021%' THEN 'FA 1.5'
+		WHEN A2.[PartNo] LIKE 'COMP-SUB-0027%' THEN 'FA 2.0'
+		WHEN A2.[PartNo] LIKE 'COMP-SUB-0029%' THEN 'FA 2.0'
+		ELSE 'Other'
+	END AS [Version], 
 	A2.[Disposition],
 	ISNULL(A2.[Status], B2.[Status]) AS [Status],
 	ISNULL(B2.[OpenDate], A2.[CreatedDate]) AS [OpenDate],
@@ -192,6 +211,7 @@ LEFT JOIN
 
 SELECT
 	[Part],
+	[Version],
 	[Disposition],
 	IIF([Status] LIKE 'Closed%', 'Closed', 'Open') AS [Status],
 	[Type],
@@ -226,6 +246,7 @@ SELECT
 	MONTH([ShippingDate]) AS [MonthShip],
 	DATEPART(ww, [ShippingDate]) AS [WeekShip],	
 	[Part],
+	[Version],
 	[Disposition],
 	[Status],
 	[Type],
