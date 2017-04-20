@@ -1,15 +1,30 @@
 --open CI that need PRE and time since opened
 SET NOCOUNT ON
-SELECT CONVERT(CHAR(7),creation_ts, 120) AS CreatedDate,
-bug_id,
-DATEDIFF(dd,creation_ts,GETDATE()) AS daysSinceCreated,
-IIF(assigned_to= '1682' OR assigned_to='1737' OR assigned_to='1730' OR assigned_to='1756' OR assigned_to='1758','CI Team','Other') AS assigned_to
-FROM CI...bugs
-WHERE bug_status = 'Open'
-AND cf_regulatory_review = 'Yes'
-AND CONVERT(NVARCHAR(MAX),cf_corrective) = N''
-AND bug_id > '13000'
-ORDER BY bug_id
---Dana: 1682
---Kimone:1737
---Yarema:1730
+
+--CI team members (from past year)
+SELECT 
+	[userid],
+	[realname] 
+INTO #CITeam
+FROM [CI]...[profiles] WITH(NOLOCK)
+WHERE [realname] IN ('Dana Saif','Kimon Clarke','Ivan Arano','Mark Druss','Yarema Nagadzhyna')
+
+SELECT
+	CAST([creation_ts] AS DATE) AS [DateOpened],
+	[bug_id],
+	[assigned_to]
+INTO #bugs
+FROM [CI]...[bugs] WITH(NOLOCK)
+WHERE [bug_status] LIKE 'Open' AND [cf_regulatory_review] LIKE 'Yes' AND [cf_corrective] LIKE ''
+
+SELECT 
+	YEAR([DateOpened]) AS [Year],
+	MONTH([DateOpened]) AS [Month], 
+	[bug_id] AS [Bug], 
+	DATEDIFF(day, [DateOpened], GETDATE()) AS [DaysSinceOpen],
+	IIF(C.[realname] IS NULL, 'Other', 'CI Team') AS [AssignedTo],
+	1 AS [Record] 
+FROM #bugs B LEFT JOIN #CITeam C
+	ON B.[assigned_to] = C.[userid]
+
+DROP TABLE #CITeam, #bugs
