@@ -1,5 +1,6 @@
 SET NOCOUNT ON
 
+
 SELECT *
 INTO #faUsers
 FROM 
@@ -8,8 +9,11 @@ FROM
 		[UserID] AS [UserID],
 		IIF(CHARINDEX('(',[UserID]) > 0, UPPER(SUBSTRING([UserID], 1, CHARINDEX('(',[UserID])-1)), UPPER([UserID])) AS [User],
 		IIF(CHARINDEX(' ',[UserID]) > 0, UPPER(SUBSTRING([UserID], 1, CHARINDEX(' ',[UserID])-1)), '') AS [FirstName],
-		IIF(CHARINDEX(' ',[UserID]) > 0 AND CHARINDEX('(',[UserID]) > 0, UPPER(SUBSTRING([UserID], CHARINDEX(' ',[UserID]) + 1, CHARINDEX('(', [UserID]) - CHARINDEX(' ',[UserID])-2)),
-			IIF(CHARINDEX(' ',[UserID]) > 0 AND CHARINDEX('(',[UserID]) = 0, UPPER(SUBSTRING([UserID], CHARINDEX(' ',[UserID]) + 1, 10)),[UserID])) AS [LastName],
+		case 
+			when CHARINDEX(' ',[UserID]) > 0 AND CHARINDEX('(',[UserID]) > 0  and CHARINDEX('(', [UserID]) - CHARINDEX(' ',[UserID])-2 >= 0  then UPPER(SUBSTRING([UserID], CHARINDEX(' ',[UserID]) + 1, CHARINDEX('(', [UserID]) - CHARINDEX(' ',[UserID])-2))
+			when CHARINDEX(' ',[UserID]) > 0 AND CHARINDEX('(',[UserID]) = 0 then UPPER(SUBSTRING([UserID], CHARINDEX(' ',[UserID]) + 1, 10)) 
+			else [UserID]
+		end as [LastName],
 		MAX([SampleId]) AS [SampId],
 		MAX([EndTime]) AS [LastDate]
 	FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R WITH(NOLOCK)
@@ -20,8 +24,11 @@ FROM
 		[UserID] AS [UserID],
 		IIF(CHARINDEX('(',[UserID]) > 0, UPPER(SUBSTRING([UserID], 1, CHARINDEX('(',[UserID])-1)), UPPER([UserID])) AS [User],
 		IIF(CHARINDEX(' ',[UserID]) > 0, UPPER(SUBSTRING([UserID], 1, CHARINDEX(' ',[UserID])-1)), '') AS [FirstName],
-		IIF(CHARINDEX(' ',[UserID]) > 0 AND CHARINDEX('(',[UserID]) > 0, UPPER(SUBSTRING([UserID], CHARINDEX(' ',[UserID]) + 1, CHARINDEX('(', [UserID]) - CHARINDEX(' ',[UserID])-2)),
-			IIF(CHARINDEX(' ',[UserID]) > 0 AND CHARINDEX('(',[UserID]) = 0, UPPER(SUBSTRING([UserID], CHARINDEX(' ',[UserID]) + 1, 10)),[UserID])) AS [LastName],
+		case 
+			when CHARINDEX(' ',[UserID]) > 0 AND CHARINDEX('(',[UserID]) > 0  and CHARINDEX('(', [UserID]) - CHARINDEX(' ',[UserID])-2 >= 0  then UPPER(SUBSTRING([UserID], CHARINDEX(' ',[UserID]) + 1, CHARINDEX('(', [UserID]) - CHARINDEX(' ',[UserID])-2))
+			when CHARINDEX(' ',[UserID]) > 0 AND CHARINDEX('(',[UserID]) = 0 then UPPER(SUBSTRING([UserID], CHARINDEX(' ',[UserID]) + 1, 10)) 
+			else [UserID]
+		end as [LastName],
 		MAX([SampleId]) AS [SampId],
 		MAX([EndTime]) AS [LastDate]
 	FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK)
