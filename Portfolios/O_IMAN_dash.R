@@ -34,9 +34,9 @@ newinstruments <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch B
 shipSource <- subset(newinstruments, select=c('Product','SalesType','Year','Month','Record'))
 shipSource <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipSource, c('SalesType'), startString.month, 'Record', 'sum', 0)
 if(nrow(subset(refurbConv.df, TranDate >= Sys.Date()-365)) > 0) {
-refurb <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Key'), startString.month, 'Record', 'sum', 0)
-colnames(refurb)[colnames(refurb) == 'Key'] <- 'SalesType'
-ship.refurb <- rbind(shipSource, refurb)
+  refurb <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Key'), startString.month, 'Record', 'sum', 0)
+  colnames(refurb)[colnames(refurb) == 'Key'] <- 'SalesType'
+  ship.refurb <- rbind(shipSource, refurb)
 } else {
   ship.refurb <- shipSource
 }
@@ -50,7 +50,8 @@ p.Ship.SalesType <- ggplot(ship.refurb, aes(x=DateGroup, y=Record, fill=SalesTyp
   axis.text.x=element_text(angle=90, vjust=0.5,color='black', size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
   ggtitle('New Instrument Shipments by Sales Type', subtitle = 'Including Refurb Conversions, FA 1.5, FA 2.0, and Torch') + 
   scale_fill_manual(values=createPaletteOfVariableLength(ship.refurb, 'SalesType'), name='Sales Type') + 
-  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30)) + 
+  geom_text(data = with(ship.refurb, aggregate(Record~DateGroup, FUN=sum)), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), vjust = -0.5, fontface = 'bold', size = 5)
 
 # -----------------------------New Instrument Shipments by Territory per Month-------------------------------------------
 shipTerr <- subset(newinstruments, select=c('Product','SalesTerritory','Year','Month','Record')) 
@@ -66,7 +67,8 @@ p.Ship.Territory <- ggplot(data=shipTerr, aes(x=DateGroup, y=Record, fill=SalesT
   axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
   ggtitle('New Instrument Shipments by Sales Territory', subtitle = 'FA 1.5, FA 2.0, and Torch') + 
   scale_fill_manual(values=createPaletteOfVariableLength(shipTerr, 'SalesTerritory'), name='Sales Territory') + 
-  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30)) +
+  geom_text(data = with(shipTerr, aggregate(Record~DateGroup, FUN=sum)), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), vjust = -0.5, fontface = 'bold', size = 5)
 
 #----------------------------------New Instrument Shipments by Version------------------------------------------------------------
 shipVer <- subset(newinstruments, select=c('Product','Year','Month','Record')) 
@@ -82,7 +84,8 @@ p.Ship.Version <- ggplot(data=shipVer, aes(x=DateGroup, y=Record, fill=Product))
   axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
   ggtitle('New Instrument Shipments by Version', subtitle = 'FA 1.5, FA 2.0, and Torch') + 
   scale_fill_manual(values=createPaletteOfVariableLength(shipVer, 'Product'), name='Version') + 
-  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30)) +
+  geom_text(data = with(shipVer, aggregate(Record~DateGroup, FUN=sum)), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), vjust = -0.5, fontface = 'bold', size = 5)
 
 #------------------------------New Instruments Transferred to Inventory per month-----------------------------------
 transferred <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', transferred.df, 'Version', startString.month, 'Record', 'sum', 0)
@@ -96,7 +99,8 @@ p.Inst.Transferred <- ggplot(data=transferred, aes(x=DateGroup, y=Record, fill=V
   xlab('Date\n(Year-Month)') + ylab('Instruments') + theme(text=element_text(size=20, face='bold'), 
   axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
   ggtitle('New Instruments Transferred to Inventory') + scale_fill_manual(values=createPaletteOfVariableLength(transferred, 'Version'), name=' ') + 
-  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30)) +
+  geom_text(data = with(transferred, aggregate(Record~DateGroup, FUN=sum)), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), vjust = -0.5, fontface = 'bold', size = 5)
 
 #------------------------------New Instruments Transferred to Inventory per month since beginning of year-----------------------------------
 beg <- paste(year(Sys.Date()), '01', sep='-')
@@ -106,7 +110,8 @@ p.Instr.Trans.year <- ggplot(subset(transferred, as.character(DateGroup) >= beg)
   xlab('Date\n(Year-Month)') + ylab('Instruments') + theme(text=element_text(size=20, face='bold'), 
   axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=20), axis.text.y=element_text(hjust=1, color='black', size=20)) + 
   ggtitle('New Instruments Transferred to Inventory', subtitle = paste0('Since Beginning of ', year(Sys.Date()))) + scale_fill_manual(values=createPaletteOfVariableLength(transferred, 'Version'), name=' ') + 
-  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30))
+  scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30)) +
+  geom_text(data = with(subset(transferred, as.character(DateGroup) >= beg), aggregate(Record~DateGroup, FUN=sum)), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), vjust = -0.5, fontface = 'bold', size = 5)
 
 #------------------------------------------------------------------------------------------------------------------------------------------
 #last 3 months
