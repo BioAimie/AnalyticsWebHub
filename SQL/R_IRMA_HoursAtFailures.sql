@@ -187,9 +187,10 @@ SELECT *,
 INTO #mtbf
 FROM #lagged
 
-SELECT 
+SELECT
 	YEAR([ServiceDate]) AS [Year],
 	MONTH([ServiceDate]) AS [Month],
+	[VisitNo],
 	[MTBF]
 FROM #mtbf
 WHERE [MTBF] IS NOT NULL AND [MTBF] > 0.0000001 AND [ServiceDate] IS NOT NULL

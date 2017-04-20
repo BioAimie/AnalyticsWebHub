@@ -322,7 +322,7 @@ calculateRates <- function(x, all.row.Numbers, l, p, d){
 }
 
  
-#*********************************************************************************************
+#**********************************************************************************************
 #********************** initialize variables/data structures **********************************
 #**********************************************************************************************
 
@@ -350,6 +350,7 @@ location.frames[["pouchqc"]] <- sqlQuery(PMScxn, pouch.qc.query)
 
 odbcClose(PMScxn)
 
+
 print("sql queries completed")
 
 print("creating rate tables...")
@@ -359,10 +360,10 @@ print("creating rate tables...")
 protocol.types <- c("NPS", "Stool", "BC", "CSF", "QC", "BT", "LRTI", "NGDS", "BJI", "Custom")
 
 
+## make the LastServiceDate column an actual date
+location.frames[["pouchqc"]]$LastServiceDate <- as.POSIXct(location.frames[["pouchqc"]]$LastServiceDate)
+location.frames[["dungeon"]]$LastServiceDate <- as.POSIXct(location.frames[["dungeon"]]$LastServiceDate)
 ## make the "Version" column  of location.frames more understandable 
-
-
-
 version.names <<- list("1"="1.5", "2"="2.0", "3"="Torch")
 location.frames[["pouchqc"]]$Version <- unlist(lapply(location.frames[["pouchqc"]]$Version, makeVersionNames))
 location.frames[["dungeon"]]$Version <- unlist(lapply(location.frames[["dungeon"]]$Version, makeVersionNames))

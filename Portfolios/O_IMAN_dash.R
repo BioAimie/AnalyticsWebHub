@@ -33,10 +33,13 @@ theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
 newinstruments <- subset(shipments.inst, Product %in% c('FA1.5','FA2.0','Torch Base','Torch Module') & ShipOrder == 1)
 shipSource <- subset(newinstruments, select=c('Product','SalesType','Year','Month','Record'))
 shipSource <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', shipSource, c('SalesType'), startString.month, 'Record', 'sum', 0)
+if(nrow(subset(refurbConv.df, TranDate >= Sys.Date()-365)) > 0) {
 refurb <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbConv.df, c('Key'), startString.month, 'Record', 'sum', 0)
 colnames(refurb)[colnames(refurb) == 'Key'] <- 'SalesType'
 ship.refurb <- rbind(shipSource, refurb)
-
+} else {
+  ship.refurb <- shipSource
+}
 #Order factors
 ship.refurb$SalesType <- factor(ship.refurb$SalesType, levels = c('Domestic Sale','International Sale','Trade-Up','Refurb Conversion','EAP','Replacement','Loaner','Demo','Short Term Rental','Internal','Other'), ordered=TRUE)
 ship.refurb<- ship.refurb[with(ship.refurb, order(SalesType)), ]
