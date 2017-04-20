@@ -1,50 +1,40 @@
 SET NOCOUNT ON
 
-SELECT
-	[bug_id],
-	min([bug_when]) AS [preDateAdded]
-INTO #PRE
-FROM CI...bugs_activity
-WHERE [bug_id] > '13000' AND [fieldid] = '70' AND [removed] = ''
-GROUP BY [bug_id]
+SELECT 
+	A.[bug_id],
+	CAST(B.[creation_ts] AS DATE) AS [DateOpened], 
+	CAST(MIN(A.[bug_when]) AS DATE) AS [PREDate]
+INTO #bugs
+FROM [CI]...[bugs_activity] A WITH(NOLOCK) INNER JOIN [CI]...[bugs] B WITH(NOLOCK)	
+	ON A.[bug_id] = B.[bug_id]
+WHERE A.[fieldid] = 70 AND A.[removed] = '' AND B.[cf_regulatory_review] LIKE 'Yes' AND B.[resolution] NOT IN ('Voided', 'DUPLICATE')
+GROUP BY A.[bug_id], B.[creation_ts]
 
 SELECT
-	CAST([creation_ts] AS DATE) [ciCreatedDate],
-	[bug_id],
-	[cf_complaint],
-	[cf_regulatory_review]
-INTO #created
-FROM CI...bugs
-WHERE [cf_complaint] <> 'N/A' AND [creation_ts] > GETDATE()-120
+	B.[bug_id],
+	CAST(T.[RecordedValue] AS DATE) AS [BecameAware]
+INTO #aware
+FROM [CI]...[bugs] B WITH(NOLOCK) INNER JOIN [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] T WITH(NOLOCK) 
+	ON B.[cf_complaint] = T.[TicketString]
+WHERE T.[Tracker] LIKE 'COMPLAINT' AND T.[PropertyName] LIKE 'Became Aware Date' AND B.[cf_regulatory_review] LIKE 'Yes' AND B.[resolution] NOT IN ('Voided', 'DUPLICATE')
 
 SELECT
-	CAST([RecordedValue] AS DATE) AS [BecameAwareDate],
-	[ciCreatedDate],
-	[bug_id],
-	[cf_complaint],
-	[cf_regulatory_review]
-INTO #master
-FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] C INNER JOIN #created CI
-ON C.[TicketString] = CI.[cf_complaint]
-WHERE [Tracker] = 'Complaint' AND [PropertyName] LIKE 'Became Aware Date'
-
+	B.[bug_id] AS [Bug],
+	[DateOpened],
+	'Days Between CI Created and PRE Review' AS [Key],
+	DATEDIFF(day, [DateOpened], [PREDate]) AS [Record]
+FROM #bugs B LEFT JOIN #aware A
+	ON B.[bug_id] = A.[bug_id]
+WHERE B.[DateOpened] >= GETDATE()-120
+UNION ALL
 SELECT
-	gM.[bug_id] AS [BugId], 
-	DATEDIFF(dd, [BecameAwareDate], [preDateAdded]) AS [Days],
-	'BecameAwareUntilPre' AS [Note],
-	1 AS [Record]
-FROM #master gM INNER JOIN #PRE mP
-	ON gM.[bug_id] = mP.[bug_id]
-WHERE [BecameAwareDate] <> [ciCreatedDate] AND [cf_regulatory_review] = 'Yes'
-UNION
-SELECT
-	gM.[bug_id] AS [BugId],
-	DATEDIFF(dd, [ciCreatedDate], [preDateAdded]) AS [Days],
-	'ciCreatedUntilPRE' AS [Note],
-	1 AS Record
-FROM #master gM INNER JOIN #PRE mP
-	ON gM.[bug_id] = mP.[bug_id]
-WHERE [BecameAwareDate] <> [ciCreatedDate] AND [cf_regulatory_review] = 'Yes'
-ORDER BY [BugId]
+	B.[bug_id] AS [Bug],
+	[DateOpened],
+	'Days Between Became Aware Date and PRE Review' AS [Key],
+	DATEDIFF(day, [BecameAware], [PREDate]) AS [Record]
+FROM #bugs B LEFT JOIN #aware A
+	ON B.[bug_id] = A.[bug_id]
+WHERE B.[DateOpened] >= GETDATE()-120
+ORDER BY [Bug] 
 
-DROP TABLE #created, #PRE, #master
+DROP TABLE #bugs, #aware
