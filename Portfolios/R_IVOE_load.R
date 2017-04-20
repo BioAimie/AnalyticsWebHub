@@ -77,5 +77,16 @@ query.charVec = readLines("SQL/R_IVOE_WireHarnessNCR.sql")
 query = paste(query.charVec,collapse="\n")
 wireharnessNCR.df = sqlQuery(PMScxn,query)
 
+# get new computers shipped
+query.charVec = readLines("SQL/R_IRMA_NewCompShip.sql")
+query = paste(query.charVec,collapse="\n")
+compShip.df = sqlQuery(PMScxn,query)
+
+# get early failure RMAs for computers/laptops/Torch base
+queryText <- readLines("SQL/R_IRMA_ComputerEarlyFailure.sql")
+query <- paste(queryText,collapse="\n")
+computerEF.df <- sqlQuery(PMScxn,query)
+
+
 # close remote connection
 close(PMScxn)

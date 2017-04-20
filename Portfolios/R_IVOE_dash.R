@@ -207,6 +207,21 @@ for(i in 0:(length(wireharness.parts)-1) %/% wireharness.partsPerChart){
 }
 
 
+# create the charts for early failures of computers per 2.0 instruments shipped in a month (non-rolling), by version of computer
+calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
+startMonth <- findStartDate(calendar.month, 'Month', 24, 0)
+computerEF2.df <- subset(computerEF.df, Version=='FA2.0')
+compShip2.df <- subset(compShip.df, Version=='FA2.0')
+computerEF.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', computerEF2.df, c('Version','CompVersion','Key'), startMonth, 'Record', 'sum', 0)
+newShip.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', compShip2.df, c('Version'), startMonth, 'Record', 'sum', 0)
+computerEF.fail.month <- mergeCalSparseFrames(computerEF.month, newShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
+computerEF.textShift = max(computerEF.fail.month$Rate)*.05;
+computerEF.agg = aggregateAndFillDateGroupGaps(calendar.month, 'Month', computerEF.df, c('Version'), startMonth, 'Record', 'sum', 0)
+computerEF.agg.rate = mergeCalSparseFrames(computerEF.agg, newShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
+computerEF.agg.merge = merge(computerEF.agg.rate, computerEF.agg, by=c('DateGroup','Version'))
+p.computerEF.voe.month <- ggplot(computerEF.fail.month, aes(x=DateGroup, y=Rate, fill=CompVersion)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(computerEF.fail.month, 'CompVersion'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + scale_y_continuous(label=percent) + theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Computer Early Failure Rates by Month', x='Date\n(Year-Month)', y='Failures/New Computers Shipped (Count shown above)') + geom_text(data=subset(computerEF.agg.merge,Record>0), aes(x=DateGroup, y=Rate+computerEF.textShift, label=Record), inherit.aes=FALSE, size=6) 
+
+
 # #Thermoboard date settings
 # bigGroup <- 'Year'
 # smallGroup <- 'Month'
