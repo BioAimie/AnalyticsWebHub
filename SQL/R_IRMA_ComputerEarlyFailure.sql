@@ -7,6 +7,11 @@ SELECT DISTINCT
 		WHEN [PartNumber] LIKE 'COMP-SUB-0027%' THEN 'FA2.0'
 		WHEN [PartNumber] LIKE 'HTFA-ASY-0001%' THEN 'Torch'
 	END AS [Version],
+	CASE
+		WHEN [LotSerialNumber] LIKE 'CZC%' THEN 'Old'
+		WHEN [LotSerialNumber] LIKE '2UA%' THEN 'New'
+		ELSE IIF([CreatedDate] < '2016-09-01', 'Old', 'Unknown')
+	END AS [CompVersion],
 	YEAR([CreatedDate]) AS [Year],
 	MONTH([CreatedDate]) AS [Month],
 	DATEPART(ww,[CreatedDate]) AS [Week],
