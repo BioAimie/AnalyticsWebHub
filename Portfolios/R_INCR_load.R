@@ -48,6 +48,11 @@ queryText <- readLines("SQL/R_INCR_EarlyFailuresBySerialNumberFamily.sql")
 query <- paste(queryText,collapse="\n")
 serialbatches.df <- sqlQuery(PMScxn,query)
 
+# Load ncr incoming inspection data 
+queryText <- readLines("SQL/R_INCR_IncomingInspection.sql")
+query <- paste(queryText,collapse="\n")
+incomingInspection.df <- sqlQuery(PMScxn,query)
+
 queryText <- readLines("SQL/O_IMAN_InstShipments.sql")
 query <- paste(queryText,collapse="\n")
 instshipments.df <- sqlQuery(PMScxn,query)

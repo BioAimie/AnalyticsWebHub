@@ -1,37 +1,46 @@
 SET NOCOUNT ON
 
 SELECT 
-	[TicketId],
-	[CustId],
-	[Type]
+	[TicketId] 
 INTO #Tickets
 FROM 
 (
-	SELECT
+	SELECT 
 		[TicketId],
-		[Customer Id] AS [CustId],
-		[RMA Type] AS [Type]
-	FROM
+		IIF([CustId] LIKE 'BMX-NC', 'Keep',
+			IIF([CustId] IN ('BIODEF','NGDS'),'DoNotKeep',
+			IIF([CustId] LIKE 'BMX%', 'DoNotKeep', 'Keep'))) AS [CustKeep],
+		[CustId],
+		[Type]
+	FROM 
 	(
-		SELECT 
+		SELECT
 			[TicketId],
-			[PropertyName],
-			[RecordedValue] 
-		FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-		WHERE [PropertyName] IN ('RMA Type', 'Customer Id') AND [Tracker] LIKE 'RMA'
-	) A
-	PIVOT
-	(
-		MAX([RecordedValue])
-		FOR [PropertyName]
-		IN
+			[Customer Id] AS [CustId],
+			[RMA Type] AS [Type]
+		FROM
 		(
-			[Customer Id],
-			[RMA Type] 
-		)
-	) PIV
-) B
-WHERE [CustId] NOT LIKE 'BMX%' AND [Type] LIKE 'Customer%'
+			SELECT 
+				[TicketId],
+				[PropertyName],
+				[RecordedValue] 
+			FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
+			WHERE [PropertyName] IN ('RMA Type', 'Customer Id') AND [Tracker] LIKE 'RMA'
+		) A
+		PIVOT
+		(
+			MAX([RecordedValue])
+			FOR [PropertyName]
+			IN
+			(
+				[Customer Id],
+				[RMA Type] 
+			)
+		) PIV
+	) B
+	WHERE [Type] LIKE 'Customer%' 
+) C
+WHERE [CustKeep] LIKE 'Keep'
 
 SELECT 
 	[TicketId],

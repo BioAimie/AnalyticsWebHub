@@ -15,6 +15,8 @@ library(devtools)
 library(sendmailR)
 install_github('BioAimie/dateManip')
 library(dateManip)
+library(gtable)
+library(grid)
 
 # load the data from SQL
 source('Portfolios/R_IRMA_load.R')
@@ -33,6 +35,9 @@ validateDate <- '2015-40'
 startYear <- year(Sys.Date()) - 2
 calendar.df <- createCalendarLikeMicrosoft(startYear, smallGroup)
 startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
+startMonth.2 <- findStartDate(calendar.month, 'Month', 24, 0) #2years
+startMonth <- findStartDate(calendar.month, 'Month', 12, 0)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
@@ -54,7 +59,7 @@ x.val <- which(as.character(unique(reliability.lim[,'DateGroup'])) == validateDa
 # x_positions <- c('2015-37')
 # reliability.annotations <- c('Heat\nPress\nFix')
 # y_positions <- reliability.lim[as.character(reliability.lim[,'DateGroup']) %in% x_positions, 'Rate'] - 140
-p.reliability <- ggplot(reliability.lim, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), name='Key', guide=FALSE) + expand_limits(y=0) + geom_hline(aes(yintercept=LL), color='red', lty='dashed') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks) + labs(title='Pouches Shipped per Complaint RMA:\nLimit = -2 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average')
+p.reliability <- ggplot(reliability.lim, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), name='Key', guide=FALSE) + expand_limits(y=0) + geom_hline(aes(yintercept=LL), color='red', lty='dashed') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks) + labs(title='Pouches Shipped per Complaint RMA:\nLimit = -2 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average') + geom_hline(aes(yintercept=1500), color='forestgreen', lty='dashed')
 
 # remake this reliability chart, but lag the pouches shipped by 4 weeks (i.e. use pouches shipped 4 weeks ago per complaints this week)
 startDate.lag <- findStartDate(calendar.df, 'Week', weeks+4, periods)
@@ -237,15 +242,26 @@ p.failures.version <- ggplot(failures.rate.verison, aes(x=DateGroup, y=Rate, fil
 # early failures by version and department and type
 failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), startDate, 'Record', 'sum', 0)
 failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
-p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='black', lty=2)
+# add a ytd line
+failures.agg$ytd <- rep(NA, nrow(failures.agg))
+ships.fill.version$ytd <- rep(NA, nrow(ships.fill.version))
+for(department in unique(failures.agg.rate$Department)){  # loop through the departments and versions so the ytd is calculated in the correct groups 
+	for(version in c('FA2.0', 'Torch')){
+  	for(dategroup in unique(failures.agg$DateGroup)) {
+    	if(dategroup >= '2017-01') {
+      	numerator <- sum(subset(failures.agg, DateGroup >= '2017-01' & DateGroup <= dategroup & Department == department & Version == version)$Record, na.rm=TRUE)
+        denominator <- sum(subset(ships.fill.version, DateGroup >= '2017-01' & DateGroup <= dategroup & Key == department & Version == version)$Record, na.rm=TRUE)
+        ytd <- numerator/denominator
+        failures.agg.rate[which(failures.agg.rate$Department == department & failures.agg.rate$Version == version & failures.agg.rate$DateGroup == dategroup), 'ytd'] <- ytd
+      }
+  	}
+	}
+}
+p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_line(data=failures.agg.rate, aes(x=DateGroup, y=ytd, group=1), size=1.25, linetype=2, colour="black") + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='darkgreen', lty=2)
 start.noroll <- findStartDate(calendar.df, 'Week', 53, 0)
 p.earlyfailures.count <- ggplot(subset(failures.agg, DateGroup >=start.noroll), aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg, 'Key'), name='') + labs(title='Count of Early Failures',x='Reported Date\n(Year-Week)', y='Count') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks)
 
-
-  
 # create the charts for early failures per instruments shipped in a month (non-rolling) for each instrument version
-calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
-startMonth <- findStartDate(calendar.month, 'Month', 12, 0)
 rmasShip.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', rmasShip.df, c('Version'), startMonth, 'Record', 'sum', 0)
 newShip.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', instShip.df, c('Version'), startMonth, 'Record', 'sum', 0)
 failures.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', failures.df, c('Version','Key','Department'), startMonth, 'Record', 'sum', 0)
@@ -269,22 +285,19 @@ p.prod.fail.month <- ggplot(prod.fail.month, aes(x=DateGroup, y=Rate, fill=Key))
 p.serv.fail.month <- ggplot(serv.fail.month, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(serv.fail.month, 'Key'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + geom_line(data = serv.fail.month, aes(x=DateGroup, y=CumulativeRate, group=Key, color=Key), lwd=1.5, lty='dashed') + scale_color_manual(values=c('darkblue', 'chocolate4'), guide=FALSE) + scale_y_continuous(label=percent) + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Early Failure Rates by Month\n(12 Month Cumulative Rate Overlay)', x='Date\n(Year-Month)', y='Failures/RMA Instruments Shipped')
 
 # create the charts for early failures of computers per instruments shipped in a month (non-rolling) for each instrument version
-calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
-startMonth <- findStartDate(calendar.month, 'Month', 24, 0)
-computerEF.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', computerEF.df, c('Version','Key'), startMonth, 'Record', 'sum', 0)
-newShip.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', compShip.df, c('Version'), startMonth, 'Record', 'sum', 0)
+computerEF.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', computerEF.df, c('Version','Key'), startMonth.2, 'Record', 'sum', 0)
+newShip.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', compShip.df, c('Version'), startMonth.2, 'Record', 'sum', 0)
 computerEF.fail.month <- mergeCalSparseFrames(subset(computerEF.month, Version!='FA1.5'), newShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
 #computerEF.fail.merge = merge(computerEF.fail.month, computerEF.month, by=c('DateGroup','Version','Key'))
 computerEF.textShift = max(computerEF.fail.month$Rate)*.05;
-computerEF.agg = aggregateAndFillDateGroupGaps(calendar.month, 'Month', computerEF.df, c('Version'), startMonth, 'Record', 'sum', 0)
+computerEF.agg = aggregateAndFillDateGroupGaps(calendar.month, 'Month', computerEF.df, c('Version'), startMonth.2, 'Record', 'sum', 0)
 computerEF.agg.rate = mergeCalSparseFrames(subset(computerEF.agg, Version!='FA1.5'), newShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
 computerEF.agg.merge = merge(computerEF.agg.rate, computerEF.agg, by=c('DateGroup','Version'))
 p.computerEF.month <- ggplot(computerEF.fail.month, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(computerEF.fail.month, 'Key'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + scale_y_continuous(label=percent) + theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Computer Early Failure Rates by Month', x='Date\n(Year-Month)', y='Failures/New Computers Shipped (Count shown above)') + geom_text(data=subset(computerEF.agg.merge,Record>0), aes(x=DateGroup, y=Rate+computerEF.textShift, label=Record), inherit.aes=FALSE) 
 
-
 # create the chart of top ten failed parts in the last 90 days
 rootCause.agg <- with(rootCause.df, aggregate(cbind(thirtyDay, netSixtyDay, netNinetyDay, Record)~FailedPartDesc, FUN=sum))
-rootCause.agg[,'FailedPartDesc'] <- factor(rootCause.agg[,'FailedPartDesc'], levels=rootCause.agg[with(rootCause.agg, order(Record, decreasing = TRUE)), 'FailedPartDesc'])
+rootCause.agg[,'FailedPartDesc'] <- factor(rootCause.agg[,'FailedPartDesc'], levels=unique(rootCause.agg[with(rootCause.agg, order(Record, decreasing = TRUE)), 'FailedPartDesc']))
 rootCause.trim <- rootCause.agg[with(rootCause.agg, order(Record, decreasing = TRUE)), ][1:10, ]
 rootCause.trim.30 <- rootCause.trim[,c('FailedPartDesc','thirtyDay')]; rootCause.trim.30[,'Key'] <- 'Thirty Day'
 rootCause.trim.60 <- rootCause.trim[,c('FailedPartDesc','netSixtyDay')]; rootCause.trim.60[,'Key'] <- 'Sixty Day (net)'
@@ -294,7 +307,7 @@ colnames(rootCause.trim.60)[grep('Day', colnames(rootCause.trim.60))] <- 'Record
 colnames(rootCause.trim.90)[grep('Day', colnames(rootCause.trim.90))] <- 'Record'
 rootCause.trim <- rbind(rootCause.trim.30, rootCause.trim.60, rootCause.trim.90)
 rootCause.trim <- merge(rootCause.trim, with(rootCause.trim, aggregate(Record~FailedPartDesc, FUN=sum)), by='FailedPartDesc')
-rootCause.trim[,'FailedPartDesc'] <- factor(rootCause.trim[,'FailedPartDesc'], levels=rootCause.trim[with(rootCause.trim, order(Record.y)), 'FailedPartDesc'])
+rootCause.trim[,'FailedPartDesc'] <- factor(rootCause.trim[,'FailedPartDesc'], levels=unique(rootCause.trim[with(rootCause.trim, order(Record.y)), 'FailedPartDesc']))
 pal.rootCause <- createPaletteOfVariableLength(rootCause.trim, 'Key')
 p.rootcause <- ggplot(rootCause.trim[with(rootCause.trim, order(Key)), ], aes(x=FailedPartDesc, y=Record.x, fill=Key)) + geom_bar(stat='identity') + labs(title='Last 90 Days: Top Ten Failed Parts', x='Failed Part', y='Count of Occurrences') + coord_flip() + scale_fill_manual(values = pal.rootCause)
 
@@ -334,6 +347,7 @@ fit <- lm(y~x)
 hoursBad <- cbind(y, dfbetas(fit))
 hoursBad <- hoursBad[abs(hoursBad[,'x']) > 1,'y']
 failures.clean <- hours.df[!(hours.df$MTBF %in% hoursBad), ]
+failures.cleanfirst <- subset(failures.clean, VisitNo == 1)
 
 avgMTBF <- c()
 for (i in 1:length(yearMonths)) {
@@ -350,6 +364,14 @@ for (i in 1:length(yearMonths)) {
   periodMTBF.strip <- data.frame(YearMonth = yearMonths[i], MTBF_cum=mean(periodFail.strip$MTBF))
   avgMTBF.strip <- rbind(avgMTBF.strip, periodMTBF.strip)
 }
+#strip out MTBFs less than 100 hours and only use first time failures
+avgMTBF.first <- c()
+for (i in 1:length(yearMonths)) {
+  
+  periodFail.first <- failures.cleanfirst[failures.cleanfirst[,'YearMonth'] <= yearMonths[i] & failures.cleanfirst$MTBF > 100, ]
+  periodMTBF.first <- data.frame(YearMonth = yearMonths[i], MTBF_cum=mean(periodFail.first$MTBF))
+  avgMTBF.first <- rbind(avgMTBF.first, periodMTBF.first)
+}
 
 # make the chart... add bars with average hours by month under the line chart
 qtrBreaks <- yearMonths[seq(1,i,3)]
@@ -365,13 +387,20 @@ barMTBF.strip <- barMTBF.strip[barMTBF.strip[,'YearMonth'] != exclude, ]
 pstripped <- ggplot(barMTBF.strip, aes(x=YearMonth, y=MTBF)) + geom_bar(stat='identity', fill='dodgerblue') + geom_line(aes(x=YearMonth, y=MTBF_cum, group=1), color='blue', data = avgMTBF.strip) + geom_point(aes(x=YearMonth, y=MTBF_cum), color='blue', data = avgMTBF.strip)
 pstripped <- pstripped + theme(axis.text.x=element_text(angle=90, hjust=1), legend.position='bottom') + scale_x_discrete(breaks=qtrBreaks)
 p.mtbf.stripped <- pstripped + labs(title='Average Hours Run Between Failures:\nCumulative Field Population with Early Failures Removed', x='Date', y='Average Hours Between Failures')
+# first failures only, no early failures
+barMTBF.first <- with(failures.cleanfirst[failures.cleanfirst$MTBF > 100,], aggregate(MTBF~YearMonth, FUN=mean))
+barMTBF.first <- barMTBF.first[barMTBF.first[,'YearMonth'] != exclude, ]
+pfirst <- ggplot(barMTBF.first, aes(x=YearMonth, y=MTBF)) + geom_bar(stat='identity', fill='dodgerblue') + geom_line(aes(x=YearMonth, y=MTBF_cum, group=1), color='blue', data = avgMTBF.first) + geom_point(aes(x=YearMonth, y=MTBF_cum), color='blue', data = avgMTBF.first)
+pfirst <- pfirst + theme(axis.text.x=element_text(angle=90, hjust=1), legend.position='bottom') + scale_x_discrete(breaks=qtrBreaks)
+p.mtbf.first <- pfirst + labs(title='Average Hours Run To First Failure:\nCumulative Field Population with Early Failures Removed', x='Date', y='Average Hours To Failure')
 
 # make the denominator charts
 instShip.ver.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instShip.df, c('Version','Key'), startDate, 'Record', 'sum', 0)
 p.denom.pouchesShipped <- ggplot(pouches.fill, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(pouches.fill, 'Key'), guide=FALSE) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='Pouches Shipped', y='Pouches Shipped', x='Ship Date\n(Year-Week)')
 p.denom.rmasShipped <- ggplot(rmasShip.fill, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(rmasShip.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='RMAs Shipped by Version', y='Instruments Shipped', x='Ship Date\n(Year-Week)')
 p.denom.newInstShipped <- ggplot(subset(instShip.ver.fill, Key=='Production'), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(instShip.ver.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='New Instruments Shipped by Version', y='New Instruments Shipped', x='Ship Date\n(Year-Week)')
-
+pouches.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', pouches.df, c('Panel'), findStartDate(calendar.month, 'Month', 12), 'Record', 'sum', 0)
+p.pouchesShipped.month <- ggplot(pouches.month, aes(x=DateGroup, y=Record, fill=Panel)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.month, 'Panel')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Pouches Shipped', y='Pouches Shipped', x='Ship Date\n(Year-Month)') + scale_y_continuous(labels=comma, breaks=pretty_breaks())
 
 # Send alert to DJ Holden if new computer ELF/DOA received
 computerEFFilename = '../lastComputerEFTicket.rda'
@@ -399,33 +428,57 @@ track.df[,'PercentReturned'] <- with(track.df, Returned/Shipments)
 track.df[,'PercentFailures'] <- with(track.df, FailCount/Shipments)
 track.df[,'DateGroup'] <- with(track.df, ifelse(Month < 10, paste(Year, Month, sep='-0'), paste(Year, Month, sep='-')))
 track.df[,'Date'] <- as.Date(paste(track.df$DateGroup,'-01', sep=''))
-
-x1 <- track.df[,'Date']
-y1 <- track.df[,'Shipments']
-z1 <- track.df[,'PercentReturned']
-z2 <- track.df[,'PercentFailures']
-
-#------Opening png file-----------------------------
-setwd(imgDir)
-png(file='trend.png', width=1200, height=800, units='px')
-plot.new() #-------------------
-par(mfrow=c(1,1))
-par(mar = c(5, 4, 4, 4) + 0.3, font.axis=2)
-
-barplot(y1, names.arg = substring(x1, 1, 7), col='dodgerblue', las=2, axes=FALSE)
-mtext("New Instrument Shipments", side=2, line=2.5, col='black', font=2, padj=1)
-axis(2, col.axis='black')
-
-par(new=TRUE)
-plot(x1, z2, col='black', type = 'l', axes = FALSE, bty = 'n', xlab = "", ylab = "", lwd=3)
-lines(x1, z1, col='blue', lwd=3)
-axis(side=4, at=pretty(range(z2)), lab=paste0(pretty(z2)*100, '%'))
-mtext("Failures/Shipments, Returned/Total", side=4, line=3, col='black', font=2)
-
-title(main='Return and Failure Percentage by Shipment Month of Instrument')
-legend("top",legend=c('Shipments','Failures/Instrument','Percent Returned'), text.col=c('black','black','black'), pch=c(16,15,14), col=c('dodgerblue','black','blue'), cex=0.8)
-makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
-dev.off()
+# make 3 charts
+p1.shipments <- ggplot(subset(track.df, DateGroup >= startMonth.2), aes(x=DateGroup, y=Shipments, fill='Instrument Shipments')) + geom_bar(stat='identity') + scale_fill_manual(name='', values='lightskyblue2') + theme(panel.background = element_blank(), panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank(),axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank(), legend.position = 'bottom', legend.justification = 'right') + labs(title='', x = '', y='New Instrument Shipments')
+p2.percents <- ggplot(subset(track.df, DateGroup >= startMonth.2), aes(x=DateGroup, y=PercentReturned, group=1, colour='Percent Returned')) + geom_line() + geom_point() + geom_line(aes(x=DateGroup, y=PercentFailures, group=1, color='Failures/Instrument Shipments')) + geom_point(aes(x=DateGroup, y=PercentFailures, group=1, colour='Failures/Instrument Shipments')) + scale_color_manual(name='', values = c('black', 'blue')) + scale_y_continuous(limits = c(0,1.5), labels = percent, minor_breaks = seq(0.1,1.5,0.1)) + theme(panel.background = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank(), legend.position = 'bottom', legend.justification = 'left') + labs(title = '', x='', y='Failures/Instrument Shipments,\nReturned/Instrument Shipments')
+p3.panel <- ggplot(subset(track.df, DateGroup >= startMonth.2), aes(x=DateGroup, y=PercentReturned, group=1, colour='Percent Returned')) + geom_line() + geom_point() + geom_line(aes(x=DateGroup, y=PercentFailures, group=1, color='Failures/Instrument Shipments')) + geom_point(aes(x=DateGroup, y=PercentFailures, group=1, colour='Failures/Instrument Shipments')) + scale_color_manual(name='', values = c('black', 'blue')) + scale_y_continuous(limits = c(0,1.5), labels = percent, minor_breaks = seq(0.1,1.5,0.1)) + theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(), panel.grid.major.y = element_line(color='grey'), panel.grid.minor.y = element_line(color='grey'), legend.position = 'bottom', legend.justification = 'left', axis.text.x=element_text(angle=90, hjust=1), plot.margin = margin(0.5,0.5,2,0.5,'cm')) + labs(title = 'Return and Failure Percentage by Shipment Month of Instrument', x='Date\n(Year-Month)', y='Failures/Instrument Shipments,\nReturned/Instrument Shipments')
+# function to invert 2nd y axis
+hinvert_title_grob <- function(grob){
+  # Swap the widths
+  widths <- grob$widths
+  grob$widths[1] <- widths[3]
+  grob$widths[3] <- widths[1]
+  grob$vp[[1]]$layout$widths[1] <- widths[3]
+  grob$vp[[1]]$layout$widths[3] <- widths[1]
+  # Fix the justification
+  grob$children[[1]]$hjust <- 1 - grob$children[[1]]$hjust
+  grob$children[[1]]$vjust <- 1 - grob$children[[1]]$vjust
+  grob$children[[1]]$x <- unit(1, "npc") - grob$children[[1]]$x
+  grob
+}
+# Get the ggplot grobs
+g1 <- ggplotGrob(p1.shipments)
+g2 <- ggplotGrob(p2.percents)
+g3 <- ggplotGrob(p3.panel)
+# Get the location of the plot panel and legend in g1
+pp <- c(subset(g1$layout, name == "panel", se = t:r))
+pp2 <- c(subset(g1$layout, name == "guide-box", se = t:r))
+# Overlap panel for first plot on top of third plot and then second plot on that
+g4 <- gtable_add_grob(g3, g1$grobs[[which(g1$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l, name='c')
+g4 <- gtable_add_grob(g4, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l, name='a')
+# Add legend from g1
+g4 <- gtable_add_grob(g4, g1$grobs[[which(g1$layout$name == "guide-box")]], pp2$t, pp2$l, pp2$b, pp2$l, name='b')
+# Get the y axis title from g1
+index <- which(g1$layout$name == "ylab-l") # Which grob contains the y axis title?
+ylab <- g1$grobs[[index]]                # Extract that grob
+ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
+# Put the transformed label on the right side of g4
+g4 <- gtable_add_cols(g4, g1$widths[g1$layout[index, ]$l], pp$r)
+g4 <- gtable_add_grob(g4, ylab, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "ylab-r")
+# Get the y axis from g1 (axis line, tick marks, and tick mark labels)
+index <- which(g1$layout$name == "axis-l")  # Which grob
+yaxis <- g1$grobs[[index]]                  # Extract the grob
+yaxis$children[[1]]$x <- unit.c(unit(0, "npc"), unit(0, "npc"))
+ticks <- yaxis$children[[2]]
+ticks$widths <- rev(ticks$widths)
+ticks$grobs <- rev(ticks$grobs)
+ticks$grobs[[1]]$x <- ticks$grobs[[1]]$x - unit(1, "npc") + unit(3, "pt")
+ticks$grobs[[2]] <- hinvert_title_grob(ticks$grobs[[2]])
+yaxis$children[[2]] <- ticks
+# Put the transformed yaxis on the right side of g4
+g4 <- gtable_add_cols(g4, g1$widths[g1$layout[index, ]$l], pp$r)
+g4 <- gtable_add_grob(g4, yaxis, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "axis-r")
+# grid.draw(g4)
 
 # export images for web hub
 setwd(imgDir)
@@ -439,6 +492,10 @@ for(i in 1:length(plots)) {
   makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
   dev.off()
 }
+png(file='trend.png', width=1200, height=800, units='px')
+grid.draw(g4)
+makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
+dev.off()
 
 # Make pdf report for the web hub
 setwd(pdfDir)
@@ -447,23 +504,7 @@ for(i in 1:length(plots)) {
   
   print(eval(parse(text = plots[i])))
 }
-#add trend.png at end of pdf
-par(mfrow=c(1,1))
-par(mar = c(5, 4, 4, 4) + 0.3, font.axis=2)
-
-barplot(y1, names.arg = substring(x1, 1, 7), col='dodgerblue', las=2, axes=FALSE)
-mtext("New Instrument Shipments", side=2, line=2.5, col='black', font=2, padj=1)
-axis(2, col.axis='black')
-
-par(new=TRUE)
-plot(x1, z2, col='black', type = 'l', axes = FALSE, bty = 'n', xlab = "", ylab = "", lwd=3)
-lines(x1, z1, col='blue', lwd=3)
-axis(side=4, at=pretty(range(z2)), lab=paste0(pretty(z2)*100, '%'))
-mtext("Failures/Shipments, Returned/Total", side=4, line=3, col='black', font=2)
-
-title(main='Return and Failure Percentage by Shipment Month of Instrument')
-legend("top",legend=c('Shipments','Failures/Instrument','Percent Returned'), text.col=c('black','black','black'), pch=c(16,15,14), col=c('dodgerblue','black','blue'), cex=0.8)
-
+grid.draw(g4)
 dev.off()
 
 rm(list=ls())

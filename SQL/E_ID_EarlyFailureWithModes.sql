@@ -40,7 +40,7 @@ SELECT
 	IIF(F.[PartNo] LIKE 'FLM1-%', 'FA1.5',
 		IIF(F.[PartNo] LIKE 'FLM2-%', 'FA2.0',
 		IIF(F.[PartNo] LIKE 'HTFA-ASY-0001%' OR F.[PartNo] LIKE 'HTFA-ASY-0104%', 'Torch Base', 'Torch Module'))) AS [Version],
-	A.[ProblemArea],
+	IIF(A.[ProblemArea] LIKE 'Instrument%', SUBSTRING(A.[ProblemArea], 12,LEN(A.[ProblemArea])), A.[ProblemArea]) AS [ProblemArea],
 	A.[FailCat],
 	A.[SubFailCat] 
 INTO #Master
