@@ -87,5 +87,15 @@ queryText <- readLines("SQL/R_IRMA_ComputerEarlyFailure.sql")
 query <- paste(queryText,collapse="\n")
 computerEF.df <- sqlQuery(PMScxn,query)
 
+# get new instruments shipped
+query.charVec = readLines("SQL/R_INCR_InstrumentsProduced_denom.sql")
+query = paste(query.charVec,collapse="\n")
+newInst.df = sqlQuery(PMScxn,query)
+
+# get loose screw/fastener RMAs
+query.charVec = readLines("SQL/R_IVOE_LooseScrewRMA.sql")
+query = paste(query.charVec,collapse="\n")
+looseScrew.df = sqlQuery(PMScxn,query)
+
 # close remote connection
 close(PMScxn)
