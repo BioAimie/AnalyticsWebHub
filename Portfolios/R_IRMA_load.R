@@ -7,7 +7,7 @@ library(RODBC)
 PMScxn = odbcConnect("PMS_PROD")
 
 # get pouches shipped
-query.charVec = readLines("SQL/R_IRMA_PouchesShipped.sql")
+query.charVec = readLines("SQL/R_CC_CustPouchesShippedDetailed.sql")
 query = paste(query.charVec,collapse="\n")
 pouches.df = sqlQuery(PMScxn,query)
 
