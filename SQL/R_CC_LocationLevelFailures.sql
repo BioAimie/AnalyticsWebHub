@@ -5,7 +5,7 @@ SELECT
 	[RecordedValue] AS [Date]
 INTO #awareDate
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Became Aware Date' AND [CreatedDate] > GETDATE()  - 400
+WHERE [Tracker] = 'COMPLAINT' AND [PropertyName] = 'Became Aware Date' AND [CreatedDate] > GETDATE()  - 400
 
 SELECT 
 	[TicketId],
@@ -15,14 +15,14 @@ SELECT
 	[RecordedValue]
 INTO #fail
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'BFDX Part Number' AND [CreatedDate] > GETDATE() - 400
+WHERE [Tracker] = 'COMPLAINT' AND [ObjectName] = 'BFDX Part Number' AND [CreatedDate] > GETDATE() - 400
 
 SELECT 
 	[TicketId],
 	[RecordedValue] AS [CustId]
 INTO #cust
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Customer Id' AND [CreatedDate] > GETDATE() - 400
+WHERE [Tracker] = 'COMPLAINT' AND [PropertyName] = 'Customer Id' AND [CreatedDate] > GETDATE() - 400
 
 SELECT 
 	[TicketString],
