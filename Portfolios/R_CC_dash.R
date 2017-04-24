@@ -30,6 +30,7 @@ validateDate <- '2015-50'
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
 startYear <- year(Sys.Date()) - 3
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
+calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
 startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
 threeyr <- findStartDate(calendar.df, 'Week', 156, 4)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
@@ -144,15 +145,11 @@ pouches.all.3yr <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df
 instrument.all.3yr <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('Key'), threeyr, 'Record', 'sum', 0)
 instrument.all.3yr.rate <- mergeCalSparseFrames(instrument.all.3yr, pouches.all.3yr, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
 p.instrument.all.3yr <- ggplot(instrument.all.3yr.rate, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point() + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Pouches Shipped', subtitle = 'Over Three Years', x='Date', y='4 Week Rolling Average')
-
-
 instrument.all.version.3y <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), threeyr, 'Record', 'sum', 0)
 instrument.all.version.rate.3y <- mergeCalSparseFrames(instrument.all.version.3y, pouches.all.3yr, c('DateGroup'),c('DateGroup'), 'Record', 'Record', 0, periods)
 instrument.all.version.lims.3y <- addStatsToSparseHandledData(instrument.all.version.rate.3y, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.0005)
 pressure.error.rows.pouches <- instrument.all.version.lims.3y[which(instrument.all.version.lims.3y$RecordedValue == "Pressure Error"), ]
 p.pressure.errors.pouches <- ggplot(pressure.error.rows.pouches, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color="black") + geom_point() + scale_color_manual(values=c("black", "black"), guide=FALSE) + geom_hline(aes(yintercept=UL), color="blue", lty=2) +  scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pressure Errors per Pouches Shipped', x='Date', y='4 Week Rolling Average')
-
-
 instrument.all.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), startDate, 'Record', 'sum', 0)
 instrument.all.version.count <- instrument.all.version[instrument.all.version[,'DateGroup'] >= startDate.16, ]
 instrument.all.version.count[,'Period'] <- with(instrument.all.version.count, ifelse(DateGroup < startDate.8, '16 Weeks', '8 Weeks'))
@@ -195,7 +192,6 @@ p.instrument.all.installed.3yr <- ggplot(instrument.all.installed.3yr.rate, aes(
 instrument.all.version.installed.rate <- mergeCalSparseFrames(instrument.all.version, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
 instrument.all.version.installed.lims <- addStatsToSparseHandledData(instrument.all.version.installed.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0)
 p.instrument.version.installed <- ggplot(instrument.all.version.installed.lims, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_hline(aes(yintercept = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instrument Complaints By Type per Instruments Installed', x='Date', y='4 Week Rolling Average')
-
 instrument.all.version.installed.3y <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), threeyr, 'Record', 'sum', 0)
 instrument.all.version.installed.rate.3y <- mergeCalSparseFrames(instrument.all.version.installed.3y, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
 instrument.all.version.installed.lims.3y <- addStatsToSparseHandledData(instrument.all.version.installed.rate.3y, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0)
@@ -259,9 +255,10 @@ p.BioThreat.pareto <- ggplot(biothreat.df, aes(x=RecordedValue, y=Record, fill=Y
 # denominator charts
 p.denom.pouches <- ggplot(pouches.panel[with(pouches.panel, order(Version, decreasing = TRUE)), ], aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.panel, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pouches Shipped', x='Date', y='Pouches Shipped')
 p.denom.installed <- ggplot(subset(install.base.count, DateGroup >= startDate), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(install.base.count, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instruments in Install Base', x='Date', y='Install Base Size')
+pouches.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', pouches.df, c('Version'), findStartDate(calendar.month, 'Month', 12), 'Record', 'sum', 0)
+p.pouchesShipped.month <- ggplot(pouches.month, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.month, 'Version')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(color='black',size=fontSize,face=fontFace), axis.text.x=element_text(angle=90, vjust=0.5)) + labs(title='Pouches Shipped', y='Pouches Shipped', x='Ship Date\n(Year-Month)') + scale_y_continuous(labels=comma, breaks=pretty_breaks())
 
 # Count of complaints chart
-calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
 complaints.count.agg <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', complaintsCount.df, 'Key', '2014-01', 'Record', 'sum', 0)
 dateBreak.mon <- as.character(unique(calendar.month[calendar.month[,'DateGroup'] >= '2014-01','DateGroup']))[order(as.character(unique(calendar.month[calendar.month[,'DateGroup'] >= '2014-01','DateGroup'])))][seq(1,length(as.character(unique(calendar.month[calendar.month[,'DateGroup'] >= '2014-01','DateGroup']))), 3)]
 p.complaints.count <- ggplot(complaints.count.agg, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat = 'identity') + scale_fill_manual(values=createPaletteOfVariableLength(complaints.count.agg, 'Key'), guide = FALSE) + scale_x_discrete(breaks=dateBreak.mon) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, vjust=0.5)) + labs(title='Customer Complaints', x='Date\n(Year-Month)', y='Count of Complaints') + geom_text(aes(label=Record), fontface = 'bold', vjust = -0.5, size=6)
