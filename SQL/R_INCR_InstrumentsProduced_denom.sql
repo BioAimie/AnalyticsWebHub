@@ -15,6 +15,7 @@ WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001%' OR P.[PartNumber] LIKE 'HTFA-ASY-000
 
 SELECT
 	YEAR(MIN([DateOfManufacturing])) AS [Year],
+	MONTH(MIN([DateOfManufacturing])) AS [Month],
 	DATEPART(ww,MIN([DateOfManufacturing])) AS [Week],
 	IIF(LEFT(MIN([PartNumber]),4) LIKE 'FLM1', 'FA1.5',
 		IIF(LEFT(MIN([PartNumber]),4) LIKE 'FLM2', 'FA2.0','Torch')) AS [Version],
