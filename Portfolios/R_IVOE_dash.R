@@ -221,6 +221,22 @@ computerEF.agg.rate = mergeCalSparseFrames(computerEF.agg, newShip.month, c('Dat
 computerEF.agg.merge = merge(computerEF.agg.rate, computerEF.agg, by=c('DateGroup','Version'))
 p.computerEF.voe.month <- ggplot(computerEF.fail.month, aes(x=DateGroup, y=Rate, fill=CompVersion)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(computerEF.fail.month, 'CompVersion'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + scale_y_continuous(label=percent) + theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Computer Early Failure Rates by Month', x='Date\n(Year-Month)', y='Failures/New Computers Shipped (Count shown above)') + geom_text(data=subset(computerEF.agg.merge,Record>0), aes(x=DateGroup, y=Rate+computerEF.textShift, label=Record), inherit.aes=FALSE, size=6) 
 
+# Loose screw/fastener failures
+looseScrew.fail <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', looseScrew.df, c('HoursRunBin'), '2015-01', 'Record', 'sum', 0)
+newInst.fill <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', newInst.df, c('Key'), '2015-01', 'Record', 'sum', 0)
+looseScrew.rate <- mergeCalSparseFrames(looseScrew.fail, newInst.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0)
+looseScrew.rate$Key <- 'Failures/Instruments Manufactured'
+looseScrew.count <- looseScrew.fail;
+looseScrew.count$Key <- 'Count of Failures';
+colnames(looseScrew.count)[colnames(looseScrew.count)=='Record'] = 'Rate'
+looseScrew.all <- rbind(looseScrew.rate, looseScrew.count)
+looseScrew.all$HoursRunBin <- factor(looseScrew.all$HoursRunBin, levels = c('0-100','100-500','500-1000','1000+','Unknown'))
+looseScrew.annot = rbind(
+  data.frame(Label="Loose component check", DateGroup='2016-07', Key='Failures/Instruments Manufactured', Rate=.01),
+  data.frame(Label="Loose component check", DateGroup='2016-07', Key='Count of Failures', Rate=2.5)
+);
+p.looseScrew.all.voe <- ggplot(looseScrew.all, aes(x=DateGroup, y=Rate, fill=HoursRunBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(looseScrew.all, 'HoursRunBin'), name='') + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Loose Screw/Fastener Failures on New Instruments', y='Failures/Instrument Manufactured, Failure Count', x='Date of Instrument Manufacture\n(Year-Month)') +  geom_text(data = looseScrew.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=6, fontface='bold') + facet_wrap(~Key, ncol=1, scale='free_y');
+
 
 # #Thermoboard date settings
 # bigGroup <- 'Year'
