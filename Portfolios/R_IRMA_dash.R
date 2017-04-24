@@ -396,11 +396,8 @@ p.mtbf.first <- pfirst + labs(title='Average Hours Run To First Failure:\nCumula
 
 # make the denominator charts
 instShip.ver.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instShip.df, c('Version','Key'), startDate, 'Record', 'sum', 0)
-p.denom.pouchesShipped <- ggplot(pouches.fill, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(pouches.fill, 'Key'), guide=FALSE) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='Pouches Shipped', y='Pouches Shipped', x='Ship Date\n(Year-Week)')
 p.denom.rmasShipped <- ggplot(rmasShip.fill, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(rmasShip.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='RMAs Shipped by Version', y='Instruments Shipped', x='Ship Date\n(Year-Week)')
 p.denom.newInstShipped <- ggplot(subset(instShip.ver.fill, Key=='Production'), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(instShip.ver.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='New Instruments Shipped by Version', y='New Instruments Shipped', x='Ship Date\n(Year-Week)')
-pouches.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', pouches.df, c('Panel'), findStartDate(calendar.month, 'Month', 12), 'Record', 'sum', 0)
-p.pouchesShipped.month <- ggplot(pouches.month, aes(x=DateGroup, y=Record, fill=Panel)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.month, 'Panel')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Pouches Shipped', y='Pouches Shipped', x='Ship Date\n(Year-Month)') + scale_y_continuous(labels=comma, breaks=pretty_breaks())
 
 # Send alert to DJ Holden if new computer ELF/DOA received
 computerEFFilename = '../lastComputerEFTicket.rda'

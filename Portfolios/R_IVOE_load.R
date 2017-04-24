@@ -28,7 +28,7 @@ query = paste(query.charVec,collapse="\n")
 rmaShipped.df = sqlQuery(PMScxn,query)
 
 # get pouches shipped
-query.charVec = readLines("SQL/R_IVOE_PouchesShippedToCustomers.sql")
+query.charVec = readLines("SQL/R_CC_CustPouchesShippedDetailed.sql")
 query = paste(query.charVec,collapse="\n")
 pouches.df = sqlQuery(PMScxn,query)
 
@@ -86,7 +86,6 @@ compShip.df = sqlQuery(PMScxn,query)
 queryText <- readLines("SQL/R_IRMA_ComputerEarlyFailure.sql")
 query <- paste(queryText,collapse="\n")
 computerEF.df <- sqlQuery(PMScxn,query)
-
 
 # close remote connection
 close(PMScxn)
