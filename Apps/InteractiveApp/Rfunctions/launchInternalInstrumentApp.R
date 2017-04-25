@@ -51,7 +51,8 @@ calculateAlerts <- function(serial.num, alert.frame, location){
 } # end calculateAlerts 
 
 
-if(wday(Sys.Date()) == 4){
+#if(wday(Sys.Date()) == 4){
+if(FALSE){
 	
 	
 	## initialize the output data structure and email varialbes for the instrument alerts 
