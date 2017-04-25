@@ -114,7 +114,6 @@ SELECT
 		IIF([RecordedValue] LIKE '%Lid Lock%', 'Lid Lock Error', [RecordedValue]))))) AS [RecordedValue],
 	SUM([Record]) AS [Record]
 FROM #final
-WHERE [Year] > 2015 AND [RecordedValue] LIKE '%communication%'
 GROUP BY [Year], [Week], [Version], [Key], [RecordedValue]
 ORDER BY [Year], [Week]
 

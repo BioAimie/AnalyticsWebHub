@@ -33,4 +33,4 @@ query = paste(query.charVec,collapse="\n")
 biothreat.df = sqlQuery(PMScxn,query)
 
 # close remote connection
-close(PMScxn)
+odbcCloseAll()
