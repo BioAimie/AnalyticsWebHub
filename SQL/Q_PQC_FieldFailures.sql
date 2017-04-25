@@ -5,7 +5,7 @@ SELECT
 	[RecordedValue] AS [Date]
 INTO #aware
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Became Aware Date'
+WHERE [Tracker] = 'COMPLAINT' AND [PropertyName] = 'Became Aware Date'
 
 SELECT 
 	[TicketId],
@@ -16,7 +16,7 @@ SELECT
 	[RecordedValue]
 INTO #fail
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'BFDX Part Number'
+WHERE [Tracker] = 'COMPLAINT' AND [ObjectName] = 'BFDX Part Number'
 
 SELECT
 	[LotNo],
