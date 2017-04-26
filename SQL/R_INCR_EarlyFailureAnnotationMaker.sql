@@ -40,7 +40,7 @@ SELECT
 	[RecordedValue]
 INTO #partInfo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Part Information'
+WHERE [ObjectName] LIKE 'Part Information' AND [Tracker] LIKE 'RMA'
 
 SELECT 
 	[TicketId],
@@ -50,7 +50,7 @@ SELECT
 	[RecordedValue]
 INTO #freePropPivrops
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title','System Failure') 
+WHERE [PropertyName] IN ('Hours Run','Complaint Number','RMA Type','RMA Title','System Failure') AND [Tracker] LIKE 'RMA'
 
 SELECT 
 	[TicketId],
@@ -183,7 +183,7 @@ SELECT
 	[RecordedValue]
 INTO #bfdxParts
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'BFDX Part Number'
+WHERE [ObjectName] LIKE 'BFDX Part Number' AND [Tracker] LIKE 'COMPLAINT'
 
 SELECT 
        [TicketId],
