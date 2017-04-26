@@ -21,7 +21,7 @@ SELECT
 	[RecordedValue]
 INTO #partsAffectedPrePiv
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'Parts Affected'
+WHERE [ObjectName] LIKE 'Parts Affected' AND [Tracker] LIKE 'NCR'
 
 SELECT 
 	[TicketId],
