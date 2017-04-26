@@ -52,7 +52,7 @@ calculateAlerts <- function(serial.num, alert.frame, location){
 
 
 #if(wday(Sys.Date()) == 4){
-if(FALSE){
+if(wday(Sys.Date()) == 4){
 	
 	
 	## initialize the output data structure and email varialbes for the instrument alerts 
@@ -67,11 +67,11 @@ if(FALSE){
 	alert.location.frames[["pouchqc"]] <- subset(location.frames[["pouchqc"]], Date >= date.ranges[["7"]][1] & (LastServiceDate < date.ranges[["7"]][1] | is.na(LastServiceDate)))
 	
 	from <-"Anna.Hoffee@biofiredx.com"
-	dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Lisa.Ogden@biofiredx.com", "Bartek.Ksok@biofiredx.com", "Shane.Woodhouse@biofiredx.com" )
-	qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Emily.Fernandez@biofiredx.com", "Kristel.Borsos@biofiredx.com", "Dana.Saif@biofiredx.com", "Kimon.Clarke@biofiredx.com")
+	#dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Lisa.Ogden@biofiredx.com", "Bartek.Ksok@biofiredx.com", "Shane.Woodhouse@biofiredx.com" )
+	#qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Emily.Fernandez@biofiredx.com", "Kristel.Borsos@biofiredx.com", "Dana.Saif@biofiredx.com", "Kimon.Clarke@biofiredx.com")
 
-	#dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com")
-	#qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com")
+	dungeon.people <- c("Anna.Hoffee@biofiredx.com")
+	qc.people <- c("Anna.Hoffee@biofiredx.com")
 	
 	mailControl <- list(smtpServer="webmail.biofiredx.com")
 	subject.names <- list("pouchqc" = "Pouch QC", "dungeon"="Dungeon")
