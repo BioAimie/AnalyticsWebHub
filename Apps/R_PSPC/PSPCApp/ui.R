@@ -3,6 +3,7 @@ library(shinydashboard)
 library(shinysky)
 library(DT)
 library(stringr)
+library(rhandsontable)
 
 shinyUI(
 dashboardPage( 
@@ -13,8 +14,9 @@ dashboardPage(
       menuItem('Recent vs Previous Anomaly Rate', tabName = 'recentvprev', icon = icon('bar-chart')),
       menuItem('QC Anomaly Rate', tabName = 'qcanomrate', icon = icon('area-chart')),
       menuItem('QC Pouches Run To Date', tabName = 'qcpouches', icon = icon('bar-chart')),
-      menuItem('Real False Positives', tabName = 'fppanel', icon = icon('bar-chart')),
+      menuItem('Run Observation Rates', tabName = 'fppanel', icon = icon('bar-chart')),
       menuItem('Control Failure Pattern', tabName = 'cfpattern', icon = icon('area-chart')),
+      menuItem('Permanently Exclude Pouch Serials', tabName = 'permex', icon = icon('table')),
       br(),
       br(),
       br(),
@@ -24,42 +26,53 @@ dashboardPage(
     )
   ),
   dashboardBody(
+    list(tags$head(tags$style(HTML("
+                                 .multicol { 
+                                   height: 80px;
+                                   -webkit-column-count: 7; /* Chrome, Safari, Opera */ 
+                                   -moz-column-count: 7;    /* Firefox */ 
+                                   column-count: 7; 
+                                   -moz-column-fill: auto;
+                                   -column-fill: auto;
+                                   } 
+                                   ")) 
+    )),
     tabItems(
       tabItem(tabName = 'datatable', 
-        fluidRow(
-          box(
-            title = 'Filters',
-            width = 2, 
-            checkboxGroupInput('columnsVisible','Columns to Show', choices = colnames(summary.df), selected = colnames(summary.df)),
-            actionLink('selectAll', label = 'Select All/Deselect All'),
-            br(),
-            br(),
-            checkboxInput('includeabg', 'Include alpha, beta, and gamma runs', value = FALSE),
-            br(),
-            br(),
-            downloadButton('downloaddt', 'Download Data Table')
-          ),
-          box(
-            title = 'Anomaly Summary Table',
-            width = 10,
-            dataTableOutput('dataTable')
-          ) #end box
-        ) #end fluidRow
+              fluidRow(
+                box(
+                  title = 'Filters',
+                  width = 12, 
+                  tags$div(class='multicol', checkboxGroupInput('columnsVisible','Columns to Show', choices = colnames(summary.df), selected = colnames(summary.df), inline=FALSE)),
+                  actionLink('selectAll', label = 'Select All/Deselect All'),
+                  br(),
+                  checkboxInput('includeabg', 'Include alpha, beta, and gamma runs', value = FALSE),
+                  br(),
+                  downloadButton('downloaddt', 'Download Data Table')
+                )
+              ),#end fluidRow
+              fluidRow(
+                box(
+                  title = 'Anomaly Summary Table',
+                  width = 12,
+                  dataTableOutput('dataTable')
+                ) #end box
+              ) #end fluidRow
       ), # end tabItem
       tabItem(tabName = 'recentvprev',
         fluidRow(
           box(
             title = 'Filters',
             width = 2, 
-            textInput('pouchserial1', 'Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
+            textInput('pouchserial1', 'Temporarily Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
             br(),
             br(),
             downloadButton('downloadrecentvprev', 'Download Chart')
           ),
           box(
-            width = 8,
+            width = 10,
             busyIndicator(text = 'Making chart...', wait=0),
-            plotOutput('recentprevchart', height = '600px')
+            plotOutput('recentprevchart', height = '700px')
           )
         )#end fluidrow
       ), #end tabItem
@@ -72,7 +85,7 @@ dashboardPage(
                   br(),
                   checkboxGroupInput('anomalyfilter', 'Anomaly:', choices = c('False Positive','False Negative','Control Failure'), selected = c('False Positive','False Negative','Control Failure'), inline = FALSE),
                   br(),
-                  textInput('pouchserial2', 'Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
+                  textInput('pouchserial2', 'Temporarily Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
                   br(),
                   checkboxInput('includeabg2', 'Include alpha, beta, and gamma runs', value = FALSE),
                   br(),
@@ -80,9 +93,9 @@ dashboardPage(
                   downloadButton('downloadqcanomrate', 'Download Chart')
                 ),
                 box(
-                  width = 8,
+                  width = 10,
                   busyIndicator(text = 'Making chart...', wait=0),
-                  plotOutput('qcanomratechart', height = '600px')
+                  plotOutput('qcanomratechart', height = '700px')
                 )
               )#end fluidrow
       ), #end tabItem
@@ -118,7 +131,7 @@ dashboardPage(
                   radioButtons('panVassayBut', label=NULL, choices = c('Panel', 'Assay'), selected = 'Panel', inline = TRUE),
                   uiOutput('panVassay'),
                   br(),
-                  textInput('pouchserial5', 'Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
+                  textInput('pouchserial5', 'Temporarily Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
                   br(),
                   checkboxInput('includeabg3', 'Include alpha, beta, and gamma runs', value = FALSE),
                   br(),
@@ -126,9 +139,9 @@ dashboardPage(
                   downloadButton('downloadfppanel', 'Download Chart')
                 ),
                 box(
-                  width = 8,
+                  width = 10,
                   busyIndicator(text = 'Making chart...', wait=0),
-                  plotOutput('fppanelchart', height = '600px')
+                  plotOutput('fppanelchart', height = '700px')
                 )
               )#end fluidrow
       ), #end tabItem
@@ -143,7 +156,9 @@ dashboardPage(
                   br(),
                   selectizeInput('runOb', 'Run Observation:', choices = c('All', sort(as.character(runobs.df$RunObservation))), selected = 'All', multiple = TRUE),
                   br(),
-                  textInput('pouchserial4', 'Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
+                  checkboxGroupInput('assay2', 'Assay:', choices = sort(unique(as.character(subset(allruns.df, CF==1)[,'Control_Failures']))), selected = sort(unique(as.character(subset(allruns.df, CF==1)[,'Control_Failures'])))),
+                  br(), 
+                  textInput('pouchserial4', 'Temporarily Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
                   br(),
                   checkboxInput('includeabg5', 'Include alpha, beta, and gamma runs', value = FALSE),
                   br(),
@@ -151,9 +166,19 @@ dashboardPage(
                   downloadButton('downloadcfpattern', 'Download Chart')
                 ),
                 box(
-                  width = 8,
+                  width = 10,
                   busyIndicator(text = 'Making chart...', wait=0),
-                  plotOutput('cfpatternchart', height = '600px')
+                  plotOutput('cfpatternchart', height = '700px')
+                )
+              )#end fluidrow
+      ), #end tabItem
+      tabItem(tabName = 'permex',
+              fluidRow(
+                box(
+                  width = 10,
+                  rHandsontableOutput('hot'),
+                  br(),
+                  actionButton('savetable', 'Save')
                 )
               )#end fluidrow
       )#end tabItem

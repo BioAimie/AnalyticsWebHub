@@ -3,6 +3,7 @@ library(shinydashboard)
 library(shinysky)
 library(DT)
 library(stringr)
+library(rhandsontable)
 
 shinyServer(function(input, output, session) {
   # Load data on page load---------------------------------------------------------------------------------------------------
@@ -35,7 +36,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$dataTable <- renderDataTable({
-    datatable(summaryDT(), filter = 'top', options = list(pageLength = 25, scrollX = TRUE, autoWidth=TRUE, columnDefs = list(list(width='200px', targets='_all'))), rownames=FALSE, escape = FALSE)
+    datatable(summaryDT(), filter = 'top', options = list(pageLength = 25, scrollX = TRUE, autoWidth=TRUE, columnDefs = list(list(width='100px', targets='_all'))), rownames=FALSE, escape = FALSE)
   })
   
   #QC Pouches Run to Date-----------------------------------------------------------------------------------------------------------------------
@@ -58,18 +59,26 @@ shinyServer(function(input, output, session) {
   makeRecentvPrev <- reactive({
     temp <- subset(allruns.df, !grepl('alpha', allruns.df$SampleId, ignore.case = TRUE) & !grepl('beta', allruns.df$SampleId, ignore.case = TRUE) & !grepl('gamma', allruns.df$SampleId, ignore.case = TRUE))
 
-    if(!is.null(input$pouchserial1)) {
+    if(nrow(expouchserials) > 0) {
+      exserials <- as.character(expouchserials[,'PouchSerialNumber'])
+      if(!is.null(input$pouchserial1)) {
+        exserials <- c(exserials, str_trim(unlist(strsplit(input$pouchserial1,',')), side = 'both'))
+      }
+    } else if (!is.null(input$pouchserial1)) {
       exserials <- str_trim(unlist(strsplit(input$pouchserial1,',')), side = 'both')
-      allqcruns.30 <- sum(subset(temp, ThirtyDayRun == 1 & !(PouchSerialNumber %in% exserials))[,'Record'])
-      allqcruns.90 <- sum(subset(temp, NinetyDayRunNet == 1 & !(PouchSerialNumber %in% exserials))[,'Record'])
-      anomaly.30 <- with(subset(temp, (CF > 0 | FP > 0 | FN > 0) & !is.na(RunObservation) & ThirtyDayRun == 1 & !(PouchSerialNumber %in% exserials)), aggregate(Record~RunObservation, FUN=sum))
-      anomaly.90 <- with(subset(temp, (CF > 0 | FP > 0 | FN > 0) & !is.na(RunObservation) & NinetyDayRunNet == 1 & !(PouchSerialNumber %in% exserials)), aggregate(Record~RunObservation, FUN=sum))
     } else {
-      allqcruns.30 <- sum(subset(temp, ThirtyDayRun == 1)[,'Record'])
-      allqcruns.90 <- sum(subset(temp, NinetyDayRunNet == 1)[,'Record'])
-      anomaly.30 <- with(subset(temp, (CF > 0 | FP > 0 | FN > 0) & !is.na(RunObservation) & ThirtyDayRun == 1), aggregate(Record~RunObservation, FUN=sum))
-      anomaly.90 <- with(subset(temp, (CF > 0 | FP > 0 | FN > 0) & !is.na(RunObservation) & NinetyDayRunNet == 1), aggregate(Record~RunObservation, FUN=sum))
+      exserials <- c()
     }
+    if(length(exserials > 0)) {
+      for(i in 1:length(exserials)) {
+        temp <- subset(temp, !grepl(exserials[i], temp$PouchSerialNumber))
+      }    
+    }
+    
+    allqcruns.30 <- sum(subset(temp, ThirtyDayRun == 1)[,'Record'])
+    allqcruns.90 <- sum(subset(temp, NinetyDayRunNet == 1)[,'Record'])
+    anomaly.30 <- with(subset(temp, (CF > 0 | FP > 0 | FN > 0) & !is.na(RunObservation) & ThirtyDayRun == 1), aggregate(Record~RunObservation, FUN=sum))
+    anomaly.90 <- with(subset(temp, (CF > 0 | FP > 0 | FN > 0) & !is.na(RunObservation) & NinetyDayRunNet == 1), aggregate(Record~RunObservation, FUN=sum))
 
     anomaly.30 <- merge(anomaly.30, runobs.df, all = TRUE)
     anomaly.30$Key <- '< 30 Day Anomaly'
@@ -81,7 +90,7 @@ shinyServer(function(input, output, session) {
     anomaly.90$Rate <- anomaly.90$Record / allqcruns.90
     anomaly.pareto <- rbind(anomaly.30, anomaly.90)
     anomaly.pareto$RunObservation <- factor(anomaly.pareto$RunObservation, levels = as.character(anomaly.30[with(anomaly.30, order(Rate, decreasing = TRUE)),'RunObservation']))
-    ggplot(anomaly.pareto, aes(x=RunObservation, y=Rate, fill=Key)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name='', values = c('#a30000','#ff8585')) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=45, hjust=1), plot.title = element_text(hjust=0.5)) + labs(title='Previous vs Recent Anomaly Rate', y='Observations per QC Runs', x='Anomaly Observations')
+    ggplot(anomaly.pareto, aes(x=RunObservation, y=Rate, fill=Key)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name='', values = c('#a30000','#ff8585')) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.title = element_text(size=16), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=60, hjust=1), plot.title = element_text(hjust=0.5)) + labs(title='Previous vs Recent Anomaly Rate', y='Observations per QC Runs', x='Anomaly Observations')
   })
 
   output$recentprevchart <- renderPlot({
@@ -95,19 +104,29 @@ shinyServer(function(input, output, session) {
     } else {
       temp <- allruns.df
     }
-
-    if(!is.null(input$pouchserial2)) {
-      exserials <- str_trim(unlist(strsplit(input$pouchserial2,',')), side = 'both')
-      anomaly.overall <- subset(temp, StartTime >= '2015-01-01' & !(PouchSerialNumber %in% exserials))
-      allqcruns.denom <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(temp, !(PouchSerialNumber %in% exserials)), 'Key', '2014-04', 'Record', 'sum', 1)
-    } else {
-      anomaly.overall <- subset(temp, StartTime >= '2015-01-01')
-      allqcruns.denom <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, 'Key', '2014-04', 'Record', 'sum', 1)
-    }
     
     if(!is.null(input$panel2)) {
-      anomaly.overall <- subset(anomaly.overall, Panel %in% input$panel2)  
+      temp <- subset(temp, Panel %in% input$panel2)
     }
+    
+    if(nrow(expouchserials) > 0) {
+      exserials <- as.character(expouchserials[,'PouchSerialNumber'])
+      if(!is.null(input$pouchserial2)) {
+        exserials <- c(exserials, str_trim(unlist(strsplit(input$pouchserial2,',')), side = 'both'))
+      }
+    } else if (!is.null(input$pouchserial2)) {
+      exserials <- str_trim(unlist(strsplit(input$pouchserial2,',')), side = 'both')
+    } else {
+      exserials <- c()
+    }
+    if(length(exserials > 0)) {
+      for(i in 1:length(exserials)) {
+        temp <- subset(temp, !grepl(exserials[i], temp$PouchSerialNumber))
+      }    
+    }
+    
+    anomaly.overall <- subset(temp, StartTime >= '2015-01-01')
+    allqcruns.denom <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, 'Key', '2014-04', 'Record', 'sum', 1)
 
     anomaly.overall$DateGroup <- with(anomaly.overall, ifelse(Month < 10, paste0(Year, '-0', Month), paste0(Year, '-', Month)))
     anomaly.overallCF <- with(anomaly.overall, aggregate(CF~DateGroup, FUN=sum))
@@ -125,11 +144,12 @@ shinyServer(function(input, output, session) {
     anomaly.rate$Key.x <- factor(anomaly.rate$Key.x, levels = c('False Positive','False Negative','Control Failure'))
     dateLabels <- as.character(unique(anomaly.rate[,'DateGroup']))[order(as.character(unique(anomaly.rate[,'DateGroup'])))]
     dateBreaks <- 1:length(as.character(unique(anomaly.rate[,'DateGroup'])))
+    panelsFiltered <- paste0('Panels Included: ', paste(input$panel2, collapse = ', '))
     
     if(!is.null(input$anomalyfilter)) {
-      ggplot(subset(anomaly.rate, Key.x %in% input$anomalyfilter), aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Key.x)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = c('#7a0000','#cc0000','#ff8585')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5)) + labs(title='QC Anomaly Rate', y='Anomaly per QC Runs', x='Date\n(Year-Month)')
+      ggplot(subset(anomaly.rate, Key.x %in% input$anomalyfilter), aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Key.x)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = c('#7a0000','#cc0000','#ff8585')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.title = element_text(size=16), axis.text=element_text(size=16, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='QC Anomaly Rate', subtitle = panelsFiltered, y='Anomaly per QC Runs', x='Date\n(Year-Month)')
     } else {
-      ggplot(anomaly.rate, aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Key.x)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = c('#7a0000','#cc0000','#ff8585')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5)) + labs(title='QC Anomaly Rate', y='Anomaly per QC Runs', x='Date\n(Year-Month)')
+      ggplot(anomaly.rate, aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Key.x)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = c('#7a0000','#cc0000','#ff8585')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.title = element_text(size=16), axis.text=element_text(size=16, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='QC Anomaly Rate', subtitle = panelsFiltered, y='Anomaly per QC Runs', x='Date\n(Year-Month)')
     }
   })
 
@@ -137,7 +157,7 @@ shinyServer(function(input, output, session) {
     makeQCAnomRate()
   })
 
-  # Real False Positives By Panel--------------------------------------------------------------------------------------------------
+  # Run Observation Rates--------------------------------------------------------------------------------------------------
   output$calendar <- renderUI({
     if(is.null(input$dateBut))
       return()
@@ -184,9 +204,20 @@ shinyServer(function(input, output, session) {
     if(!is.null(input$instVer))
       temp <- subset(temp, Version %in% input$instVer)
     #Pouch exclude
-    if(!is.null(input$pouchserial5)) {
+    if(nrow(expouchserials) > 0) {
+      exserials <- as.character(expouchserials[,'PouchSerialNumber'])
+      if(!is.null(input$pouchserial5)) {
+        exserials <- c(exserials, str_trim(unlist(strsplit(input$pouchserial5,',')), side = 'both'))
+      }
+    } else if (!is.null(input$pouchserial5)) {
       exserials <- str_trim(unlist(strsplit(input$pouchserial5,',')), side = 'both')
-      temp <- subset(temp, !(PouchSerialNumber %in% exserials))
+    } else {
+      exserials <- c()
+    }
+    if(length(exserials > 0)) {
+      for(i in 1:length(exserials)) {
+        temp <- subset(temp, !grepl(exserials[i], temp$PouchSerialNumber))
+      }    
     }
     #denominator
     allqcruns.denom <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, 'Key', startD, 'Record', 'sum', 1)
@@ -255,23 +286,40 @@ shinyServer(function(input, output, session) {
     } else {
       startD <- '2012-01'
     }
-    allqcruns.denom <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, 'Key', startD, 'Record', 'sum', 1)
     
     #Panel input
     if(!is.null(input$panel4)) {
       temp <- subset(temp, Panel %in% input$panel4)
     }
+    #exclude pouch
+    if(nrow(expouchserials) > 0) {
+      exserials <- as.character(expouchserials[,'PouchSerialNumber'])
+      if(!is.null(input$pouchserial4)) {
+        exserials <- c(exserials, str_trim(unlist(strsplit(input$pouchserial4,',')), side = 'both'))
+      }
+    } else if (!is.null(input$pouchserial4)) {
+      exserials <- str_trim(unlist(strsplit(input$pouchserial4,',')), side = 'both')
+    } else {
+      exserials <- c()
+    }
+    if(length(exserials > 0)) {
+      for(i in 1:length(exserials)) {
+        temp <- subset(temp, !grepl(exserials[i], temp$PouchSerialNumber))
+      }    
+    }
+    #denominator
+    allqcruns.denom <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, 'Key', startD, 'Record', 'sum', 1)
+    
     #runob input
     if(!is.null(input$runOb) & !('All' %in% input$runOb)) {
       temp <- subset(temp, RunObservation %in% input$runOb)
     } 
-    #exclude pouch
-    if(!is.null(input$pouchserial4)) {
-      exserials <- str_trim(unlist(strsplit(input$pouchserial4,',')), side = 'both')
-      temp <- subset(temp, !(PouchSerialNumber %in% exserials))
-    }
     
     controlFails <- subset(temp, CF == 1)
+    #assay input
+    if(!is.null(input$assay2)) {
+      controlFails <- subset(controlFails, Control_Failures %in% input$assay2)
+    }
     controlFails$Control_Failures <- gsub(',','-',controlFails$Control_Failures)
     controlFails <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', controlFails, 'Control_Failures', startD,'Record', 'sum', 0)
     controlFails$Control_Failures <- gsub('-',',',controlFails$Control_Failures)
@@ -280,9 +328,9 @@ shinyServer(function(input, output, session) {
     dateBreaks <- 1:length(as.character(unique(controlFails.rate[,'DateGroup'])))
     
     if(!is.null(input$runOb) & !('All' %in% input$runOb)){
-      ggplot(controlFails.rate, aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Control_Failures)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = createPaletteOfVariableLength(controlFails.rate, 'Control_Failures')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.caption = element_text(size=13, face = 'plain')) + labs(title='Control Failure Pattern', caption = paste0('Including: ', paste(input$runOb, sep='', collapse = ', ')), y='Anomaly Rate', x='Date\n(Year-Month)')  
+      ggplot(controlFails.rate, aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Control_Failures)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = createPaletteOfVariableLength(controlFails.rate, 'Control_Failures')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.caption = element_text(size=13, face = 'plain'), axis.title = element_text(size=16)) + labs(title='Control Failure Pattern', caption = paste0('Including: ', paste(input$runOb, sep='', collapse = ', '), '    Panels Included: ', paste(input$panel4, collapse=', ')), y='Anomaly Rate', x='Date\n(Year-Month)')  
     } else {
-      ggplot(controlFails.rate, aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Control_Failures)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = createPaletteOfVariableLength(controlFails.rate, 'Control_Failures')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.caption = element_text(size=13, face = 'plain')) + labs(title='Control Failure Pattern', y='Anomaly Rate', x='Date\n(Year-Month)')  
+      ggplot(controlFails.rate, aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Control_Failures)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = createPaletteOfVariableLength(controlFails.rate, 'Control_Failures')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.caption = element_text(size=13, face = 'plain'), axis.title = element_text(size=16)) + labs(title='Control Failure Pattern', y='Anomaly Rate', x='Date\n(Year-Month)', caption = paste0('Panels Included: ', paste(input$panel4, collapse=', ')))  
     }
   })
   
@@ -290,6 +338,26 @@ shinyServer(function(input, output, session) {
     makeControlFailurePattern()
   })
   
+  # Permanently Exclude Pouch Serials ---------------------------------------------------------------------------------------------
+
+  output$hot <- renderRHandsontable({
+    if(!is.null(input$hot)) {
+      DF <- hot_to_r(input$hot)
+    } else {
+      DF <- read.csv('exclude.csv')
+    }
+    rhandsontable(DF) %>%
+      hot_cols(columnSorting=TRUE)
+  })
+
+  observe({
+    input$savetable
+    hot <- isolate(input$hot)
+    if(!is.null(hot)) {
+      write.csv(hot_to_r(input$hot), 'exclude.csv', row.names = FALSE)
+    }
+  })
+
   # downloads-----------------------------------------------------------------------------------------------------------------------
   output$downloadrecentvprev <- downloadHandler(
     filename = function() {
