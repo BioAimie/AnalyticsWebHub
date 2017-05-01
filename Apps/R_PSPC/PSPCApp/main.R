@@ -31,6 +31,8 @@ instversion.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)
 
+expouchserials <- read.csv('exclude.csv')
+
 source('createPaletteOfVariableLength.R')
 
 calendar.month <- createCalendarLikeMicrosoft(2011, 'Month')
