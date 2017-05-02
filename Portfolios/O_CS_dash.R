@@ -278,6 +278,7 @@ colnames(avgDaysSL.agg)[3] <- 'RollingAvg'
 avgDaysperPhase.SL <- merge(avgDaysperPhase.SL, subset(avgDaysSL.agg, select=c('DateGroup', 'RollingAvg')))
 avgDaysperPhase.SL$Key <- factor(avgDaysperPhase.SL$Key, levels = rmaTAT.levels)
 p.RMATaT.SaltLake <- ggplot(avgDaysperPhase.SL, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + geom_line(inherit.aes=FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes=FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + scale_fill_manual(name='', values = createPaletteOfVariableLength(avgDaysperPhase, 'Key')) + geom_hline(aes(yintercept = 14), lty='dashed', color = 'forestgreen') + theme(axis.text.x=element_text(angle = 90), legend.position = 'bottom', plot.caption = element_text(hjust=0, size=14)) + labs(title = 'Days Per RMA Process for Salt Lake Service Center', subtitle = paste('Goal = 14 days, Rolling Average for', curMonthName, ':', format(subset(avgDaysSL.agg, DateGroup == currentMonth)[,'RollingAvg'], digits=3)), x = 'Shipping Date\n(Year-Month)', y ='Average Days\n4 Month Rolling Average Line', caption = 'Instrument RMAs where Disposition is "Return to Customer"') + geom_text(data = avgDaysSL.agg, inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=format(Record, digits=2)), size=5, fontface='bold', vjust=-0.5)  
+
 # current month table 
 avgDaysinReceiving.cur <- mean(subset(rmaTAT.SL, DateGroup == currentMonth)[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysinReceiving.prev <- mean(subset(rmaTAT.SL, DateGroup == lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
@@ -300,6 +301,29 @@ avgDaysInSO.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.m
 avgDaysInShip.cur <- subset(avgDaysperPhase.SL, DateGroup == currentMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.prev <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysToShip'], na.rm=TRUE)
+#checks
+avgDaysinReceiving.cur <- ifelse(length(avgDaysinReceiving.cur) == 0 || is.na(avgDaysinReceiving.cur), NA, avgDaysinReceiving.cur) 
+avgDaysinReceiving.prev <- ifelse(length(avgDaysinReceiving.prev) == 0 || is.na(avgDaysinReceiving.prev), NA, avgDaysinReceiving.prev) 
+avgDaysinReceiving.year <- ifelse(length(avgDaysinReceiving.year) == 0 || is.na(avgDaysinReceiving.year), NA, avgDaysinReceiving.year) 
+avgDaysInQuarantineDecon.cur <- ifelse(length(avgDaysInQuarantineDecon.cur) == 0 || is.na(avgDaysInQuarantineDecon.cur), NA, avgDaysInQuarantineDecon.cur) 
+avgDaysInQuarantineDecon.prev <- ifelse(length(avgDaysInQuarantineDecon.prev) == 0 || is.na(avgDaysInQuarantineDecon.prev), NA, avgDaysInQuarantineDecon.prev) 
+avgDaysInQuarantineDecon.year <- ifelse(length(avgDaysInQuarantineDecon.year) == 0 || is.na(avgDaysInQuarantineDecon.year), NA, avgDaysInQuarantineDecon.year) 
+avgDaysInService.cur <- ifelse(length(avgDaysInService.cur) == 0 || is.na(avgDaysInService.cur), NA, avgDaysInService.cur) 
+avgDaysInService.prev <- ifelse(length(avgDaysInService.prev) == 0 || is.na(avgDaysInService.prev), NA, avgDaysInService.prev) 
+avgDaysInService.year <- ifelse(length(avgDaysInService.year) == 0 || is.na(avgDaysInService.year), NA, avgDaysInService.year) 
+avgDaysInQC.cur <- ifelse(length(avgDaysInQC.cur) == 0 || is.na(avgDaysInQC.cur), NA, avgDaysInQC.cur) 
+avgDaysInQC.prev <- ifelse(length(avgDaysInQC.prev) == 0 || is.na(avgDaysInQC.prev), NA, avgDaysInQC.prev) 
+avgDaysInQC.year <- ifelse(length(avgDaysInQC.year) == 0 || is.na(avgDaysInQC.year), NA, avgDaysInQC.year) 
+avgDaysInLoaner.cur <- ifelse(length(avgDaysInLoaner.cur) == 0 || is.na(avgDaysInLoaner.cur), NA, avgDaysInLoaner.cur) 
+avgDaysInLoaner.prev <- ifelse(length(avgDaysInLoaner.prev) == 0 || is.na(avgDaysInLoaner.prev), NA, avgDaysInLoaner.prev) 
+avgDaysInLoaner.year <- ifelse(length(avgDaysInLoaner.year) == 0 || is.na(avgDaysInLoaner.year), NA, avgDaysInLoaner.year) 
+avgDaysInSO.cur <- ifelse(length(avgDaysInSO.cur) == 0 || is.na(avgDaysInSO.cur), NA, avgDaysInSO.cur) 
+avgDaysInSO.prev <- ifelse(length(avgDaysInSO.prev) == 0 || is.na(avgDaysInSO.prev), NA, avgDaysInSO.prev) 
+avgDaysInSO.year <- ifelse(length(avgDaysInSO.year) == 0 || is.na(avgDaysInSO.year), NA, avgDaysInSO.year) 
+avgDaysInShip.cur <- ifelse(length(avgDaysInShip.cur) == 0 || is.na(avgDaysInShip.cur), NA, avgDaysInShip.cur) 
+avgDaysInShip.prev <- ifelse(length(avgDaysInShip.prev) == 0 || is.na(avgDaysInShip.prev), NA, avgDaysInShip.prev) 
+avgDaysInShip.year <- ifelse(length(avgDaysInShip.year) == 0 || is.na(avgDaysInShip.year), NA, avgDaysInShip.year) 
+
 table.RMASaltLake <- data.frame('PhaseofRMA' = c('Receiving', 
                                                  'Quarantine/Release', 
                                                  'Service', 
@@ -343,41 +367,63 @@ table.RMASaltLake <- data.frame('PhaseofRMA' = c('Receiving',
                                              format(avgDaysInSO.year, digits=3),
                                              format(avgDaysInShip.year, digits=3)))
 colnames(table.RMASaltLake) <- c('Phase of RMA', 'Days Per Process -\nGoal', 'Current Month', 'Previous Month', 'Delta', 'Average Days For\nPrevious 1 Year')
-if(!is.na(avgDaysinReceiving.cur) & avgDaysinReceiving.cur >= 6) {
+
+if(is.na(avgDaysinReceiving.cur)) {
+  curTableFill <- 'transparent'
+} else if (avgDaysinReceiving.cur >= 6) {
   curTableFill <- 'red'
 } else {
   curTableFill <- 'green'
 }
-if(!is.na(avgDaysInQuarantineDecon.cur) & avgDaysInQuarantineDecon.cur > 2) {
+
+if(is.na(avgDaysInQuarantineDecon.cur)) {
+  curTableFill <- c(curTableFill, 'transparent')
+} else if (avgDaysInQuarantineDecon.cur > 2) {
   curTableFill <- c(curTableFill, 'red')
 } else {
   curTableFill <- c(curTableFill, 'green')
 }
-if(!is.na(avgDaysInService.cur) & avgDaysInService.cur > 4) {
+
+if(is.na(avgDaysInService.cur)) {
+  curTableFill <- c(curTableFill, 'transparent')
+} else if (avgDaysInService.cur > 4) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 }
-if(!is.na(avgDaysInQC.cur) & avgDaysInQC.cur > 2) {
+
+if(is.na(avgDaysInQC.cur)) {
+  curTableFill <- c(curTableFill, 'transparent')
+} else if (avgDaysInQC.cur > 2) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 }
-if(!is.na(avgDaysInLoaner.cur) & avgDaysInLoaner.cur >= 1) {
+
+if(is.na(avgDaysInLoaner.cur)) {
+  curTableFill <- c(curTableFill, 'transparent')
+} else if (avgDaysInLoaner.cur >= 1) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 } 
-if(!is.na(avgDaysInSO.cur) & avgDaysInSO.cur > 1) {
+
+if(is.na(avgDaysInSO.cur)) {
+  curTableFill <- c(curTableFill, 'transparent')
+} else if (avgDaysInSO.cur > 1) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 } 
-if(!is.na(avgDaysInShip.cur) & avgDaysInShip.cur > 1) {
+
+if(is.na(avgDaysInShip.cur)) {
+  curTableFill <- c(curTableFill, 'transparent')
+} else if (avgDaysInShip.cur > 1) {
   curTableFill <- c(curTableFill, 'red')
 } else { 
   curTableFill <- c(curTableFill, 'green')
 } 
+
 tt1 <- ttheme_minimal(
   core=list(bg_params = list(fill = curTableFill, alpha = 0.5, col=1),
             fg_params=list(fontface=1, fontsize=18)),
@@ -394,6 +440,8 @@ table1 <- gtable_add_grob(
   table1, 
   title, 
   1, 1, 1, ncol(table1))
+# grid.newpage()
+# grid.draw(table1)
 
 # prev month table 
 if(month(Sys.Date()) < 3) {
@@ -429,6 +477,29 @@ avgDaysInSO.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.m
 avgDaysInShip.cur <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.prev <- subset(avgDaysperPhase.SL, DateGroup == prevprevMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysToShip'], na.rm=TRUE)
+#checks
+avgDaysinReceiving.cur <- ifelse(length(avgDaysinReceiving.cur) == 0 || is.na(avgDaysinReceiving.cur), NA, avgDaysinReceiving.cur) 
+avgDaysinReceiving.prev <- ifelse(length(avgDaysinReceiving.prev) == 0 || is.na(avgDaysinReceiving.prev), NA, avgDaysinReceiving.prev) 
+avgDaysinReceiving.year <- ifelse(length(avgDaysinReceiving.year) == 0 || is.na(avgDaysinReceiving.year), NA, avgDaysinReceiving.year) 
+avgDaysInQuarantineDecon.cur <- ifelse(length(avgDaysInQuarantineDecon.cur) == 0 || is.na(avgDaysInQuarantineDecon.cur), NA, avgDaysInQuarantineDecon.cur) 
+avgDaysInQuarantineDecon.prev <- ifelse(length(avgDaysInQuarantineDecon.prev) == 0 || is.na(avgDaysInQuarantineDecon.prev), NA, avgDaysInQuarantineDecon.prev) 
+avgDaysInQuarantineDecon.year <- ifelse(length(avgDaysInQuarantineDecon.year) == 0 || is.na(avgDaysInQuarantineDecon.year), NA, avgDaysInQuarantineDecon.year) 
+avgDaysInService.cur <- ifelse(length(avgDaysInService.cur) == 0 || is.na(avgDaysInService.cur), NA, avgDaysInService.cur) 
+avgDaysInService.prev <- ifelse(length(avgDaysInService.prev) == 0 || is.na(avgDaysInService.prev), NA, avgDaysInService.prev) 
+avgDaysInService.year <- ifelse(length(avgDaysInService.year) == 0 || is.na(avgDaysInService.year), NA, avgDaysInService.year) 
+avgDaysInQC.cur <- ifelse(length(avgDaysInQC.cur) == 0 || is.na(avgDaysInQC.cur), NA, avgDaysInQC.cur) 
+avgDaysInQC.prev <- ifelse(length(avgDaysInQC.prev) == 0 || is.na(avgDaysInQC.prev), NA, avgDaysInQC.prev) 
+avgDaysInQC.year <- ifelse(length(avgDaysInQC.year) == 0 || is.na(avgDaysInQC.year), NA, avgDaysInQC.year) 
+avgDaysInLoaner.cur <- ifelse(length(avgDaysInLoaner.cur) == 0 || is.na(avgDaysInLoaner.cur), NA, avgDaysInLoaner.cur) 
+avgDaysInLoaner.prev <- ifelse(length(avgDaysInLoaner.prev) == 0 || is.na(avgDaysInLoaner.prev), NA, avgDaysInLoaner.prev) 
+avgDaysInLoaner.year <- ifelse(length(avgDaysInLoaner.year) == 0 || is.na(avgDaysInLoaner.year), NA, avgDaysInLoaner.year) 
+avgDaysInSO.cur <- ifelse(length(avgDaysInSO.cur) == 0 || is.na(avgDaysInSO.cur), NA, avgDaysInSO.cur) 
+avgDaysInSO.prev <- ifelse(length(avgDaysInSO.prev) == 0 || is.na(avgDaysInSO.prev), NA, avgDaysInSO.prev) 
+avgDaysInSO.year <- ifelse(length(avgDaysInSO.year) == 0 || is.na(avgDaysInSO.year), NA, avgDaysInSO.year) 
+avgDaysInShip.cur <- ifelse(length(avgDaysInShip.cur) == 0 || is.na(avgDaysInShip.cur), NA, avgDaysInShip.cur) 
+avgDaysInShip.prev <- ifelse(length(avgDaysInShip.prev) == 0 || is.na(avgDaysInShip.prev), NA, avgDaysInShip.prev) 
+avgDaysInShip.year <- ifelse(length(avgDaysInShip.year) == 0 || is.na(avgDaysInShip.year), NA, avgDaysInShip.year) 
+
 table.RMASaltLake.prev <- data.frame('PhaseofRMA' = c('Receiving', 
                                                  'Quarantine/Release', 
                                                  'Service', 
@@ -472,41 +543,63 @@ table.RMASaltLake.prev <- data.frame('PhaseofRMA' = c('Receiving',
                                                                   format(avgDaysInSO.year, digits=3),
                                                                   format(avgDaysInShip.year, digits=3)))
 colnames(table.RMASaltLake.prev) <- c('Phase of RMA', 'Days Per Process -\nGoal', 'Current Month', 'Previous Month', 'Delta', 'Average Days For\nPrevious 1 Year')
-if(!is.na(avgDaysinReceiving.cur) & avgDaysinReceiving.cur >= 6) {
+
+if(is.na(avgDaysinReceiving.cur)) {
+  prevTableFill <- 'transparent'
+} else if (avgDaysinReceiving.cur >= 6) {
   prevTableFill <- 'red'
 } else {
   prevTableFill <- 'green'
 }
-if(!is.na(avgDaysInQuarantineDecon.cur) & avgDaysInQuarantineDecon.cur > 2) {
+
+if(is.na(avgDaysInQuarantineDecon.cur)) {
+  prevTableFill <- c(prevTableFill, 'transparent')
+} else if (avgDaysInQuarantineDecon.cur > 2) {
   prevTableFill <- c(prevTableFill, 'red')
 } else {
   prevTableFill <- c(prevTableFill, 'green')
 }
-if(!is.na(avgDaysInService.cur) & avgDaysInService.cur > 4) {
+
+if(is.na(avgDaysInService.cur)) {
+  prevTableFill <- c(prevTableFill, 'transparent')
+} else if (avgDaysInService.cur > 4) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 }
-if(!is.na(avgDaysInQC.cur) & avgDaysInQC.cur > 2) {
+
+if(is.na(avgDaysInQC.cur)) {
+  prevTableFill <- c(prevTableFill, 'transparent')
+} else if (avgDaysInQC.cur > 2) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 }
-if(!is.na(avgDaysInLoaner.cur) & avgDaysInLoaner.cur >= 1) {
+
+if(is.na(avgDaysInLoaner.cur)) {
+  prevTableFill <- c(prevTableFill, 'transparent')
+} else if (avgDaysInLoaner.cur >= 1) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 } 
-if(!is.na(avgDaysInSO.cur) & avgDaysInSO.cur > 1) {
+
+if(is.na(avgDaysInSO.cur)) {
+  prevTableFill <- c(prevTableFill, 'transparent')
+} else if (avgDaysInSO.cur > 1) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 } 
-if(!is.na(avgDaysInShip.cur) & avgDaysInShip.cur > 1) {
+
+if(is.na(avgDaysInShip.cur)) {
+  prevTableFill <- c(prevTableFill, 'transparent')
+} else if (avgDaysInShip.cur > 1) {
   prevTableFill <- c(prevTableFill, 'red')
 } else { 
   prevTableFill <- c(prevTableFill, 'green')
 } 
+
 tt2 <- ttheme_minimal(
   core=list(bg_params = list(fill = prevTableFill, alpha = 0.5, col=1),
             fg_params=list(fontface=1, fontsize=18)),
@@ -523,6 +616,8 @@ table2 <- gtable_add_grob(
   table2, 
   title, 
   1, 1, 1, ncol(table2))
+# grid.newpage()
+# grid.draw(table2)
 
 # RMA TAT for Florence service center
 rmaTAT.FL <- subset(rmaTAT, ServiceCenter == 'Florence')
@@ -561,6 +656,23 @@ avgDaysInQC.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.m
 avgDaysInShip.cur <- subset(avgDaysperPhase.FL, DateGroup == currentMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.prev <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysToShip'], na.rm=TRUE)
+#checks
+avgDaysinReceiving.cur <- ifelse(length(avgDaysinReceiving.cur) == 0 || is.na(avgDaysinReceiving.cur), NA, avgDaysinReceiving.cur) 
+avgDaysinReceiving.prev <- ifelse(length(avgDaysinReceiving.prev) == 0 || is.na(avgDaysinReceiving.prev), NA, avgDaysinReceiving.prev) 
+avgDaysinReceiving.year <- ifelse(length(avgDaysinReceiving.year) == 0 || is.na(avgDaysinReceiving.year), NA, avgDaysinReceiving.year) 
+avgDaysInQuarantineDecon.cur <- ifelse(length(avgDaysInQuarantineDecon.cur) == 0 || is.na(avgDaysInQuarantineDecon.cur), NA, avgDaysInQuarantineDecon.cur) 
+avgDaysInQuarantineDecon.prev <- ifelse(length(avgDaysInQuarantineDecon.prev) == 0 || is.na(avgDaysInQuarantineDecon.prev), NA, avgDaysInQuarantineDecon.prev) 
+avgDaysInQuarantineDecon.year <- ifelse(length(avgDaysInQuarantineDecon.year) == 0 || is.na(avgDaysInQuarantineDecon.year), NA, avgDaysInQuarantineDecon.year) 
+avgDaysInService.cur <- ifelse(length(avgDaysInService.cur) == 0 || is.na(avgDaysInService.cur), NA, avgDaysInService.cur) 
+avgDaysInService.prev <- ifelse(length(avgDaysInService.prev) == 0 || is.na(avgDaysInService.prev), NA, avgDaysInService.prev) 
+avgDaysInService.year <- ifelse(length(avgDaysInService.year) == 0 || is.na(avgDaysInService.year), NA, avgDaysInService.year) 
+avgDaysInQC.cur <- ifelse(length(avgDaysInQC.cur) == 0 || is.na(avgDaysInQC.cur), NA, avgDaysInQC.cur) 
+avgDaysInQC.prev <- ifelse(length(avgDaysInQC.prev) == 0 || is.na(avgDaysInQC.prev), NA, avgDaysInQC.prev) 
+avgDaysInQC.year <- ifelse(length(avgDaysInQC.year) == 0 || is.na(avgDaysInQC.year), NA, avgDaysInQC.year) 
+avgDaysInShip.cur <- ifelse(length(avgDaysInShip.cur) == 0 || is.na(avgDaysInShip.cur), NA, avgDaysInShip.cur) 
+avgDaysInShip.prev <- ifelse(length(avgDaysInShip.prev) == 0 || is.na(avgDaysInShip.prev), NA, avgDaysInShip.prev) 
+avgDaysInShip.year <- ifelse(length(avgDaysInShip.year) == 0 || is.na(avgDaysInShip.year), NA, avgDaysInShip.year)
+
 table.RMAFlorence <- data.frame('PhaseofRMA' = c('Receiving', 
                                                  'Quarantine/Release', 
                                                  'Service', 
@@ -592,31 +704,47 @@ table.RMAFlorence <- data.frame('PhaseofRMA' = c('Receiving',
                                                                   format(avgDaysInQC.year, digits=3),
                                                                   format(avgDaysInShip.year, digits=3)))
 colnames(table.RMAFlorence) <- c('Phase of RMA', 'Days Per Process -\nGoal', 'Current Month', 'Previous Month', 'Delta', 'Average Days For\nPrevious 1 Year')
-if(!is.na(avgDaysinReceiving.cur) & avgDaysinReceiving.cur >= 6) {
+
+if(is.na(avgDaysinReceiving.cur)) {
+  curTableFill.f <- 'transparent'
+} else if (avgDaysinReceiving.cur >= 6) {
   curTableFill.f <- 'red'
 } else {
   curTableFill.f <- 'green'
 }
-if(!is.na(avgDaysInQuarantineDecon.cur) & avgDaysInQuarantineDecon.cur > 2) {
+
+if(is.na(avgDaysInQuarantineDecon.cur)) {
+  curTableFill.f <- c(curTableFill.f, 'transparent')
+} else if (avgDaysInQuarantineDecon.cur > 2) {
   curTableFill.f <- c(curTableFill.f, 'red')
 } else {
   curTableFill.f <- c(curTableFill.f, 'green')
 }
-if(!is.na(avgDaysInService.cur) & avgDaysInService.cur > 4) {
+
+if(is.na(avgDaysInService.cur)) {
+  curTableFill.f <- c(curTableFill.f, 'transparent')
+} else if (avgDaysInService.cur > 4) {
   curTableFill.f <- c(curTableFill.f, 'red')
 } else { 
   curTableFill.f <- c(curTableFill.f, 'green')
 }
-if(!is.na(avgDaysInQC.cur) & avgDaysInQC.cur > 2) {
+
+if(is.na(avgDaysInQC.cur)) {
+  curTableFill.f <- c(curTableFill.f, 'transparent')
+} else if (avgDaysInQC.cur > 2) {
   curTableFill.f <- c(curTableFill.f, 'red')
 } else { 
   curTableFill.f <- c(curTableFill.f, 'green')
 }
-if(is.na(avgDaysInShip.cur) | avgDaysInShip.cur <= 1) {
+
+if(is.na(avgDaysInShip.cur)) {
+  curTableFill.f <- c(curTableFill.f, 'transparent')
+} else if (avgDaysInShip.cur <= 1) {
   curTableFill.f <- c(curTableFill.f, 'green')
 } else { 
   curTableFill.f <- c(curTableFill.f, 'red')
 } 
+
 tt3 <- ttheme_minimal(
   core=list(bg_params = list(fill = curTableFill.f, alpha = 0.5, col=1),
             fg_params=list(fontface=1, fontsize=18)),
@@ -633,6 +761,8 @@ table3 <- gtable_add_grob(
   table3, 
   title, 
   1, 1, 1, ncol(table3))
+# grid.newpage()
+# grid.draw(table3)
 
 # prev month table 
 avgDaysinReceiving.cur <- mean(subset(rmaTAT.FL, DateGroup == lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
@@ -650,6 +780,23 @@ avgDaysInQC.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.m
 avgDaysInShip.cur <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.prev <- subset(avgDaysperPhase.FL, DateGroup == prevprevMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysToShip'], na.rm=TRUE)
+#checks
+avgDaysinReceiving.cur <- ifelse(length(avgDaysinReceiving.cur) == 0 || is.na(avgDaysinReceiving.cur), NA, avgDaysinReceiving.cur) 
+avgDaysinReceiving.prev <- ifelse(length(avgDaysinReceiving.prev) == 0 || is.na(avgDaysinReceiving.prev), NA, avgDaysinReceiving.prev) 
+avgDaysinReceiving.year <- ifelse(length(avgDaysinReceiving.year) == 0 || is.na(avgDaysinReceiving.year), NA, avgDaysinReceiving.year) 
+avgDaysInQuarantineDecon.cur <- ifelse(length(avgDaysInQuarantineDecon.cur) == 0 || is.na(avgDaysInQuarantineDecon.cur), NA, avgDaysInQuarantineDecon.cur) 
+avgDaysInQuarantineDecon.prev <- ifelse(length(avgDaysInQuarantineDecon.prev) == 0 || is.na(avgDaysInQuarantineDecon.prev), NA, avgDaysInQuarantineDecon.prev) 
+avgDaysInQuarantineDecon.year <- ifelse(length(avgDaysInQuarantineDecon.year) == 0 || is.na(avgDaysInQuarantineDecon.year), NA, avgDaysInQuarantineDecon.year) 
+avgDaysInService.cur <- ifelse(length(avgDaysInService.cur) == 0 || is.na(avgDaysInService.cur), NA, avgDaysInService.cur) 
+avgDaysInService.prev <- ifelse(length(avgDaysInService.prev) == 0 || is.na(avgDaysInService.prev), NA, avgDaysInService.prev) 
+avgDaysInService.year <- ifelse(length(avgDaysInService.year) == 0 || is.na(avgDaysInService.year), NA, avgDaysInService.year) 
+avgDaysInQC.cur <- ifelse(length(avgDaysInQC.cur) == 0 || is.na(avgDaysInQC.cur), NA, avgDaysInQC.cur) 
+avgDaysInQC.prev <- ifelse(length(avgDaysInQC.prev) == 0 || is.na(avgDaysInQC.prev), NA, avgDaysInQC.prev) 
+avgDaysInQC.year <- ifelse(length(avgDaysInQC.year) == 0 || is.na(avgDaysInQC.year), NA, avgDaysInQC.year) 
+avgDaysInShip.cur <- ifelse(length(avgDaysInShip.cur) == 0 || is.na(avgDaysInShip.cur), NA, avgDaysInShip.cur) 
+avgDaysInShip.prev <- ifelse(length(avgDaysInShip.prev) == 0 || is.na(avgDaysInShip.prev), NA, avgDaysInShip.prev) 
+avgDaysInShip.year <- ifelse(length(avgDaysInShip.year) == 0 || is.na(avgDaysInShip.year), NA, avgDaysInShip.year)
+
 table.RMAFlorence.prev <- data.frame('PhaseofRMA' = c('Receiving', 
                                                       'Quarantine/Release', 
                                                       'Service', 
@@ -681,31 +828,47 @@ table.RMAFlorence.prev <- data.frame('PhaseofRMA' = c('Receiving',
                                                                        format(avgDaysInQC.year, digits=3),
                                                                        format(avgDaysInShip.year, digits=3)))
 colnames(table.RMAFlorence.prev) <- c('Phase of RMA', 'Days Per Process -\nGoal', 'Current Month', 'Previous Month', 'Delta', 'Average Days For\nPrevious 1 Year')
-if(!is.na(avgDaysinReceiving.cur) & avgDaysinReceiving.cur >= 6) {
+
+if(is.na(avgDaysinReceiving.cur)) {
+  prevTableFill.f <- 'transparent'
+} else if (avgDaysinReceiving.cur >= 6) {
   prevTableFill.f <- 'red'
 } else {
   prevTableFill.f <- 'green'
 }
-if(!is.na(avgDaysInQuarantineDecon.cur) & avgDaysInQuarantineDecon.cur > 2) {
+
+if(is.na(avgDaysInQuarantineDecon.cur)) {
+  prevTableFill.f <- c(prevTableFill.f, 'transparent')
+} else if (avgDaysInQuarantineDecon.cur > 2) {
   prevTableFill.f <- c(prevTableFill.f, 'red')
 } else {
   prevTableFill.f <- c(prevTableFill.f, 'green')
 }
-if(!is.na(avgDaysInService.cur) & avgDaysInService.cur > 4) {
+
+if(is.na(avgDaysInService.cur)) {
+  prevTableFill.f <- c(prevTableFill.f, 'transparent')
+} else if (avgDaysInService.cur > 4) {
   prevTableFill.f <- c(prevTableFill.f, 'red')
 } else { 
   prevTableFill.f <- c(prevTableFill.f, 'green')
 }
-if(!is.na(avgDaysInQC.cur) & avgDaysInQC.cur > 2) {
+
+if(is.na(avgDaysInQC.cur)) {
+  prevTableFill.f <- c(prevTableFill.f, 'transparent')
+} else if (avgDaysInQC.cur > 2) {
   prevTableFill.f <- c(prevTableFill.f, 'red')
 } else { 
   prevTableFill.f <- c(prevTableFill.f, 'green')
 }
-if(!is.na(avgDaysInShip.cur) & avgDaysInShip.cur > 1) {
+
+if(is.na(avgDaysInShip.cur)) {
+  prevTableFill.f <- c(prevTableFill.f, 'transparent')
+} else if (avgDaysInShip.cur > 1) {
   prevTableFill.f <- c(prevTableFill.f, 'red')
 } else { 
   prevTableFill.f <- c(prevTableFill.f, 'green')
 } 
+
 tt4 <- ttheme_minimal(
   core=list(bg_params = list(fill = prevTableFill.f, alpha = 0.5, col=1),
             fg_params=list(fontface=1, fontsize=18)),
@@ -722,6 +885,8 @@ table4 <- gtable_add_grob(
   table4, 
   title, 
   1, 1, 1, ncol(table4))
+# grid.newpage()
+# grid.draw(table4)
 
 #--- plots of the average days it takes for an rma'd instrument to get to a service center
 serviceCenter.df$DateGroup <- with(serviceCenter.df, ifelse(Month < 10, paste0(Year,'-0', Month), paste0(Year,'-',Month)))

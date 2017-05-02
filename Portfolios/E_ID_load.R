@@ -47,6 +47,10 @@ queryText <- readLines("SQL/E_ID_EarlyFailureWithModes.sql")
 query <- paste(queryText,collapse="\n")
 fail.modes.df <- sqlQuery(PMScxn,query)
 
+queryText <- readLines("SQL/E_ID_EarlyFailureHours.sql")
+query <- paste(queryText,collapse="\n")
+fail.hours.df <- sqlQuery(PMScxn,query)
+
 query.charVec = readLines("SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql")
 query = paste(query.charVec,collapse="\n")
 rmasShip.df = sqlQuery(PMScxn,query)
