@@ -7,7 +7,7 @@ library(rhandsontable)
 
 shinyServer(function(input, output, session) {
   # Load data on page load---------------------------------------------------------------------------------------------------
-  #withProgress(message = 'Loading Data...', value = 1, {source('reload.R', local=TRUE)})
+  withProgress(message = 'Loading Data...', value = 1, {source('reload.R', local=TRUE)})
   
   # Refresh Data------------------------------------------------------------------------------------------------------------
   observeEvent(input$refresh, {session$reload()})
