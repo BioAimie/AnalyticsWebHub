@@ -232,15 +232,9 @@ failures.lim <- addStatsToSparseHandledData(failures.rate, c('Department'), lagP
 pal.fail <- createPaletteOfVariableLength(failures.lim, 'Key')
 p.failures.all <- ggplot(failures.lim, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Department, ncol=1) + scale_fill_manual(values=pal.fail) + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nLimit = +3 standard deviations',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=UL), color='red', lty=2) #+ annotate("text",x=x_positions,y=y_positions,label=fail.annotations, size=4)
 
-# create charts for early failures per instruments shipped - by version and department
-failures.fill.version <-  aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department','Version'), startDate, 'Record', 'sum', 0)
-ships.fill.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ships.df, c('Version','Key'), startDate, 'Record', 'sum', 1)
-failures.rate.verison <- mergeCalSparseFrames(failures.fill.version, ships.fill.version, c('DateGroup','Department','Version'), c('DateGroup','Key','Version'), 'Record', 'Record', 0, periods)
-pal.fail.version <- createPaletteOfVariableLength(failures.rate.verison, 'Version')
-p.failures.version <- ggplot(failures.rate.verison, aes(x=DateGroup, y=Rate, fill=Version)) + geom_bar(stat='identity') + facet_wrap(~Department, ncol=1) + scale_fill_manual(values=pal.fail.version) + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='black', lty=2)
-
 # early failures by version and department and type
 failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), startDate, 'Record', 'sum', 0)
+ships.fill.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ships.df, c('Version','Key'), startDate, 'Record', 'sum', 1)
 failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
 # add a ytd line
 failures.agg$ytd <- rep(NA, nrow(failures.agg))
