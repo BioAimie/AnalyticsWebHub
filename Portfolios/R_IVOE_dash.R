@@ -272,6 +272,25 @@ looseScrew.annot = rbind(
 );
 p.looseScrew.all.voe <- ggplot(looseScrew.all, aes(x=DateGroup, y=Rate, fill=HoursRunBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(looseScrew.all, 'HoursRunBin'), name='') + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Loose Screw/Fastener Failures on New Instruments', y='Failures/Instrument Manufactured, Failure Count', x='Date of Instrument Manufacture\n(Year-Month)') +  geom_text(data = looseScrew.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=6, fontface='bold') + facet_wrap(~Key, ncol=1, scale='free_y');
 
+# Edge loader complaints
+edgeLoad.fail <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', edgeLoad.df, c('Version'), '2015-01', 'Record', 'sum', 0)
+newInst.fill <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(newInst.df, Version=='Torch'), c('Key'), '2015-01', 'Record', 'sum', 0)
+idx = which(newInst.fill$Record > 10);
+edgeLoad.rate <- mergeCalSparseFrames(edgeLoad.fail[idx,], newInst.fill[idx,], c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0)
+edgeLoad.rate$Key <- 'Complaints/Torch Modules Manufactured (for months with >10 modules manufactured)'
+edgeLoad.count <- edgeLoad.fail;
+edgeLoad.count$Key <- 'Count of Complaints';
+colnames(edgeLoad.count)[colnames(edgeLoad.count)=='Record'] = 'Rate'
+edgeLoad.all <- rbind(edgeLoad.rate, edgeLoad.count)
+edgeLoad.annot = rbind(
+ data.frame(Label="Motor pulley setscrew update", DateGroup='2016-10', Key=edgeLoad.rate$Key[1], Rate=edgeLoad.rate$Rate[edgeLoad.rate$DateGroup=='2016-10']+.01),
+ #data.frame(Label="Motor pulley setscrew update", DateGroup='2016-10', Key=edgeLoad.count$Key[1], Rate=edgeLoad.count$Rate[edgeLoad.count$DateGroup=='2016-10']+1),
+ data.frame(Label="Clear sheet tightening", DateGroup='2017-04', Key=edgeLoad.rate$Key[1], Rate=edgeLoad.rate$Rate[edgeLoad.rate$DateGroup=='2017-04']+.01),
+ data.frame(Label="Clear sheet tightening", DateGroup='2017-04', Key=edgeLoad.count$Key[1], Rate=edgeLoad.count$Rate[edgeLoad.count$DateGroup=='2017-04']+1)
+);
+p.edgeLoad.voe <- ggplot(subset(edgeLoad.all, DateGroup>='2016-06'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', color='black') + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Torch - Failure to Eject Pouch Complaints', y='Complaints/Torch Module Manufactured, Complaint Count', x='Date of Torch Module Manufacture\n(Year-Month)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = edgeLoad.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=4, fontface='bold') 
+
+
 
 # #Thermoboard date settings
 # bigGroup <- 'Year'

@@ -102,5 +102,12 @@ query.charVec = readLines("SQL/R_IVOE_LooseScrewRMA.sql")
 query = paste(query.charVec,collapse="\n")
 looseScrew.df = sqlQuery(PMScxn,query)
 
+# get edge loader complaints
+query.charVec = readLines("SQL/R_IVOE_EdgeLoadComplaints.sql")
+query = paste(query.charVec,collapse="\n")
+edgeLoad.df = sqlQuery(PMScxn,query)
+
+
+
 # close remote connection
 close(PMScxn)
