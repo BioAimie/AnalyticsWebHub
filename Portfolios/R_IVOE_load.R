@@ -77,6 +77,11 @@ query.charVec = readLines("SQL/R_IVOE_WireHarnessNCR.sql")
 query = paste(query.charVec,collapse="\n")
 wireharnessNCR.df = sqlQuery(PMScxn,query)
 
+# get wire harness RMAs
+query.charVec = readLines("SQL/R_IVOE_WireHarnessRMA.sql")
+query = paste(query.charVec,collapse="\n")
+wireharnessRMA.df = sqlQuery(PMScxn,query)
+
 # get new computers shipped
 query.charVec = readLines("SQL/R_IRMA_NewCompShip.sql")
 query = paste(query.charVec,collapse="\n")
@@ -96,6 +101,13 @@ newInst.df = sqlQuery(PMScxn,query)
 query.charVec = readLines("SQL/R_IVOE_LooseScrewRMA.sql")
 query = paste(query.charVec,collapse="\n")
 looseScrew.df = sqlQuery(PMScxn,query)
+
+# get edge loader complaints
+query.charVec = readLines("SQL/R_IVOE_EdgeLoadComplaints.sql")
+query = paste(query.charVec,collapse="\n")
+edgeLoad.df = sqlQuery(PMScxn,query)
+
+
 
 # close remote connection
 close(PMScxn)
