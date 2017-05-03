@@ -475,7 +475,67 @@ yaxis$children[[2]] <- ticks
 # Put the transformed yaxis on the right side of g4
 g4 <- gtable_add_cols(g4, g1$widths[g1$layout[index, ]$l], pp$r)
 g4 <- gtable_add_grob(g4, yaxis, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "axis-r")
+g4a <- g4
 # grid.draw(g4)
+
+# Special chart - Return and Failure Percentage by Shipment Month of Instrument (Domestic shipments only)
+# find a rate of Returned/Shipped in the month as well as a rate of Failures/Shipped
+track.df[,'PercentDomesticReturned'] <- with(track.df, DomesticReturned/DomesticShipments)
+track.df[,'PercentDomesticFailures'] <- with(track.df, DomesticFailCount/DomesticShipments)
+track.df[,'DateGroup'] <- with(track.df, ifelse(Month < 10, paste(Year, Month, sep='-0'), paste(Year, Month, sep='-')))
+track.df[,'Date'] <- as.Date(paste(track.df$DateGroup,'-01', sep=''))
+# make 3 charts
+p1.shipments <- ggplot(subset(track.df, DateGroup >= startMonth.2), aes(x=DateGroup, y=DomesticShipments, fill='Instrument Domestic Shipments')) + geom_bar(stat='identity') + scale_fill_manual(name='', values='lightskyblue2') + theme(panel.background = element_blank(), panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank(),axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank(), legend.position = 'bottom', legend.justification = 'right') + labs(title='', x = '', y='New Instrument Domestic Shipments')
+p2.percents <- ggplot(subset(track.df, DateGroup >= startMonth.2), aes(x=DateGroup, y=PercentDomesticReturned, group=1, colour='Percent Returned')) + geom_line() + geom_point() + geom_line(aes(x=DateGroup, y=PercentDomesticFailures, group=1, color='Failures/Instrument Domestic Shipments')) + geom_point(aes(x=DateGroup, y=PercentDomesticFailures, group=1, colour='Failures/Instrument Domestic Shipments')) + scale_color_manual(name='', values = c('black', 'blue')) + scale_y_continuous(limits = c(0,1.5), labels = percent, minor_breaks = seq(0.1,1.5,0.1)) + theme(panel.background = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank(), legend.position = 'bottom', legend.justification = 'left') + labs(title = '', x='', y='Failures/Instrument Domestic Shipments,\nReturned/Instrument Domestic Shipments')
+p3.panel <- ggplot(subset(track.df, DateGroup >= startMonth.2), aes(x=DateGroup, y=PercentDomesticReturned, group=1, colour='Percent Returned')) + geom_line() + geom_point() + geom_line(aes(x=DateGroup, y=PercentDomesticFailures, group=1, color='Failures/Instrument Shipments')) + geom_point(aes(x=DateGroup, y=PercentDomesticFailures, group=1, colour='Failures/Instrument Shipments')) + scale_color_manual(name='', values = c('black', 'blue')) + scale_y_continuous(limits = c(0,1.5), labels = percent, minor_breaks = seq(0.1,1.5,0.1)) + theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(), panel.grid.major.y = element_line(color='grey'), panel.grid.minor.y = element_line(color='grey'), legend.position = 'bottom', legend.justification = 'left', axis.text.x=element_text(angle=90, hjust=1), plot.margin = margin(0.5,0.5,2,0.5,'cm')) + labs(title = 'Domestic Return and Failure Percentage by Shipment Month of Instrument', x='Date\n(Year-Month)', y='Failures/Instrument Domestic Shipments,\nReturned/Instrument Domestic Shipments')
+# function to invert 2nd y axis
+hinvert_title_grob <- function(grob){
+  # Swap the widths
+  widths <- grob$widths
+  grob$widths[1] <- widths[3]
+  grob$widths[3] <- widths[1]
+  grob$vp[[1]]$layout$widths[1] <- widths[3]
+  grob$vp[[1]]$layout$widths[3] <- widths[1]
+  # Fix the justification
+  grob$children[[1]]$hjust <- 1 - grob$children[[1]]$hjust
+  grob$children[[1]]$vjust <- 1 - grob$children[[1]]$vjust
+  grob$children[[1]]$x <- unit(1, "npc") - grob$children[[1]]$x
+  grob
+}
+# Get the ggplot grobs
+g1 <- ggplotGrob(p1.shipments)
+g2 <- ggplotGrob(p2.percents)
+g3 <- ggplotGrob(p3.panel)
+# Get the location of the plot panel and legend in g1
+pp <- c(subset(g1$layout, name == "panel", se = t:r))
+pp2 <- c(subset(g1$layout, name == "guide-box", se = t:r))
+# Overlap panel for first plot on top of third plot and then second plot on that
+g4 <- gtable_add_grob(g3, g1$grobs[[which(g1$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l, name='c')
+g4 <- gtable_add_grob(g4, g2$grobs[[which(g2$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l, name='a')
+# Add legend from g1
+g4 <- gtable_add_grob(g4, g1$grobs[[which(g1$layout$name == "guide-box")]], pp2$t, pp2$l, pp2$b, pp2$l, name='b')
+# Get the y axis title from g1
+index <- which(g1$layout$name == "ylab-l") # Which grob contains the y axis title?
+ylab <- g1$grobs[[index]]                # Extract that grob
+ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
+# Put the transformed label on the right side of g4
+g4 <- gtable_add_cols(g4, g1$widths[g1$layout[index, ]$l], pp$r)
+g4 <- gtable_add_grob(g4, ylab, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "ylab-r")
+# Get the y axis from g1 (axis line, tick marks, and tick mark labels)
+index <- which(g1$layout$name == "axis-l")  # Which grob
+yaxis <- g1$grobs[[index]]                  # Extract the grob
+yaxis$children[[1]]$x <- unit.c(unit(0, "npc"), unit(0, "npc"))
+ticks <- yaxis$children[[2]]
+ticks$widths <- rev(ticks$widths)
+ticks$grobs <- rev(ticks$grobs)
+ticks$grobs[[1]]$x <- ticks$grobs[[1]]$x - unit(1, "npc") + unit(3, "pt")
+ticks$grobs[[2]] <- hinvert_title_grob(ticks$grobs[[2]])
+yaxis$children[[2]] <- ticks
+# Put the transformed yaxis on the right side of g4
+g4 <- gtable_add_cols(g4, g1$widths[g1$layout[index, ]$l], pp$r)
+g4 <- gtable_add_grob(g4, yaxis, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "axis-r")
+# grid.draw(g4)
+
 
 # export images for web hub
 setwd(imgDir)
@@ -490,6 +550,10 @@ for(i in 1:length(plots)) {
   dev.off()
 }
 png(file='trend.png', width=1200, height=800, units='px')
+grid.draw(g4a)
+makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
+dev.off()
+png(file='trend.domestic.png', width=1200, height=800, units='px')
 grid.draw(g4)
 makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
 dev.off()
