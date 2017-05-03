@@ -217,11 +217,25 @@ FROM
 	ON I.[SerialNo] = V.[SerialNo] AND I.[id] = V.[uniqueId]
 
 SELECT 
+	[SerialNo]
+INTO #internationalSerial
+FROM (
+	SELECT
+		REPLACE(REPLACE(REPLACE(REPLACE([SerialNo],'R',''),'_',''),'.',''),' ','') AS [SerialNo],
+		[ShipDate],
+		[SalesTerritoryId],
+		ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [ShipDate]) AS [VisitNo]
+	FROM [PMS1].[dbo].[vInstrumentShipments]
+) Q
+WHERE [VisitNo] = 1 AND [SalesTerritoryID] = 'International'
+
+SELECT 
 	YEAR(S.[TranDate]) AS [Year],
 	MONTH(S.[TranDate]) AS [Month],
 	S.[SerialNo],
 	IIF(R.[CreatedDate] IS NULL, 0, 1) AS [ReturnedDueToFailure],
-	ISNULL(F.[FailCount], 0) AS [TimesReturnedDueToFailure]
+	ISNULL(F.[FailCount], 0) AS [TimesReturnedDueToFailure],
+	IIF(S.[SerialNo] IN (SELECT * FROM #internationalSerial), 0, 1) AS [Domestic]
 INTO #shipFailTracker
 FROM #serialShipments S LEFT JOIN #serialReturns R
 	ON S.[SerialNo] = R.[SerialNo] LEFT JOIN
@@ -239,13 +253,17 @@ SELECT
 	S.[Month],
 	S.[Shipments],
 	ISNULL(R.[Returned],0) AS [Returned],
-	F.[FailCount]
+	F.[FailCount],
+	S.[DomesticShipments],
+	ISNULL(R.[DomesticReturned],0) AS [DomesticReturned],
+	F.[DomesticFailCount]
 FROM
 (
 	SELECT 
 		[Year],
 		[Month],
-		COUNT([SerialNo]) AS [Shipments]
+		COUNT([SerialNo]) AS [Shipments],
+		SUM(IIF([Domestic]=1, 1, 0)) AS [DomesticShipments]
 	FROM #shipFailTracker
 	GROUP BY 
 		[Year],
@@ -255,7 +273,8 @@ FROM
 	SELECT 
 		[Year],
 		[Month],
-		SUM([ReturnedDueToFailure]) AS [Returned]
+		SUM([ReturnedDueToFailure]) AS [Returned],
+		SUM(IIF([Domestic]=1, [ReturnedDueToFailure], 0)) AS [DomesticReturned]
 	FROM #shipFailTracker
 	WHERE [ReturnedDueToFailure] = 1
 	GROUP BY 
@@ -267,7 +286,8 @@ FROM
 	SELECT
 		[Year],
 		[Month],
-		SUM([TimesReturnedDueToFailure]) AS [FailCount]
+		SUM([TimesReturnedDueToFailure]) AS [FailCount],
+		SUM(IIF([Domestic]=1, [TimesReturnedDueToFailure], 0)) AS [DomesticFailCount]
 	FROM #shipFailTracker
 	GROUP BY 
 		[Year],
@@ -277,5 +297,5 @@ FROM
 WHERE S.[Year] > 2012
 ORDER BY S.[Year], S.[Month]
 
-DROP TABLE #bestSet, #complaintsReal, #consider, #flagged, #partinfo, #properties, #rootCause, #serialReturns, #serialShipId, #serialShipments, 
-			#shipFailTracker, #workflow, #instShip
+--DROP TABLE #bestSet, #complaintsReal, #consider, #flagged, #partinfo, #properties, #rootCause, #serialReturns, #serialShipId, #serialShipments, 
+--			#shipFailTracker, #workflow, #instShip, #internationalSerial
