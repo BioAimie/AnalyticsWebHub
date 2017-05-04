@@ -28,10 +28,12 @@
     <img src = "images/BioFire-Logo1.jpg" alt="Biofire" />
         <h1>Pouch SPC Curator</h1>
         <div id="updateButtons">
-            <asp:Button ID="Button3" runat="server" Text="Input New Run Observation" OnClick="Button3_Click" />
+            <asp:Button ID="Button3" runat="server" Text="Input New Run Observation" OnClick="Button3_Click" BackColor="#CCCCCC" />
             <asp:Button ID="Button2" runat="server" Text="Update Previous Run Observation" OnClick="Button2_Click" />
-            <asp:Button ID="Button5Link" runat="server" Text="Pouch SPC Charting App" OnClick="Button5Link_Click" />
+            <asp:Button ID="Button5Link" runat="server" Text="Pouch SPC Charting App" OnClick="Button5Link_Click" />          
         </div>
+        <asp:Label ID="CountLabel" runat="server" Text="Runs Not Curated: "></asp:Label>
+        <br />
     <div id="TopBox">
         <div id="RunInfo" class="PouchInfo">
             <h4>
@@ -247,7 +249,7 @@
                 </SelectParameters>
             </asp:SqlDataSource>
             <br />
-            <asp:Button ID="Button1" runat="server" Text="Add New Observation" Width="200px" OnClick="Button1_Click" Visible="False" />
+            <asp:Button ID="Button1" runat="server" Text="Add New Observation" Width="200px" OnClick="Button1_Click" Visible="False" BackColor="#CCCCCC" />
 
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             <asp:Button ID="updatebut" runat="server" OnClick="updatebut_Click" Text="Update Previous Observation" Visible="False" />

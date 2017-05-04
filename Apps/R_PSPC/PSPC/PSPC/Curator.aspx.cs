@@ -25,6 +25,7 @@ namespace PSPC
                 ComboBox1.DataTextField = "PouchSerialNumber";
                 DataBind();
                 PrevRunOb.Visible = false;
+                CountLabel.Text = "Runs Not Curated: " + ComboBox1.Items.Count;
             }
         }
 
@@ -62,6 +63,9 @@ namespace PSPC
             Label2.Visible = false;
             DropDownList7.Visible = false;
             DropDownList8.Visible = false;
+            Button3.BackColor = System.Drawing.ColorTranslator.FromHtml("#CCCCCC");
+            Button2.BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFFF");
+            CountLabel.Visible = true;
         }
 
         protected void Button2_Click(object sender, EventArgs e)
@@ -91,6 +95,9 @@ namespace PSPC
             runob5lab.Visible = false;
             DropDownList6.Visible = false;
             del4.Visible = false;
+            Button2.BackColor = System.Drawing.ColorTranslator.FromHtml("#CCCCCC");
+            Button3.BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFFF");
+            CountLabel.Visible = false;
         }
 
         protected void Button1_Click(object sender, EventArgs e)
@@ -102,6 +109,8 @@ namespace PSPC
             Label2.Visible = false;
             DropDownList7.Visible = false;
             DropDownList8.Visible = false;
+            Button1.BackColor = System.Drawing.ColorTranslator.FromHtml("#CCCCCC");
+            updatebut.BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFFF");
         }
 
         protected void Button4_Click(object sender, EventArgs e)
@@ -190,6 +199,8 @@ namespace PSPC
             Label2.Visible = true;
             DropDownList7.Visible = true;
             DropDownList8.Visible = true;
+            updatebut.BackColor = System.Drawing.ColorTranslator.FromHtml("#CCCCCC");
+            Button1.BackColor = System.Drawing.ColorTranslator.FromHtml("#FFFFFF");
         }
 
         protected void Button4_Click1(object sender, EventArgs e)
