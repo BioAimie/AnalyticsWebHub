@@ -25,19 +25,21 @@ WHERE ([PartNumber] LIKE 'FLM_-ASY-0001%' OR [PartNumber] LIKE 'HTFA-SUB-0103%' 
 	AND YEAR([CreatedDate]) >= 2015
 ORDER BY [PartNumber];
 
-WITH [BirthLot] ([TopLotID], [BottomLot], [BottomPart])
+WITH [BirthLot] ([TopLotID], [BottomLot], [BottomPart], [Quantity])
 AS (
 	SELECT
 		[LotNumberID] AS [TopLotID],
 		[LotNumber] AS [BottomLot],
-		[PartNumber] AS [BottomPart]
-	FROM [ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
+		[PartNumber] AS [BottomPart],
+		[Quantity] AS [Quantity]
+	FROM [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
 	WHERE [Quantity]>0
 	UNION ALL
 	SELECT
 		U.[LotNumberId] AS [TopLotID],
 		D.[BottomLot] AS [BottomLot],
-		D.[BottomPart] AS [BottomPart]
+		D.[BottomPart] AS [BottomPart],
+		D.[Quantity]*U.[Quantity] AS [Quantity]
 	FROM [BirthLot] D INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
 		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
 			ON L.[LotNumber] = U.[LotNumber]
@@ -49,7 +51,8 @@ SELECT DISTINCT
 	REPLACE(REPLACE(REPLACE(TL.[LotNumber],'.',''),'_',''),' ','') AS [SerialNo],
 	B.[BottomLot] AS [LotNumber],
 	B.[BottomPart] AS [WireHarPart],
-	TL.[DateOfManufacturing]
+	TL.[DateOfManufacturing],
+	B.[Quantity]
 INTO #wireHarInProd
 FROM [BirthLot] B INNER JOIN [ProductionWeb].[dbo].[Lots] BL WITH(NOLOCK)
 	ON B.[BottomLot] = BL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK)
@@ -66,14 +69,16 @@ FROM (
 		[SerialNo],
 		[LotNumber],
 		[WireHarPart],
-		[DateOfManufacturing] AS [DatePlaced]
+		[DateOfManufacturing] AS [DatePlaced],
+		ISNULL([Quantity],1) AS [Quantity]
 	FROM #wireHarInProd
 	UNION
 	SELECT
 	    REPLACE(REPLACE(I.[LotSerialNumber], ' ', ''), '-', '') AS [SerialNo],
 		REPLACE(SUBSTRING(U.[LotSerialNumber], 1, CHARINDEX(':', U.[LotSerialNumber]+':')-1), ' ', '') AS [LotNumber],
 		REPLACE(U.[PartUsed], ' ', '') AS [WireHarPart],
-		U.[CreatedDate] AS [DatePlaced]
+		U.[CreatedDate] AS [DatePlaced],
+		ISNULL(U.[Quantity],1) AS [Quantity]
 	FROM [PMS1].[dbo].[RMAPartsUsed] U
 	INNER JOIN [PMS1].[dbo].[RMAPartInformation] I ON I.[TicketId] = U.[TicketId]
 	WHERE (I.[PartNumber] LIKE 'FLM_-ASY-0001%' OR I.[PartNumber] LIKE 'HTFA-SUB-0103%' OR I.[PartNumber] LIKE 'HTFA-ASY-0003%')
@@ -81,7 +86,7 @@ FROM (
 		AND YEAR(I.[CreatedDate]) >= '2015'
 ) Q
 
-SELECT
+SELECT DISTINCT
 	[LotNumber],
 	[PartNumber],
 	CAST([Date] AS DATE) AS [Date]
@@ -112,7 +117,7 @@ WHERE [CustId] != 'IDATEC'
 SELECT
 	W.[LotNumber],
 	W.[WireHarPart],
-	COUNT(*) AS [Count]
+	SUM([Quantity]) AS [Count]
 INTO #wireHarCountInField
 FROM #wireHarPlaced W
 INNER JOIN #instShipped I ON I.[SerialNo] = W.[SerialNo]
@@ -148,8 +153,8 @@ SELECT
 	DATEPART(ww, L.[Date]) AS [Week]
 FROM #wireHarCountInField W
 INNER JOIN #wireHarLots L ON L.[LotNumber] = W.[LotNumber]
-WHERE YEAR(L.[Date]) >= 2015
+WHERE YEAR(L.[Date]) >= 2015 AND L.[PartNumber] != 'WIRE-HAR-0554'
 ORDER BY L.[PartNumber], L.[Date]
 
 
---DROP TABLE #instShipped, #wireHarCountInField, #wireHarFail, #wireHarInProd, #wireHarLots, #wireHarPlaced, #wireHarFailLot
+DROP TABLE #instShipped, #wireHarCountInField, #wireHarFail, #wireHarInProd, #wireHarLots, #wireHarPlaced, #wireHarFailLot

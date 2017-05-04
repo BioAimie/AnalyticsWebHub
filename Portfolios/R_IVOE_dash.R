@@ -202,8 +202,8 @@ wireharness.all$PartNumber = as.character(wireharness.all$PartNumber);
 wireharness.parts = sort(unique(wireharness.all$PartNumber));
 wireharness.maxrecord <- max(wireharness.all$Record)
 for(i in 1:wireharness.numCharts){
-  partmin = floor((length(wireharness.parts)-1) * ((i-1) / wireharness.numCharts))+1;
-  partmax = floor((length(wireharness.parts)-1) * (i / wireharness.numCharts))+1;
+  partmin = floor(length(wireharness.parts) * ((i-1) / wireharness.numCharts))+1;
+  partmax = floor(length(wireharness.parts) * (i / wireharness.numCharts));
   parts=wireharness.parts[partmin:partmax];
   wireharness.fill = subset(wireharness.all, PartNumber %in% parts);
   wireharness.fill = wireharness.fill[order(as.character(wireharness.fill$PartNumber)),]
@@ -231,13 +231,13 @@ wireharness.qty.all <- rbind(
 wireharness.qty.all$PartNumber = as.character(wireharness.qty.all$PartNumber);
 wireharness.qty.parts = sort(unique(wireharness.qty.all$PartNumber));
 for(i in 1:wireharness.numCharts){
-  partmin = floor((length(wireharness.qty.parts)-1) * ((i-1) / wireharness.numCharts))+1;
-  partmax = floor((length(wireharness.qty.parts)-1) * (i / wireharness.numCharts))+1;
+  partmin = floor(length(wireharness.parts) * ((i-1) / wireharness.numCharts))+1;
+  partmax = floor(length(wireharness.parts) * (i / wireharness.numCharts));
   parts=wireharness.qty.parts[partmin:partmax];
   wireharness.fill = subset(wireharness.qty.all, PartNumber %in% parts);
   wireharness.fill = wireharness.fill[order(as.character(wireharness.fill$PartNumber)),]
   assign(paste("p.wireharness.quantity",i,sep=""),
-         ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(color='black', stat='identity', position='identity', alpha=.5) + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.qty.max), sec.axis = sec_axis(~. * wireharnessRMA.rate.max / wireharnessNCR.qty.max, labels = scales::percent, name = "RMA Count / Lot Size In Field")) + facet_wrap(~PartNumber) + scale_fill_manual(values=c('blue','red'), name='')+ theme(axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCR Quantity Affected and RMA Count/Lot Size In Field', x='Wire Harness Manufacture Date (Year-Month)', y='NCR Quantity affected')
+         ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(color='black', stat='identity', position='identity', alpha=.5) + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.qty.max+1), sec.axis = sec_axis(~. * wireharnessRMA.rate.max / wireharnessNCR.qty.max, labels = scales::percent, name = "RMA Count / Lot Size In Field")) + facet_wrap(~PartNumber) + scale_fill_manual(values=c('blue','red'), name='')+ theme(axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCR Quantity Affected and RMA Count/Lot Size In Field', x='Wire Harness Manufacture Date (Year-Month)', y='NCR Quantity affected')
   );
 }
 
@@ -288,7 +288,7 @@ edgeLoad.annot = rbind(
  data.frame(Label="Clear sheet tightening", DateGroup='2017-04', Key=edgeLoad.rate$Key[1], Rate=edgeLoad.rate$Rate[edgeLoad.rate$DateGroup=='2017-04']+.01),
  data.frame(Label="Clear sheet tightening", DateGroup='2017-04', Key=edgeLoad.count$Key[1], Rate=edgeLoad.count$Rate[edgeLoad.count$DateGroup=='2017-04']+1)
 );
-p.edgeLoad.voe <- ggplot(subset(edgeLoad.all, DateGroup>='2016-06'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', color='black') + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Torch - Failure to Eject Pouch Complaints', y='Complaints/Torch Module Manufactured, Complaint Count', x='Date of Torch Module Manufacture\n(Year-Month)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = edgeLoad.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=4, fontface='bold') 
+p.edgeLoad.voe <- ggplot(subset(edgeLoad.all, DateGroup>='2016-06'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', color='black') + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Torch - Failure to Eject Pouch Complaints', y='Complaints/Torch Module Manufactured, Complaint Count', x='Date of Torch Module Manufacture\n(Year-Month)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = edgeLoad.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=5) 
 
 
 
