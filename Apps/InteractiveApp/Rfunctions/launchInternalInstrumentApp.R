@@ -18,11 +18,10 @@ calculateAlerts <- function(serial.num, alert.frame, location){
 	
 		 
 	if(length(which(alert.frame$SerialNo == serial.num)) >= 3 ){ ## greater thant 3 because the minimum requirement for an alert is three consecutive runs with errors 
-		
 		## make alert.frame have only the runs on serial.num
 		
 		alert.frame <- alert.frame[which(alert.frame$SerialNo == serial.num), ]
-		
+		print(unique(alert.frame$Protocol))
 		## order by run start time
 		alert.frame <- alert.frame[order(alert.frame$Date), ]
 		alert.frame$error <- apply(alert.frame[ , c("InstrumentError", "SoftwareError", "PouchLeak", "PCR2", "PCR1", "yeast")], 1, function(x)if(sum(x, na.rm=TRUE) >= 1){return(1)}else{return(0)})
@@ -51,27 +50,29 @@ calculateAlerts <- function(serial.num, alert.frame, location){
 } # end calculateAlerts 
 
 
-#if(wday(Sys.Date()) == 4){
+
 if(wday(Sys.Date()) == 4){
 	
 	
 	## initialize the output data structure and email varialbes for the instrument alerts 
-	alerts.output <<- list()
+	alerts.output <- list()
   alerts.output[["dungeon"]] <- list("20percent"=vector(), "3consecutive"=vector())
   alerts.output[["pouchqc"]] <- list("20percent"=vector(), "3consecutive"=vector())
-	
+	alerts.output <<- alerts.output
+
 	alert.location.frames <- list()
 	#alert.location.frames[["dungeon"]] <- location.frames[["dungeon"]][which(location.frames[["dungeon"]]$Date >= date.ranges[["7"]][1] & location.frames[["dungeon"]]$Protocol != "Custom") , ]
-	alert.location.frames[["dungeon"]] <- subset(location.frames[["dungeon"]], Date >= date.ranges[["7"]][1] & Protocol != "Custom" & (LastServiceDate < date.ranges[["7"]][1] | is.na(LastServiceDate)))
+	
+	alert.location.frames[["dungeon"]] <- subset(location.frames[["dungeon"]], Date >= date.ranges[["7"]][1] & !(grepl("Custom", Protocol)) & (LastServiceDate < date.ranges[["7"]][1] | is.na(LastServiceDate)))
 	#alert.location.frames[["pouchqc"]] <- location.frames[["pouchqc"]][which(location.frames[["pouchqc"]]$Date >= date.ranges[["7"]][1] & location.frames[["pouchqc"]]$LastServiceDate > ), ]
 	alert.location.frames[["pouchqc"]] <- subset(location.frames[["pouchqc"]], Date >= date.ranges[["7"]][1] & (LastServiceDate < date.ranges[["7"]][1] | is.na(LastServiceDate)))
 	
 	from <-"Anna.Hoffee@biofiredx.com"
-	#dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Lisa.Ogden@biofiredx.com", "Bartek.Ksok@biofiredx.com", "Shane.Woodhouse@biofiredx.com" )
-	#qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Emily.Fernandez@biofiredx.com", "Kristel.Borsos@biofiredx.com", "Dana.Saif@biofiredx.com", "Kimon.Clarke@biofiredx.com")
+	dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Lisa.Ogden@biofiredx.com", "Bartek.Ksok@biofiredx.com", "Shane.Woodhouse@biofiredx.com" )
+	qc.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Emily.Fernandez@biofiredx.com", "Kristel.Borsos@biofiredx.com", "Dana.Saif@biofiredx.com", "Kimon.Clarke@biofiredx.com")
 
-	dungeon.people <- c("Anna.Hoffee@biofiredx.com")
-	qc.people <- c("Anna.Hoffee@biofiredx.com")
+	#dungeon.people <- c("Anna.Hoffee@biofiredx.com")
+	#qc.people <- c("Anna.Hoffee@biofiredx.com")
 	
 	mailControl <- list(smtpServer="webmail.biofiredx.com")
 	subject.names <- list("pouchqc" = "Pouch QC", "dungeon"="Dungeon")
