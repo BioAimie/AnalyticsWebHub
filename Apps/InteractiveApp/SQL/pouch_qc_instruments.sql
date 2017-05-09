@@ -236,7 +236,6 @@ FROM #cptm
 WHERE [Tm1] IS NOT NULL 
 GROUP BY [PouchSerialNumber]
 
-
 SELECT 
 	ie.[Date], 
 	ie.[SerialNo],
@@ -249,7 +248,8 @@ SELECT
 	ISNULL(c.[PCR1], 0) AS [PCR1],
 	ISNULL(c.[yeast], 0) AS [yeast],
 	FORMAT(cp.[Cp], 'N2') AS [Cp],
-	FORMAT(tm.[Tm], 'N2') AS [Tm]
+	FORMAT(tm.[Tm], 'N2') AS [Tm],
+	ie.[PouchSerialNumber]
 INTO #fa2
 FROM #instrumentErrors ie LEFT JOIN #softwareErrors se 
 	ON ie.[PouchSerialNumber] = se.[PouchSerialNumber] LEFT JOIN #pouchLeaks pl 
@@ -451,7 +451,8 @@ SELECT
 	ISNULL(c1.[PCR1], 0) AS [PCR1],
 	ISNULL(c1.[yeast], 0) AS [yeast],
 	FORMAT(cp1.[Cp], 'N2') AS [Cp],
-	FORMAT(tm1.[Tm], 'N2') AS [Tm]
+	FORMAT(tm1.[Tm], 'N2') AS [Tm],
+	ie1.[PouchSerialNumber]
 INTO #fa1
 FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1 
 	ON ie1.[PouchSerialNumber] = se1.[PouchSerialNumber] LEFT JOIN #pouchLeaks1 pl1 
@@ -513,9 +514,11 @@ select
 	e.[yeast], 
 	e.[Cp], 
 	e.[Tm], 
-	m.[LastServiceDate]
+	m.[LastServiceDate],
+	e.[PouchSerialNumber]
 from #errors e left join #mostRecentServiceDates m 
 	on e.[SerialNo] = m.[SerialNo]
+where e.[SerialNo] like 'TM272C7' 
+order by [Date]
 
-
-DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cptm, #cpAvg,  #tmAvg, #cptm1, #cpAvg1, #tmAvg1, #version1, #version2, #allVersions, #versions, #serviceDates, #partNumbers, #mostRecentServiceDates, #errors
+--DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cptm, #cpAvg,  #tmAvg, #cptm1, #cpAvg1, #tmAvg1, #version1, #version2, #allVersions, #versions, #serviceDates, #partNumbers, #mostRecentServiceDates, #errors

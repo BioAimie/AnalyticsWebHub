@@ -161,8 +161,23 @@ p.TorchBaseELFDOA <- ggplot(subset(fail.rate, DateGroup >= '2017-01' & Version =
 
 # 2017 FA 2.0 Rate of Failures at <100 run hours (4-month rolling average) (new chart)
 # rate calculated by using 4 month moving average of instruments shipped as denominator
+beg <- paste0(year(Sys.Date()), '-01')
 fail.hours <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', fail.hours.df, c('Version'), start.monthyr, 'Failure', 'sum', 0)
+fail.hours$FailureLower = numeric(nrow(fail.hours));
+fail.hours$FailureUpper = numeric(nrow(fail.hours));
+for(i in 1:nrow(fail.hours)){
+  CI = poisson.test(fail.hours$Failure[i]);
+  fail.hours$FailureLower[i] = CI$conf.int[1];
+  fail.hours$FailureUpper[i] = CI$conf.int[2];
+}
 fail.hours.rate <- mergeCalSparseFrames(fail.hours, new.shipavg, c('DateGroup', 'Version'), c('DateGroup','Product'), 'Failure','RollingAvg',0,0)
+fail.hours.rateLower <- mergeCalSparseFrames(fail.hours, new.shipavg, c('DateGroup', 'Version'), c('DateGroup','Product'), 'FailureLower','RollingAvg',0,0)
+fail.hours.rateUpper <- mergeCalSparseFrames(fail.hours, new.shipavg, c('DateGroup', 'Version'), c('DateGroup','Product'), 'FailureUpper','RollingAvg',0,0)
+fail.hours.rate$Failure = fail.hours.rateLower$Failure;
+fail.hours.rate$RateLower = fail.hours.rateLower$Rate;
+fail.hours.rate$RateUpper = fail.hours.rateUpper$Rate;
+fail.hours.rate = merge(fail.hours.rate, subset(new.shipavg, select=c('DateGroup', 'Product', 'RollingAvg')), by.x=c('DateGroup', 'Version'), by.y=c('DateGroup', 'Product'))
+
 fail.pal <- createPaletteOfVariableLength(fail.rate, 'Fail')
 #YTD rates
 fail.hours.2017 <- subset(fail.hours, DateGroup >= beg)
@@ -180,14 +195,71 @@ for(i in 1:length(versions)) {
   ship2017.cum <- rbind(ship2017.cum, temp)
 }
 ytdrates.hours <- mergeCalSparseFrames(fail.hours.2017cum, ship2017.cum, c('DateGroup', 'Version'), c('DateGroup', 'Product'), 'CumSum', 'CumSum', 0, 0)
-p.FA2.0Hours100 <- ggplot(subset(fail.hours.rate, DateGroup >= '2017-01' & Version == 'FA2.0'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='2017 FA 2.0 Rate of Failures at <100 Hours Run', subtitle= 'Per 4-Month Moving Average of Instruments Shipped',#\nGoal = Green Line', 
+p.FA2.0Hours100 <- ggplot(subset(fail.hours.rate, DateGroup >= '2017-01' & Version == 'FA2.0'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill=pal.wpfs[1]) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='2017 FA 2.0 Rate of Failures at <100 Hours Run', subtitle= 'Per 4-Month Moving Average of Instruments Shipped',#\nGoal = Green Line', 
 y='Rate of Failures at <100 Hours Run', x='Date\n(Year-Month)') + #geom_hline(yintercept=0.025, color='forestgreen', size=1) + 
-  geom_line(data=subset(ytdrates.hours, Version == 'FA2.0'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Version), size=1) + geom_point(data=subset(ytdrates.hours, Version == 'FA2.0'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate))  #+ guides(color=guide_legend(nrow=1, by.row=TRUE))
+  geom_line(data=subset(ytdrates.hours, Version == 'FA2.0'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Version), size=1) + geom_point(data=subset(ytdrates.hours, Version == 'FA2.0'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate)) + geom_errorbar(aes(ymin=RateLower, ymax=RateUpper)) + geom_text(aes(label=paste(Failure,'\n',sprintf("%.1f",RollingAvg),sep='')),  position = position_stack(vjust = 0.5), size=8)   #+ guides(color=guide_legend(nrow=1, by.row=TRUE))
 
 # 2017 Torch Module Rate of failure at <100 run hours (new chart)
-p.TorchModHours100 <- ggplot(subset(fail.hours.rate, DateGroup >= '2017-01' & Version == 'Torch Module'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='2017 Torch Module Rate of Failures at <100 Hours Run', subtitle= 'Per 4-Month Moving Average of Instruments Shipped',#\nGoal = Green Line', 
+p.TorchModHours100 <- ggplot(subset(fail.hours.rate, DateGroup >= '2017-01' & Version == 'Torch Module'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill=pal.wpfs[1]) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='2017 Torch Module Rate of Failures at <100 Hours Run', subtitle= 'Per 4-Month Moving Average of Instruments Shipped',#\nGoal = Green Line', 
 y='Rate of Failures at <100 Hours Run', x='Date\n(Year-Month)') + #geom_hline(yintercept=0.025, color='forestgreen', size=1) + 
-  geom_line(data=subset(ytdrates.hours, Version == 'Torch Module'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Version), size=1) + geom_point(data=subset(ytdrates.hours, Version == 'Torch Module'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate))  #+ guides(color=guide_legend(nrow=1, by.row=TRUE))
+  geom_line(data=subset(ytdrates.hours, Version == 'Torch Module'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Version), size=1) + geom_point(data=subset(ytdrates.hours, Version == 'Torch Module'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate)) + geom_errorbar(aes(ymin=RateLower, ymax=RateUpper)) + geom_text(aes(label=paste(Failure,'\n',sprintf("%.1f",RollingAvg),sep='')),  position = position_stack(vjust = 0.5), size=8) #+ guides(color=guide_legend(nrow=1, by.row=TRUE))
+
+# Long-term FA 2.0 Rate of Failures at <100 run hours (4-month rolling average) (new chart)
+# rate calculated by using 4 month moving average of instruments shipped as denominator
+beg <- '2000-01';
+begFA2 <- '2015-05';
+new.ship <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', newShipments, 'Product', beg, 'Record', 'sum', 0)
+new.shipavg <- c()
+versions <- as.character(unique(new.ship$Product))
+for(i in 1:length(versions)) {
+  temp <- subset(new.ship, Product == versions[i])
+  l <- length(temp$DateGroup)  
+  temp <- cbind(temp[4:l,], sapply(4:l, function(x) mean(temp[(x-3):x,'Record'])))
+  colnames(temp)[4] <- 'RollingAvg'
+  new.shipavg <- rbind(new.shipavg, temp)
+}
+#start.monthyr <- findStartDate(calendar.month, 'Month', 12, 0)
+fail.hours <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', fail.hours.df, c('Version'), beg, 'Failure', 'sum', 0)
+fail.hours$FailureLower = numeric(nrow(fail.hours));
+fail.hours$FailureUpper = numeric(nrow(fail.hours));
+for(i in 1:nrow(fail.hours)){
+  CI = poisson.test(fail.hours$Failure[i]);
+  fail.hours$FailureLower[i] = CI$conf.int[1];
+  fail.hours$FailureUpper[i] = CI$conf.int[2];
+}
+fail.hours.rate <- mergeCalSparseFrames(fail.hours, new.shipavg, c('DateGroup', 'Version'), c('DateGroup','Product'), 'Failure','RollingAvg',0,0)
+fail.hours.rateLower <- mergeCalSparseFrames(fail.hours, new.shipavg, c('DateGroup', 'Version'), c('DateGroup','Product'), 'FailureLower','RollingAvg',0,0)
+fail.hours.rateUpper <- mergeCalSparseFrames(fail.hours, new.shipavg, c('DateGroup', 'Version'), c('DateGroup','Product'), 'FailureUpper','RollingAvg',0,0)
+fail.hours.rate$Failure = fail.hours.rateLower$Failure;
+fail.hours.rate$RateLower = fail.hours.rateLower$Rate;
+fail.hours.rate$RateUpper = fail.hours.rateUpper$Rate;
+fail.hours.rate = merge(fail.hours.rate, subset(new.shipavg, select=c('DateGroup', 'Product', 'RollingAvg')), by.x=c('DateGroup', 'Version'), by.y=c('DateGroup', 'Product'))
+
+fail.pal <- createPaletteOfVariableLength(fail.rate, 'Fail')
+#YTD rates
+fail.hours.2017 <- subset(fail.hours, DateGroup >= beg)
+new.ship2017 <- subset(new.ship, DateGroup >= beg)
+#cum sum per version
+fail.hours.2017cum <- c()
+ship2017.cum <- c()
+for(i in 1:length(versions)) {
+  temp <- subset(fail.hours.2017, Version == versions[i])
+  keys <- as.character(unique(temp$Fail))
+  temp$CumSum <- cumsum(temp$Failure)
+  fail.hours.2017cum <- rbind(fail.hours.2017cum, temp)
+  temp <- subset(new.ship2017, Product == versions[i])
+  temp$CumSum <- cumsum(temp$Record)
+  ship2017.cum <- rbind(ship2017.cum, temp)
+}
+ytdrates.hours <- mergeCalSparseFrames(fail.hours.2017cum, ship2017.cum, c('DateGroup', 'Version'), c('DateGroup', 'Product'), 'CumSum', 'CumSum', 0, 0)
+p.FA2.0Hours100.long <- ggplot(subset(fail.hours.rate, DateGroup >= begFA2 & Version == 'FA2.0'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill=pal.wpfs[1]) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='Long-term FA 2.0 Rate of Failures at <100 Hours Run', subtitle= 'Per 4-Month Moving Average of Instruments Shipped',y='Rate of Failures at <100 Hours Run', x='Date\n(Year-Month)') + #geom_hline(yintercept=0.025, color='forestgreen', size=1) + 
+  geom_line(data=subset(ytdrates.hours, Version == 'FA2.0' & DateGroup >= begFA2), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Version), size=1) + geom_point(data=subset(ytdrates.hours, Version == 'FA2.0'  & DateGroup >= begFA2), inherit.aes = FALSE, aes(x=DateGroup, y=Rate)) + geom_errorbar(aes(ymin=RateLower, ymax=RateUpper)) + geom_text(aes(label=paste(Failure,'\n',sprintf("%.1f",RollingAvg),sep='')),  position = position_stack(vjust = 0.5), size=5)   #+ guides(color=guide_legend(nrow=1, by.row=TRUE))
+
+# Long-term Torch Module Rate of failure at <100 run hours (new chart)
+begTorch = '2016-04'
+p.TorchModHours100.long <- ggplot(subset(fail.hours.rate, DateGroup >= begTorch & Version == 'Torch Module'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill=pal.wpfs[1]) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='Long-term Torch Module Rate of Failures at <100 Hours Run', subtitle= 'Per 4-Month Moving Average of Instruments Shipped',y='Rate of Failures at <100 Hours Run', x='Date\n(Year-Month)') + #geom_hline(yintercept=0.025, color='forestgreen', size=1) + 
+  geom_line(data=subset(ytdrates.hours, Version == 'Torch Module' & DateGroup >= begTorch), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Version), size=1) + geom_point(data=subset(ytdrates.hours, Version == 'Torch Module' & DateGroup >= begTorch), inherit.aes = FALSE, aes(x=DateGroup, y=Rate)) + geom_errorbar(aes(ymin=RateLower, ymax=RateUpper)) + geom_text(aes(label=paste(Failure,'\n',sprintf("%.1f",RollingAvg),sep='')),  position = position_stack(vjust = 0.5), size=8) #+ guides(color=guide_legend(nrow=1, by.row=TRUE))
+
 
 # FA 2.0 DOA/ELF Failures Modes (new chart)
 failmodes.yr <- fail.modes.df
