@@ -43,6 +43,9 @@ shinyServer(function(input, output, session){
 	 					)
 	 		
 	 				),
+				#fluidRow(
+				#	dateRangeInput("custom.date", label="")
+				#),
 			
 				fluidRow(
 						selectInput("protocol.choice", label=h3("Protocol Option(s)"),
@@ -104,7 +107,6 @@ shinyServer(function(input, output, session){
 			#################################################################################################################
 			######### wait for a user to click a row of the data table, then upload the cp/overall error plots ##############
 			#################################################################################################################
-			
 			
 			observeEvent(input$rate.table_rows_selected,{
 				
@@ -321,7 +323,7 @@ shinyServer(function(input, output, session){
 		  				combined.rate.table <<- rbind(combined.rate.table, rate.tables[[isolate(input$location.choice)]][[p]][[isolate(input$date.range.choice)]])
 		  		}
 		  	  
-		  	  combineRows <- function(x){
+		  	  combineRowsDungeon <- function(x){
 		  	  	if(length(which(combined.rate.table[ , "Instrument Serial Number"] == x)) > 1){ ## if there are actually multiple different protocol runs on the same instrument in this location/date range 
 		  	  	     
 		  	  			 indices <- which(combined.rate.table[ , "Instrument Serial Number"] == x)
@@ -339,15 +341,46 @@ shinyServer(function(input, output, session){
 		  	  	     
 		  	  	     total.errors <- round(sum(combined.rate.table[indices, "fraction of runs with at least one error"]*individual.runs)/number.runs, 3)
 		  	  	
-		  	  	     combined.rate.table <<- rbind(combined.rate.table, list(combined.rate.table[indices[1], "Instrument Serial Number"], version, number.runs , total.errors, instrument.errors, software.errors, pcr1.errors, pcr2.errors,yeast.errors, pouchleak.errors))  
+		  	  	     combined.rate.table <<- rbind(combined.rate.table, list(combined.rate.table[indices[1], "Instrument Serial Number"], version, number.runs , total.errors, instrument.errors, software.errors, pcr1.errors, pcr2.errors, yeast.errors, pouchleak.errors))  
 		  	  			 combined.rate.table <<- combined.rate.table[-indices,  ]
 		  	  	}
 		  	  	
 		  	  }
 		  	  
+		  	  
+		  	  	combineRowsPouchqc <- function(x){
+		  	  	if(length(which(combined.rate.table[ , "Instrument Serial Number"] == x)) > 1){ ## if there are actually multiple different protocol runs on the same instrument in this location/date range 
+		  	  	     
+		  	  			 indices <- which(combined.rate.table[ , "Instrument Serial Number"] == x)
+		  	  			 
+		  	  	     number.runs <- sum(combined.rate.table[indices, "# of runs"], na.rm=TRUE)
+		  	  	     individual.runs <- combined.rate.table[indices, "# of runs"]
+		  	  	     version <- combined.rate.table[indices, "Version"][1]
+		  	  	     instrument.errors <- round(sum(combined.rate.table[indices, "Instrument Failure Rate"]*individual.runs)/number.runs, 3)
+		  	  	     
+		  	  	     software.errors <- round(sum(combined.rate.table[indices, "Software Failure Rate"]*individual.runs)/number.runs, 3)
+		  	  	     pcr1.errors <- round(sum(combined.rate.table[indices, "PCR1 Negative Rate"]*individual.runs)/number.runs, 3)
+		  	  	     pcr2.errors <- round(sum(combined.rate.table[indices, "PCR2 Negative Rate"]*individual.runs)/number.runs, 3)
+		  	  	     yeast.errors <- round(sum(combined.rate.table[indices, "yeast Negative Rate"]*individual.runs)/number.runs, 3)
+		  	  	     pouchleak.errors <- round(sum(combined.rate.table[indices, "Pouch Leak Rate"]*individual.runs)/number.runs, 3)
+		  	  	     anomaly.errors <- round(sum(combined.rate.table[indices, "Anomaly Rate"]*individual.runs)/number.runs, 3)
+		  	  	     total.errors <- round(sum(combined.rate.table[indices, "fraction of runs with at least one error"]*individual.runs)/number.runs, 3)
+		  	  	     combined.rate.table <<- rbind(combined.rate.table, list(combined.rate.table[indices[1], "Instrument Serial Number"], version, number.runs , total.errors, instrument.errors, software.errors, pcr1.errors, pcr2.errors, yeast.errors, pouchleak.errors, anomaly.errors))  
+		  	  			 combined.rate.table <<- combined.rate.table[-indices,  ]
+		  	  	}
+		  	  	
+		  	  }
+
+		  	  
 		  	  serial.nums <- unique(combined.rate.table[, "Instrument Serial Number"])
 		  	  
-		  	  lapply(serial.nums, combineRows)
+		  	  if(isolate(input$location.choice) == "dungeon"){
+		  	  	lapply(serial.nums, combineRowsDungeon)
+		  	  }else{
+		  	  	lapply(serial.nums, combineRowsPouchqc)
+		  	  }
+		  	  
+		  	  
 					
 
 		  	  title.string <- paste(isolate(input$protocol.choice), collapse=" , ")
