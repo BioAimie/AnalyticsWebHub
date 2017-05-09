@@ -21,7 +21,7 @@ source('Rfunctions/makeTimeStamp.R')
 # establish some properties used throughout the code- these are kept up top to facilitate changes
 periods <- 4
 lagPeriods <- 4
-#wireharness.numCharts = 5
+wireharness.numCharts = 5
 wireharness.nrow = 5
 wireharness.ncol = 5
 
