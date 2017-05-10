@@ -234,9 +234,11 @@ shinyServer(function(input, output, session) {
       if(!is.null(input$panel3) & !('All' %in% input$panel3)) {
         temp <- subset(temp, Panel %in% input$panel3)  
       }
-      anomaly <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, 'Panel', startD, 'Record', 'sum', 0)
+      temp[,'RunObservation'] <- gsub(', ','-',as.character(temp[,'RunObservation']))
+      anomaly <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, c('Panel','RunObservation'), startD, 'Record', 'sum', 0)
       anomaly.rate <- mergeCalSparseFrames(anomaly, allqcruns.denom, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 0)
-      ggplot(anomaly.rate, aes(x=DateGroup, y=Rate, fill=Panel)) + geom_bar(stat='identity', position='stack') + scale_fill_manual(name='', values = createPaletteOfVariableLength(anomaly.rate, 'Panel')) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Anomalies By Panel', subtitle = runObSelected, y='Anomaly Rate', x='Date\n(Year-Month)')
+      anomaly.rate$RunObservation <- factor(anomaly.rate$RunObservation, levels = as.character(with(anomaly.rate, aggregate(Rate~RunObservation, FUN=sum))[with(with(anomaly.rate, aggregate(Rate~RunObservation, FUN=sum)), order(Rate)), 'RunObservation']))
+      ggplot(anomaly.rate, aes(x=DateGroup, y=Rate, fill=Panel, alpha=RunObservation)) + geom_bar(stat='identity', position='stack') + scale_fill_manual(name='', values = createPaletteOfVariableLength(anomaly.rate, 'Panel')) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Anomalies By Panel', subtitle = runObSelected, y='Anomaly Rate', x='Date\n(Year-Month)') + scale_alpha_discrete(name='Run Observation', range = c(0.3,1))
     } else {
       pouchAssays <- subset(temp, select = c('PouchSerialNumber', 'Control_Failures', 'False_Negatives', 'False_Positives'))  
       serials <- as.character(unique(pouchAssays$PouchSerialNumber))
@@ -262,9 +264,11 @@ shinyServer(function(input, output, session) {
       } else {
         temp <- merge(assaySerials, temp)
       }
-      anomaly <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, 'Assay', startD, 'Record', 'sum', 0)
+      temp[,'RunObservation'] <- gsub(', ','-',as.character(temp[,'RunObservation']))
+      anomaly <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, c('Assay','RunObservation'), startD, 'Record', 'sum', 0)
       anomaly.rate <- mergeCalSparseFrames(anomaly, allqcruns.denom, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 0)
-      ggplot(anomaly.rate, aes(x=DateGroup, y=Rate, fill=Assay)) + geom_bar(stat='identity', position='stack') + scale_fill_manual(name='', values = colVector[1:length(unique(anomaly.rate$Assay))]) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Anomalies By Assay', subtitle = runObSelected, y='Anomaly Rate', x='Date\n(Year-Month)')
+      anomaly.rate$RunObservation <- factor(anomaly.rate$RunObservation, levels = as.character(with(anomaly.rate, aggregate(Rate~RunObservation, FUN=sum))[with(with(anomaly.rate, aggregate(Rate~RunObservation, FUN=sum)), order(Rate)), 'RunObservation']))
+      ggplot(anomaly.rate, aes(x=DateGroup, y=Rate, fill=Assay, alpha=RunObservation)) + geom_bar(stat='identity', position='stack') + scale_fill_manual(name='', values = colVector[1:length(unique(anomaly.rate$Assay))]) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Anomalies By Assay', subtitle = runObSelected, y='Anomaly Rate', x='Date\n(Year-Month)') + scale_alpha_discrete(name='Run Observation', range = c(0.3,1))
     }
   })
 

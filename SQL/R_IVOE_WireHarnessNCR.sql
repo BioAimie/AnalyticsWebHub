@@ -20,6 +20,7 @@ SELECT
 	[LotNumber],
 	[PartAffected],
 	[QuantityAffected],
+	[ActualLotSize],
 	YEAR([Date]) AS [Year],
 	MONTH([Date]) AS [Month],
 	DATEPART(ww,[Date]) AS [Week],
@@ -29,11 +30,14 @@ FROM (
 		IIF(ISDATE([ManufactureDate])=1 AND [ManufactureDate] >= '2014-01-01' AND [ManufactureDate] <= GETDATE(), 
 			CAST([ManufactureDate] AS DATE), [CreatedDate]) AS [Date]
 	FROM (
-		SELECT *,
-			'20' + SUBSTRING(RIGHT([LotNumber], 9), 5, 2) + '-' + SUBSTRING(RIGHT([LotNumber], 9), 1, 2) + '-' + SUBSTRING(RIGHT([LotNumber], 9), 3, 2) AS [ManufactureDate]
-		FROM #NCRs
+		SELECT N.*,
+			'20' + SUBSTRING(RIGHT(N.[LotNumber], 9), 5, 2) + '-' + SUBSTRING(RIGHT(N.[LotNumber], 9), 1, 2) + '-' + SUBSTRING(RIGHT(N.[LotNumber], 9), 3, 2) AS [ManufactureDate],
+			(SELECT MAX(L.[ActualLotSize]) 
+			FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+			WHERE L.[LotNumber] = N.[LotNumber]) AS [ActualLotSize]
+		FROM #NCRs N
 	) Q1
 ) Q2
-ORDER BY [CreatedDate]
+ORDER BY [PartAffected],[CreatedDate]
 
 DROP TABLE #NCRs

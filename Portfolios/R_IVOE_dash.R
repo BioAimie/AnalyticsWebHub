@@ -21,7 +21,9 @@ source('Rfunctions/makeTimeStamp.R')
 # establish some properties used throughout the code- these are kept up top to facilitate changes
 periods <- 4
 lagPeriods <- 4
-wireharness.numCharts = 3
+wireharness.numCharts = 5
+wireharness.nrow = 5
+wireharness.ncol = 5
 
 # use '2014-51' as the start date so that the 4-week rolling trend starts in week 1 of 2015
 startYear <- 2014
@@ -35,6 +37,10 @@ seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
+theme_set(theme_grey()+theme(plot.title=element_text(hjust=0.5),
+                             text=element_text(size=fontSize, face=fontFace), 
+                             axis.text=element_text(color='black',size=fontSize,face=fontFace)));
+
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # Plunger manifold gaskets creeping per pouches shipped
@@ -181,31 +187,117 @@ wireharness.seqBreak <- 3
 wireharness.dates = as.character(unique(wireharness.calendar.df[wireharness.calendar.df[,'DateGroup'] >= wireharness.startDate,'DateGroup']))
 wireharness.dateBreaks <- sort(wireharness.dates)[seq(1,length(wireharness.dates), wireharness.seqBreak)]
 
+# Wire harness NCR count - Top 25 parts
+wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'Record', 'sum', 0)
+wireharnessRMA.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessRMA.df, c('PartNumber'), startDate, 'FailCount', 'sum', 0)
+wireharness.all <- rbind(
+  data.frame(DateGroup=wireharnessNCR.fill$DateGroup, 
+             PartNumber=wireharnessNCR.fill$PartAffected,
+             Record=wireharnessNCR.fill$Record,
+             Type='NCR'),
+  data.frame(DateGroup=wireharnessRMA.fill$DateGroup, 
+             PartNumber=wireharnessRMA.fill$PartNumber,
+             Record=wireharnessRMA.fill$FailCount,
+             Type='RMA')
+);
+wireharness.all$PartNumber = as.character(wireharness.all$PartNumber);
+wireharness.maxrecord.bypart = aggregate(x = wireharness.all$Record, 
+                                         by = list(part = wireharness.all$PartNumber), FUN = max);
+wireharness.maxrecord.bypart = wireharness.maxrecord.bypart[order(wireharness.maxrecord.bypart$x,
+                                                                  decreasing=TRUE),];
+wireharness.parts = wireharness.maxrecord.bypart$part;
+wireharness.maxrecord <- max(wireharness.all$Record);
+parts=wireharness.maxrecord.bypart$part[1:(wireharness.nrow * wireharness.ncol)];
+wireharness.fill = do.call(rbind,lapply(parts,function(part){
+  subset(wireharness.all, PartNumber == part);
+}));
+wireharness.fill$PartNumber = factor(wireharness.fill$PartNumber, levels=wireharness.parts);
+p.wireharness.count = ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(stat='identity', position='identity', alpha=.5, color='black') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharness.maxrecord)) + scale_fill_manual(values=c('blue','red'), name='') + facet_wrap(~PartNumber) + theme(axis.text.x=element_text(angle=90)) + labs(title='Count of Wire Harness NCRs and RMAs - Top 25 parts', x='Wire Harness Manufacture Date (Year-Month)', y='Count of NCRs/RMAs')
+
+# Wire harness NCR quantity affected - Top 25 parts
+wireharnessNCR.qty.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
+wireharnessNCR.qty.max = max(wireharnessNCR.qty.fill$QuantityAffected);
+wireharnessRMA.infield <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessRMA.df, c('PartNumber'), startDate, 'LotSizeInField', 'sum', 0)
+wireharnessRMA.rate <- mergeCalSparseFrames(wireharnessRMA.fill, wireharnessRMA.infield, c('DateGroup','PartNumber'), c('DateGroup','PartNumber'), 'FailCount', 'LotSizeInField', 0, 0)
+wireharnessRMA.rate.max = max(wireharnessRMA.rate$Rate);
+wireharness.all <- rbind(
+  data.frame(DateGroup=wireharnessNCR.qty.fill$DateGroup, 
+             PartNumber=wireharnessNCR.qty.fill$PartAffected,
+             Record=wireharnessNCR.qty.fill$QuantityAffected,
+             Type='NCR'),
+  data.frame(DateGroup=wireharnessRMA.rate$DateGroup, 
+             PartNumber=wireharnessRMA.rate$PartNumber,
+             Record=wireharnessRMA.rate$Rate * wireharnessNCR.qty.max / wireharnessRMA.rate.max,
+             Type='RMA')
+);
+wireharness.maxrecord.bypart = aggregate(x = wireharness.all$Record, 
+                                         by = list(part = wireharness.all$PartNumber), FUN = max);
+wireharness.maxrecord.bypart = wireharness.maxrecord.bypart[order(wireharness.maxrecord.bypart$x,
+                                                                  decreasing=TRUE),];
+wireharness.parts = wireharness.maxrecord.bypart$part;
+parts=wireharness.parts[1:(wireharness.nrow * wireharness.ncol)];
+wireharness.fill = do.call(rbind,lapply(parts,function(part){
+  subset(wireharness.all, PartNumber == part);
+}));
+wireharness.fill$PartNumber = factor(wireharness.fill$PartNumber, levels=parts);
+p.wireharness.quantity = ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(color='black', stat='identity', position='identity', alpha=.5) + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.qty.max+1), sec.axis = sec_axis(~. * wireharnessRMA.rate.max / wireharnessNCR.qty.max, labels = scales::percent, name = "RMA Count / Lot Size In Field")) + facet_wrap(~PartNumber) + scale_fill_manual(values=c('blue','red'), name='')+ theme(axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCR Quantity Affected and RMA Count/Lot Size In Field - Top 25 parts', x='Wire Harness Manufacture Date (Year-Month)', y='NCR Quantity affected')
+
+
 # Wire harness NCR count
 wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'Record', 'sum', 0)
-wireharnessNCR.maxrecord = max(wireharnessNCR.fill$Record);
-wireharness.parts = sort(unique(wireharnessNCR.fill$PartAffected));
-wireharness.partsPerChart = ceiling(length(wireharness.parts)/wireharness.numCharts);
-for(i in 0:(length(wireharness.parts)-1) %/% wireharness.partsPerChart){
-  parts=wireharness.parts[(i*wireharness.partsPerChart+1):(i*wireharness.partsPerChart+wireharness.partsPerChart)];
-  wireharnessNCR.filter = subset(wireharnessNCR.df, PartAffected %in% parts);
-  wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.filter, c('PartAffected'), startDate, 'Record', 'sum', 0)
-  assign(paste("p.wireharnessNCR.count",i+1,sep=""),
-         ggplot(wireharnessNCR.fill, aes(x=DateGroup, y=Record, group=PartAffected)) + geom_bar(color='black', stat='identity') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.maxrecord)) + facet_wrap(~PartAffected) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCRs - Count of NCRs', x='Wire Harness Manufacture Date (Year-Month)', y='Count of NCRs')
+wireharnessRMA.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessRMA.df, c('PartNumber'), startDate, 'FailCount', 'sum', 0)
+wireharness.all <- rbind(
+  data.frame(DateGroup=wireharnessNCR.fill$DateGroup, 
+             PartNumber=wireharnessNCR.fill$PartAffected,
+             Record=wireharnessNCR.fill$Record,
+             Type='NCR'),
+  data.frame(DateGroup=wireharnessRMA.fill$DateGroup, 
+             PartNumber=wireharnessRMA.fill$PartNumber,
+             Record=wireharnessRMA.fill$FailCount,
+             Type='RMA')
+);
+wireharness.all$PartNumber = as.character(wireharness.all$PartNumber);
+wireharness.parts = sort(unique(wireharness.all$PartNumber));
+wireharness.maxrecord <- max(wireharness.all$Record)
+for(i in 1:wireharness.numCharts){
+  partmin = floor(length(wireharness.parts) * ((i-1) / wireharness.numCharts))+1;
+  partmax = floor(length(wireharness.parts) * (i / wireharness.numCharts));
+  parts=wireharness.parts[partmin:partmax];
+  wireharness.fill = subset(wireharness.all, PartNumber %in% parts);
+  wireharness.fill = wireharness.fill[order(as.character(wireharness.fill$PartNumber)),]
+  assign(paste("p.wireharness.count",i,sep=""),
+         ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(stat='identity', position='identity', alpha=.5, color='black') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharness.maxrecord)) + scale_fill_manual(values=c('blue','red'), name='') + facet_wrap(~PartNumber) + theme(axis.text.x=element_text(angle=90)) + labs(title='Count of Wire Harness NCRs and RMAs', x='Wire Harness Manufacture Date (Year-Month)', y='Count of NCRs/RMAs')
   );
 }
 
 # Wire harness NCR quantity affected
-wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
-wireharnessNCR.maxrecord = max(wireharnessNCR.fill$QuantityAffected);
-for(i in 0:(length(wireharness.parts)-1) %/% wireharness.partsPerChart){
-  wireharnessNCR.filter = subset(wireharnessNCR.df, PartAffected %in% wireharness.parts[(i*wireharness.partsPerChart+1):(i*wireharness.partsPerChart+wireharness.partsPerChart)]);
-  wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.filter, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
-  assign(paste("p.wireharnessNCR.quantity.affected",i+1,sep=""),
-         ggplot(wireharnessNCR.fill, aes(x=DateGroup, y=QuantityAffected, group=PartAffected)) + geom_bar(color='black', stat='identity') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.maxrecord)) + facet_wrap(~PartAffected) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCRs - Quantity Affected', x='Wire Harness Manufacture Date (Year-Month)', y='Quantity affected')
+wireharnessNCR.qty.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
+wireharnessNCR.qty.max = max(wireharnessNCR.qty.fill$QuantityAffected);
+wireharnessRMA.infield <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessRMA.df, c('PartNumber'), startDate, 'LotSizeInField', 'sum', 0)
+wireharnessRMA.rate <- mergeCalSparseFrames(wireharnessRMA.fill, wireharnessRMA.infield, c('DateGroup','PartNumber'), c('DateGroup','PartNumber'), 'FailCount', 'LotSizeInField', 0, 0)
+wireharnessRMA.rate.max = max(wireharnessRMA.rate$Rate);
+wireharness.qty.all <- rbind(
+  data.frame(DateGroup=wireharnessNCR.qty.fill$DateGroup, 
+             PartNumber=wireharnessNCR.qty.fill$PartAffected,
+             Record=wireharnessNCR.qty.fill$QuantityAffected,
+             Type='NCR'),
+  data.frame(DateGroup=wireharnessRMA.rate$DateGroup, 
+             PartNumber=wireharnessRMA.rate$PartNumber,
+             Record=wireharnessRMA.rate$Rate * wireharnessNCR.qty.max / wireharnessRMA.rate.max,
+             Type='RMA')
+);
+wireharness.qty.all$PartNumber = as.character(wireharness.qty.all$PartNumber);
+wireharness.qty.parts = sort(unique(wireharness.qty.all$PartNumber));
+for(i in 1:wireharness.numCharts){
+  partmin = floor(length(wireharness.parts) * ((i-1) / wireharness.numCharts))+1;
+  partmax = floor(length(wireharness.parts) * (i / wireharness.numCharts));
+  parts=wireharness.qty.parts[partmin:partmax];
+  wireharness.fill = subset(wireharness.qty.all, PartNumber %in% parts);
+  wireharness.fill = wireharness.fill[order(as.character(wireharness.fill$PartNumber)),]
+  assign(paste("p.wireharness.quantity",i,sep=""),
+         ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(color='black', stat='identity', position='identity', alpha=.5) + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.qty.max+1), sec.axis = sec_axis(~. * wireharnessRMA.rate.max / wireharnessNCR.qty.max, labels = scales::percent, name = "RMA Count / Lot Size In Field")) + facet_wrap(~PartNumber) + scale_fill_manual(values=c('blue','red'), name='')+ theme(axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCR Quantity Affected and RMA Count/Lot Size In Field', x='Wire Harness Manufacture Date (Year-Month)', y='NCR Quantity affected')
   );
 }
-
 
 # create the charts for early failures of computers per 2.0 instruments shipped in a month (non-rolling), by version of computer
 calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
@@ -237,6 +329,25 @@ looseScrew.annot = rbind(
 );
 p.looseScrew.all.voe <- ggplot(looseScrew.all, aes(x=DateGroup, y=Rate, fill=HoursRunBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(looseScrew.all, 'HoursRunBin'), name='') + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Loose Screw/Fastener Failures on New Instruments', y='Failures/Instrument Manufactured, Failure Count', x='Date of Instrument Manufacture\n(Year-Month)') +  geom_text(data = looseScrew.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=6, fontface='bold') + facet_wrap(~Key, ncol=1, scale='free_y');
 
+# Edge loader complaints
+edgeLoad.fail <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', edgeLoad.df, c('Version'), '2015-01', 'Record', 'sum', 0)
+newInst.fill <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(newInst.df, Version=='Torch'), c('Key'), '2015-01', 'Record', 'sum', 0)
+idx = which(newInst.fill$Record > 10);
+edgeLoad.rate <- mergeCalSparseFrames(edgeLoad.fail[idx,], newInst.fill[idx,], c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0)
+edgeLoad.rate$Key <- 'Complaints/Torch Modules Manufactured (for months with >10 modules manufactured)'
+edgeLoad.count <- edgeLoad.fail;
+edgeLoad.count$Key <- 'Count of Complaints';
+colnames(edgeLoad.count)[colnames(edgeLoad.count)=='Record'] = 'Rate'
+edgeLoad.all <- rbind(edgeLoad.rate, edgeLoad.count)
+edgeLoad.annot = rbind(
+ data.frame(Label="Motor pulley setscrew update", DateGroup='2016-10', Key=edgeLoad.rate$Key[1], Rate=edgeLoad.rate$Rate[edgeLoad.rate$DateGroup=='2016-10']+.01),
+ #data.frame(Label="Motor pulley setscrew update", DateGroup='2016-10', Key=edgeLoad.count$Key[1], Rate=edgeLoad.count$Rate[edgeLoad.count$DateGroup=='2016-10']+1),
+ data.frame(Label="Clear sheet tightening", DateGroup='2017-04', Key=edgeLoad.rate$Key[1], Rate=edgeLoad.rate$Rate[edgeLoad.rate$DateGroup=='2017-04']+.01),
+ data.frame(Label="Clear sheet tightening", DateGroup='2017-04', Key=edgeLoad.count$Key[1], Rate=edgeLoad.count$Rate[edgeLoad.count$DateGroup=='2017-04']+1)
+);
+p.edgeLoad.voe <- ggplot(subset(edgeLoad.all, DateGroup>='2016-06'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', color='black') + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Torch - Failure to Eject Pouch Complaints', y='Complaints/Torch Module Manufactured, Complaint Count', x='Date of Torch Module Manufacture\n(Year-Month)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = edgeLoad.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=5) 
+
+
 
 # #Thermoboard date settings
 # bigGroup <- 'Year'
@@ -263,17 +374,17 @@ p.looseScrew.all.voe <- ggplot(looseScrew.all, aes(x=DateGroup, y=Rate, fill=Hou
 # p.thermoBoard.voe <- ggplot(thermoBoard.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=myPal.tb, name='Type') + scale_x_discrete(breaks=dateBreaks.tb) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1))+ labs(title='Effect of Thermoboard Rework:\nThermoards Serviced/Instruments Released', y='Failures/Instruments Released', x='Date of Transaction\n(Year-Month)') + facet_wrap(~RecordedValue, ncol=1, scale='free_y') + geom_text(aes(label=annotations.tb, x=x_position.tb, y=0), angle=90, hjust=-0.5, size=4) + geom_vline(xintercept=indices.tb, color = "black")
 
 # export images for web hub
-setwd(imgDir)
-plots <- ls()[grep('^p\\.', ls())]
-for(i in 1:length(plots)) {
-  
-  imgName <- paste(substring(plots[i],3),'.png',sep='')
-  
-  png(file=imgName, width=1200, height=800, units='px')
-  print(eval(parse(text = plots[i])))
-  makeTimeStamp(author='Data Science')
-  dev.off()
-}
+  setwd(imgDir)
+  plots <- ls()[grep('^p\\.', ls())]
+  for(i in 1:length(plots)) {
+    
+    imgName <- paste(substring(plots[i],3),'.png',sep='')
+    
+    png(file=imgName, width=1200, height=800, units='px')
+    print(eval(parse(text = plots[i])))
+    makeTimeStamp(author='Data Science')
+    dev.off()
+  }
 
 # Make pdf report for the web hub
 setwd(pdfDir)
