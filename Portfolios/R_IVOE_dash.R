@@ -6,6 +6,7 @@ pdfDir <- '~/WebHub/pdfs/'
 setwd(workDir)
 
 # Load needed libraries
+library(dplyr);
 library(ggplot2)
 library(zoo)
 library(scales)
@@ -95,12 +96,12 @@ board.thermo.total.rate <- mergeCalSparseFrames(board.thermo.total.fail, board.t
 board.thermo.total <- rbind(data.frame(DateGroup = board.thermo.total.rate$DateGroup, Type='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web', Key = board.thermo.total.rate$Key, Rate = board.thermo.total.rate$Rate),
                            data.frame(DateGroup = board.thermo.total.fail$DateGroup, Type='NCR Qty + RMA Failures', Key = board.thermo.total.fail$Key, Rate = board.thermo.total.fail$Record))
 p.board.thermo.field <- ggplot(board.thermo.field.rate, aes(x=DateGroup, y=Rate, fill='filler')) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(data.frame(Key='filler'),'Key'), guide=FALSE) + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Thermoboard Field Failures Per Lot Size', y='Failures/Lot', x='Date of Board Lot Manufacturing\n(Year-Week)')
-board.thermo.total$LabelY = board.thermo.total$Rate+5;
+board.thermo.total = as.data.frame(board.thermo.total %>% group_by(Type, DateGroup) %>% mutate(LabelY = sum(Rate)+5));
 board.thermo.total$LabelY[board.thermo.total$Key=='FieldFailures'] = -5;
 board.thermo.total$LabelY[board.thermo.total$Type=='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web']=0;
 board.thermo.total$Annot = board.thermo.total$Rate;
 board.thermo.total$Annot[board.thermo.total$Type=='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web'] = '';
-p.board.thermo.total <- ggplot(board.thermo.total, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Type, ncol=1, scale='free_y') + scale_fill_manual(values=createPaletteOfVariableLength(board.thermo.total,'Key'), name='', labels=c('NCR','RMA')) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Thermoboard Failures', x='Date of Manufacturing\n(Year-Week)', y='Failure Count, Failure Rate') #+ geom_text(aes(x=DateGroup, label=Annot, y=LabelY), position = position_stack(vjust=0))
+p.board.thermo.total <- ggplot(board.thermo.total, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Type, ncol=1, scale='free_y') + scale_fill_manual(values=createPaletteOfVariableLength(board.thermo.total,'Key'), name='', labels=c('NCR','RMA')) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Thermoboard Failures', x='Date of Manufacturing\n(Year-Week)', y='Failure Count, Failure Rate') + geom_text(aes(x=DateGroup, label=Annot, y=LabelY))
 # image master board
 board.image.start <- '2015-01'
 board.image.field.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.image.df, Key='FeildFailures'), c('Key'), board.image.start, 'QtyFailedInField', 'sum', 0)
