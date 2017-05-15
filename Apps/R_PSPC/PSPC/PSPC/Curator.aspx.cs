@@ -12,13 +12,13 @@ namespace PSPC
 {
     public partial class Curator : System.Web.UI.Page
     {
-        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["CIConnection"].ConnectionString);
+        SqlConnection con = new SqlConnection(ConfigurationManager.ConnectionStrings["CIConnection1"].ConnectionString);
 
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
             {
-                SqlDataAdapter da = new SqlDataAdapter("SELECT DISTINCT S.[PouchSerialNumber] FROM[PMS1].[dbo].[SPC2014] S WITH(NOLOCK) LEFT JOIN[PMS1].[dbo].[SPC2014RunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] WHERE[RunObservations] IS NULL AND[StartTime] IS NOT NULL AND[SampleId] NOT LIKE '%Alpha%' AND [SampleId] NOT LIKE '%Beta%' AND[SampleId] NOT LIKE '%Gamma%' ORDER BY S.[PouchSerialNumber] DESC", con);
+                SqlDataAdapter da = new SqlDataAdapter("SELECT DISTINCT S.[PouchSerialNumber] FROM[PMS1].[dbo].[SPCSummary] S WITH(NOLOCK) LEFT JOIN[PMS1].[dbo].[SPCRunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] WHERE[RunObservation] IS NULL AND[StartTime] IS NOT NULL AND[SampleId] NOT LIKE '%Alpha%' AND [SampleId] NOT LIKE '%Beta%' AND[SampleId] NOT LIKE '%Gamma%' ORDER BY S.[PouchSerialNumber] DESC", con);
                 DataTable dt = new DataTable();
                 da.Fill(dt);
                 ComboBox1.DataSource = dt;
@@ -31,7 +31,7 @@ namespace PSPC
 
         protected void Button3_Click(object sender, EventArgs e)
         {
-            SqlDataAdapter da = new SqlDataAdapter("SELECT DISTINCT S.[PouchSerialNumber] FROM[PMS1].[dbo].[SPC2014] S WITH(NOLOCK) LEFT JOIN[PMS1].[dbo].[SPC2014RunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] WHERE[RunObservations] IS NULL AND[StartTime] IS NOT NULL AND[SampleId] NOT LIKE '%Alpha%' AND [SampleId] NOT LIKE '%Beta%' AND[SampleId] NOT LIKE '%Gamma%' ORDER BY S.[PouchSerialNumber] DESC", con);
+            SqlDataAdapter da = new SqlDataAdapter("SELECT DISTINCT S.[PouchSerialNumber] FROM[PMS1].[dbo].[SPCSummary] S WITH(NOLOCK) LEFT JOIN[PMS1].[dbo].[SPCRunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] WHERE[RunObservation] IS NULL AND[StartTime] IS NOT NULL AND[SampleId] NOT LIKE '%Alpha%' AND [SampleId] NOT LIKE '%Beta%' AND[SampleId] NOT LIKE '%Gamma%' ORDER BY S.[PouchSerialNumber] DESC", con);
             DataTable dt = new DataTable();
             da.Fill(dt);
             ComboBox1.DataSource = dt;
@@ -70,7 +70,7 @@ namespace PSPC
 
         protected void Button2_Click(object sender, EventArgs e)
         {
-            SqlDataAdapter da = new SqlDataAdapter("SELECT DISTINCT S.[PouchSerialNumber] FROM [PMS1].[dbo].[SPC2014] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPC2014RunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] LEFT JOIN[PMS1].[dbo].[SPC2014_DL_RunObservation] D WITH(NOLOCK) ON R.[RunObservations] = D.[ID] WHERE R.[RunObservations] IS NOT NULL AND[StartTime] IS NOT NULL AND[SampleId] NOT LIKE '%Alpha%' AND[SampleId] NOT LIKE '%Beta%' AND[SampleId] NOT LIKE '%Gamma%' ORDER BY S.[PouchSerialNumber] DESC", con);
+            SqlDataAdapter da = new SqlDataAdapter("SELECT DISTINCT S.[PouchSerialNumber] FROM [PMS1].[dbo].[SPCSummary] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPCRunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] LEFT JOIN[PMS1].[dbo].[SPC_DL_RunObservations] D WITH(NOLOCK) ON R.[RunObservation] = D.[ID] WHERE R.[RunObservation] IS NOT NULL AND[StartTime] IS NOT NULL AND[SampleId] NOT LIKE '%Alpha%' AND[SampleId] NOT LIKE '%Beta%' AND[SampleId] NOT LIKE '%Gamma%' ORDER BY S.[PouchSerialNumber] DESC", con);
             DataTable dt = new DataTable();
             da.Fill(dt);
             ComboBox1.DataSource = dt;
@@ -207,10 +207,10 @@ namespace PSPC
         {
             if (DropDownList8.Visible == false)
             {
-                SqlCommand cmd = new SqlCommand("PSPCUpdateRunObservations", con);
+                SqlCommand cmd = new SqlCommand("sp_PSPCUpdateRunObservations", con);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("PouchSerialNumber", ComboBox1.Text);
-                cmd.Parameters.AddWithValue("RunObservations", DropDownList1.SelectedValue);
+                cmd.Parameters.AddWithValue("RunObservation", DropDownList1.SelectedValue);
                 cmd.Parameters.AddWithValue("ExperimentID", ExpID.Text);
                 cmd.Parameters.AddWithValue("Status", "New");
                 con.Open();
@@ -218,28 +218,28 @@ namespace PSPC
                 con.Close();
                 if (runob2lab.Visible == true)
                 {
-                    cmd.Parameters["RunObservations"].Value = DropDownList3.SelectedValue;
+                    cmd.Parameters["RunObservation"].Value = DropDownList3.SelectedValue;
                     con.Open();
                     cmd.ExecuteNonQuery();
                     con.Close();
                 }
                 if (runob3lab.Visible == true)
                 {
-                    cmd.Parameters["RunObservations"].Value = DropDownList4.SelectedValue;
+                    cmd.Parameters["RunObservation"].Value = DropDownList4.SelectedValue;
                     con.Open();
                     cmd.ExecuteNonQuery();
                     con.Close();
                 }
                 if (runob4lab.Visible == true)
                 {
-                    cmd.Parameters["RunObservations"].Value = DropDownList5.SelectedValue;
+                    cmd.Parameters["RunObservation"].Value = DropDownList5.SelectedValue;
                     con.Open();
                     cmd.ExecuteNonQuery();
                     con.Close();
                 }
                 if (runob5lab.Visible == true)
                 {
-                    cmd.Parameters["RunObservations"].Value = DropDownList6.SelectedValue;
+                    cmd.Parameters["RunObservation"].Value = DropDownList6.SelectedValue;
                     con.Open();
                     cmd.ExecuteNonQuery();
                     con.Close();
@@ -249,11 +249,11 @@ namespace PSPC
             }
             else
             {
-                SqlCommand cmd = new SqlCommand("PSPCUpdateRunObservations", con);
+                SqlCommand cmd = new SqlCommand("sp_PSPCUpdateRunObservations", con);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("PouchSerialNumber", ComboBox1.Text);
                 cmd.Parameters.AddWithValue("PrevRunObservation", DropDownList7.SelectedValue);
-                cmd.Parameters.AddWithValue("RunObservations", DropDownList8.SelectedValue);
+                cmd.Parameters.AddWithValue("RunObservation", DropDownList8.SelectedValue);
                 cmd.Parameters.AddWithValue("ExperimentID", ExpID.Text);
                 cmd.Parameters.AddWithValue("Status", "Update");
                 con.Open();
@@ -266,7 +266,7 @@ namespace PSPC
 
         protected void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM [PMS1].[dbo].[SPC2014] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPC2014RunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] LEFT JOIN [PMS1].[dbo].[SPC2014_DL_RunObservation] D WITH(NOLOCK) ON R.[RunObservations] = D.[ID] WHERE S.[PouchSerialNumber] LIKE'" + ComboBox1.Text + "'", con);
+            SqlDataAdapter da = new SqlDataAdapter("SELECT * FROM [PMS1].[dbo].[SPCSummary] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPCRunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] LEFT JOIN [PMS1].[dbo].[SPC_DL_RunObservations] D WITH(NOLOCK) ON R.[RunObservation] = D.[ID] WHERE S.[PouchSerialNumber] LIKE'" + ComboBox1.Text + "'", con);
             DataTable dt = new DataTable();
             da.Fill(dt);
             PanelVersion.Text = dt.Rows[0][7].ToString();
