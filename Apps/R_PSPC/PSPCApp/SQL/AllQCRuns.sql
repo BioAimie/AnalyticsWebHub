@@ -103,19 +103,19 @@ SELECT
 	IIF(S.[Control_Failures] IS NOT NULL, 1, 0) AS [CF],
 	IIF(S.[False_Negatives] IS NOT NULL, 1, 0) AS [FN],
 	IIF(S.[False_Positives] IS NOT NULL, 1, 0) AS [FP],
-	D.[Run Observation] AS [RunObservation],
+	D.[RunObservation],
 	Q.[ThirtyDayRun],
 	Q.[NinetyDayRun],
 	Q.[NinetyDayRunNet],
 	'PouchQC' AS [Key],
 	Q.[Record]
 INTO #Master
-FROM #AllQCRuns Q LEFT JOIN [PMS1].[dbo].[SPC2014] S WITH(NOLOCK)
+FROM #AllQCRuns Q LEFT JOIN [PMS1].[dbo].[SPCSummary] S WITH(NOLOCK)
 	ON Q.[Id] = S.[ExperimentId]
-	LEFT JOIN [PMS1].[dbo].[SPC2014RunObservations] R WITH(NOLOCK)
+	LEFT JOIN [PMS1].[dbo].[SPCRunObservations] R WITH(NOLOCK)
 		ON S.[PouchSerialNumber] = R.[PouchSerialNumber] 
-		LEFT JOIN [PMS1].[dbo].[SPC2014_DL_RunObservation] D WITH(NOLOCK) 
-			ON R.[RunObservations] = D.[ID]
+		LEFT JOIN [PMS1].[dbo].[SPC_DL_RunObservations] D WITH(NOLOCK) 
+			ON R.[RunObservation] = D.[ID]
 
 SELECT
 	[Year],
@@ -155,4 +155,3 @@ FROM #Master
 ORDER BY [StartTime] DESC
 
 DROP TABLE #FA15, #FA20, #AllQCRuns, #Master
-

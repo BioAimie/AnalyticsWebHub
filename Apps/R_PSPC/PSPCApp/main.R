@@ -7,7 +7,23 @@ library(ggplot2)
 library(scales)
 
 # Open the connection to PMS1
-PMScxn <- odbcConnect("PMS1_LOC")
+# PMScxn <- odbcConnect("PMS1_LOC")
+# 
+# queryText <- readLines("SQL/SummaryAnomalyTable.sql")
+# query <- paste(queryText,collapse="\n")
+# summary.df <- sqlQuery(PMScxn,query)
+# 
+# queryText <- readLines("SQL/AllQCRuns.sql")
+# query <- paste(queryText,collapse="\n")
+# allruns.df <- sqlQuery(PMScxn,query)
+# 
+# queryText <- readLines("SQL/AllRunObservations.sql")
+# query <- paste(queryText,collapse="\n")
+# runobs.df <- sqlQuery(PMScxn,query)
+# 
+# odbcClose(PMScxn)
+
+PMScxn <- odbcConnect("PMS_PROD")
 
 queryText <- readLines("SQL/SummaryAnomalyTable.sql")
 query <- paste(queryText,collapse="\n")
@@ -20,10 +36,6 @@ allruns.df <- sqlQuery(PMScxn,query)
 queryText <- readLines("SQL/AllRunObservations.sql")
 query <- paste(queryText,collapse="\n")
 runobs.df <- sqlQuery(PMScxn,query)
-
-odbcClose(PMScxn)
-
-PMScxn <- odbcConnect("PMS_PROD")
 
 queryText <- readLines("SQL/InstrumentVersions.sql")
 query <- paste(queryText,collapse="\n")
