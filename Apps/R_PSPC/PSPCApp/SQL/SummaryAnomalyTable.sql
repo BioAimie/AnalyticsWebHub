@@ -19,12 +19,12 @@ SELECT
 	S.[PouchTitle] AS [PouchTitle],
 	S.[InstrumentSerialNumber] AS [Instrument Serial Number],
 	S.[UserId] AS [User ID],
-	D.[Run Observation],
+	D.[RunObservation] AS [Run Observation],
 	S.[PouchCode] AS [Pouch Code],
 	S.[PouchLine] AS [Pouch Line],
-	R.[RunObservations] AS [Run Observation ID]
-FROM [PMS1].[dbo].[SPC2014] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPC2014RunObservations] R WITH(NOLOCK)
+	R.[RunObservation] AS [Run Observation ID]
+FROM [PMS1].[dbo].[SPCSummary] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPCRunObservations] R WITH(NOLOCK)
 	ON S.[PouchSerialNumber] = R.[PouchSerialNumber]
-	LEFT JOIN [PMS1].[dbo].[SPC2014_DL_RunObservation] D WITH(NOLOCK) 
-		ON R.[RunObservations] = D.[ID]
+	LEFT JOIN [PMS1].[dbo].[SPC_DL_RunObservations] D WITH(NOLOCK) 
+		ON R.[RunObservation] = D.[ID]
 ORDER BY [StartTime] DESC

@@ -36,7 +36,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$dataTable <- renderDataTable({
-    datatable(summaryDT(), filter = 'top', options = list(pageLength = 25, scrollX = TRUE, autoWidth=TRUE, columnDefs = list(list(width='100px', targets='_all'))), rownames=FALSE, escape = FALSE)
+    datatable(summaryDT(), filter = 'top', options = list(pageLength = 50, scrollX = TRUE, autoWidth=TRUE, columnDefs = list(list(width='100px', targets='_all'))), rownames=FALSE, escape = FALSE)
   })
   
   #QC Pouches Run to Date-----------------------------------------------------------------------------------------------------------------------
