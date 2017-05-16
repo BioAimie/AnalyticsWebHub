@@ -111,17 +111,17 @@
             </asp:GridView>
         </div>
         <p>
-            <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection %>" SelectCommand="SELECT [AssayName], [AssayCode] FROM [SPC2014ControlFailures] WHERE ([PouchSerialNumber] = @PouchSerialNumber)">
+            <asp:SqlDataSource ID="SqlDataSource1" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection1 %>" SelectCommand="SELECT [AssayName], [AssayCode] FROM [SPCControlFailures] WHERE ([PouchSerialNumber] = @PouchSerialNumber)">
                 <SelectParameters>
                     <asp:ControlParameter ControlID="ComboBox1" Name="PouchSerialNumber" PropertyName="SelectedValue" Type="String" />
                 </SelectParameters>
             </asp:SqlDataSource>
-            <asp:SqlDataSource ID="FalsePositives" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection %>" SelectCommand="SELECT [AssayName], [AssayCode] FROM [SPC2014FalsePositives] WHERE ([PouchSerialNumber] = @PouchSerialNumber)">
+            <asp:SqlDataSource ID="FalsePositives" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection1 %>" SelectCommand="SELECT [AssayName], [AssayCode] FROM [SPCFalsePositives] WHERE ([PouchSerialNumber] = @PouchSerialNumber)">
                 <SelectParameters>
                     <asp:ControlParameter ControlID="ComboBox1" Name="PouchSerialNumber" PropertyName="SelectedValue" Type="String" />
                 </SelectParameters>
             </asp:SqlDataSource>
-            <asp:SqlDataSource ID="FalseNegatives" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection %>" SelectCommand="SELECT [AssayName], [AssayCode] FROM [SPC2014FalseNegatives] WHERE ([PouchSerialNumber] = @PouchSerialNumber)">
+            <asp:SqlDataSource ID="FalseNegatives" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection1 %>" SelectCommand="SELECT [AssayName], [AssayCode] FROM [SPCFalseNegatives] WHERE ([PouchSerialNumber] = @PouchSerialNumber)">
                 <SelectParameters>
                     <asp:ControlParameter ControlID="ComboBox1" Name="PouchSerialNumber" PropertyName="SelectedValue" Type="String" />
                 </SelectParameters>
@@ -198,52 +198,52 @@
                     </tr>
                 </SelectedItemTemplate>
             </asp:ListView>
-            <asp:SqlDataSource ID="PrevObs" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection %>" SelectCommand="SELECT [Run Observation] AS [Previous Run Observation] FROM [PMS1].[dbo].[SPC2014] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPC2014RunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] LEFT JOIN [PMS1].[dbo].[SPC2014_DL_RunObservation] D WITH(NOLOCK) ON R.[RunObservations] = D.[ID] WHERE (S.[PouchSerialNumber] = @PouchSerialNumber)">
+            <asp:SqlDataSource ID="PrevObs" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection1 %>" SelectCommand="SELECT D.[RunObservation] AS [Previous Run Observation] FROM [PMS1].[dbo].[SPCSummary] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPCRunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] LEFT JOIN [PMS1].[dbo].[SPC_DL_RunObservations] D WITH(NOLOCK) ON R.[RunObservation] = D.[ID] WHERE (S.[PouchSerialNumber] = @PouchSerialNumber)">
                 <SelectParameters>
                     <asp:ControlParameter ControlID="ComboBox1" Name="PouchSerialNumber" PropertyName="SelectedValue" />
                 </SelectParameters>
             </asp:SqlDataSource>
         </div>
         <div id="RunOb" class="auto-style3">
-            <asp:Label ID="runob1lab" runat="server" Text="Run Observation 1" Visible="True"></asp:Label>&nbsp;&nbsp;&nbsp;<asp:DropDownList ID="DropDownList1" runat="server" DataSourceID="SqlDataSource2" DataTextField="Run Observation" DataValueField="ID">
+            <asp:Label ID="runob1lab" runat="server" Text="Run Observation 1" Visible="True"></asp:Label>&nbsp;&nbsp;&nbsp;<asp:DropDownList ID="DropDownList1" runat="server" DataSourceID="SqlDataSource2" DataTextField="RunObservation" DataValueField="Id">
             </asp:DropDownList>
             <br />
             <asp:Button ID="add1" runat="server" OnClick="Button4_Click" Text="+" />&nbsp;&nbsp;
             <asp:Label ID="runob2lab" runat="server" Text="Run Observation 2" Visible="False"></asp:Label>&nbsp;&nbsp;&nbsp;
-            <asp:DropDownList ID="DropDownList3" runat="server" DataSourceID="SqlDataSource2" DataTextField="Run Observation" DataValueField="ID" Visible="False">
+            <asp:DropDownList ID="DropDownList3" runat="server" DataSourceID="SqlDataSource2" DataTextField="RunObservation" DataValueField="Id" Visible="False">
             </asp:DropDownList>
             &nbsp;&nbsp;
             <asp:Button ID="del1" runat="server" OnClick="del1_Click" Text="x" Visible="False" />
             <br />
             <asp:Button ID="add2" runat="server" OnClick="Button5_Click" Text="+" Visible="False" />&nbsp;&nbsp;
             <asp:Label ID="runob3lab" runat="server" Text="Run Observation 3" Visible="False"></asp:Label>&nbsp;&nbsp;&nbsp;
-            <asp:DropDownList ID="DropDownList4" runat="server" DataSourceID="SqlDataSource2" DataTextField="Run Observation" DataValueField="ID" CssClass="auto-style4" Visible="False">
+            <asp:DropDownList ID="DropDownList4" runat="server" DataSourceID="SqlDataSource2" DataTextField="RunObservation" DataValueField="Id" CssClass="auto-style4" Visible="False">
             </asp:DropDownList>
             &nbsp;&nbsp;
             <asp:Button ID="del2" runat="server" OnClick="del2_Click" Text="x" Visible="False" />
             <br />
             <asp:Button ID="add3" runat="server" OnClick="Button6_Click" Text="+" Visible="False"/>&nbsp;&nbsp;
             <asp:Label ID="runob4lab" runat="server" Text="Run Observation 4" Visible="False"></asp:Label>&nbsp;&nbsp;&nbsp;
-            <asp:DropDownList ID="DropDownList5" runat="server" DataSourceID="SqlDataSource2" DataTextField="Run Observation" DataValueField="ID" CssClass="auto-style4" Visible="False">
+            <asp:DropDownList ID="DropDownList5" runat="server" DataSourceID="SqlDataSource2" DataTextField="RunObservation" DataValueField="Id" CssClass="auto-style4" Visible="False">
             </asp:DropDownList>
             &nbsp;&nbsp;
             <asp:Button ID="del3" runat="server" OnClick="del3_Click" Text="x" Visible="False" />
             <br />
             <asp:Button ID="add4" runat="server" OnClick="Button7_Click" Text="+" Visible="False"/>&nbsp;&nbsp;
             <asp:Label ID="runob5lab" runat="server" Text="Run Observation 5" Visible="False"></asp:Label>&nbsp;&nbsp;&nbsp;
-            <asp:DropDownList ID="DropDownList6" runat="server" DataSourceID="SqlDataSource2" DataTextField="Run Observation" DataValueField="ID" CssClass="auto-style4" Visible="False">
+            <asp:DropDownList ID="DropDownList6" runat="server" DataSourceID="SqlDataSource2" DataTextField="RunObservation" DataValueField="Id" CssClass="auto-style4" Visible="False">
             </asp:DropDownList>
             &nbsp;&nbsp;
             <asp:Button ID="del4" runat="server" OnClick="del4_Click" Text="x" Visible="False" />
             <br />
-            <asp:SqlDataSource ID="SqlDataSource2" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection %>" SelectCommand="SELECT * FROM [SPC2014_DL_RunObservation]"></asp:SqlDataSource>
-            <asp:Label ID="Label1" runat="server" Text="Previous Run Observation" Visible="False"></asp:Label>&nbsp;&nbsp;&nbsp;<asp:DropDownList ID="DropDownList7" runat="server" DataSourceID="PrevObsId" DataTextField="Run Observation" DataValueField="RunObservations" Visible="False">
+            <asp:SqlDataSource ID="SqlDataSource2" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection1 %>" SelectCommand="SELECT * FROM [SPC_DL_RunObservations]"></asp:SqlDataSource>
+            <asp:Label ID="Label1" runat="server" Text="Previous Run Observation" Visible="False"></asp:Label>&nbsp;&nbsp;&nbsp;<asp:DropDownList ID="DropDownList7" runat="server" DataSourceID="PrevObsId" DataTextField="RunObservation" DataValueField="Id" Visible="False">
             </asp:DropDownList>
             <br />
-            <asp:Label ID="Label2" runat="server" Text="Update to" Visible="False"></asp:Label>&nbsp;&nbsp;&nbsp;<asp:DropDownList ID="DropDownList8" runat="server" DataSourceID="SqlDataSource2" DataTextField="Run Observation" DataValueField="ID" Visible="False">
+            <asp:Label ID="Label2" runat="server" Text="Update to" Visible="False"></asp:Label>&nbsp;&nbsp;&nbsp;<asp:DropDownList ID="DropDownList8" runat="server" DataSourceID="SqlDataSource2" DataTextField="RunObservation" DataValueField="Id" Visible="False">
             </asp:DropDownList>
             <br />
-            <asp:SqlDataSource ID="PrevObsId" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection %>" SelectCommand="SELECT [RunObservations], [Run Observation] FROM [PMS1].[dbo].[SPC2014] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPC2014RunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] LEFT JOIN [PMS1].[dbo].[SPC2014_DL_RunObservation] D WITH(NOLOCK) ON R.[RunObservations] = D.[ID] WHERE (S.[PouchSerialNumber] = @PouchSerialNumber)">
+            <asp:SqlDataSource ID="PrevObsId" runat="server" ConnectionString="<%$ ConnectionStrings:CIConnection1 %>" SelectCommand="SELECT R.[RunObservation] AS [Id], D.[RunObservation] FROM [PMS1].[dbo].[SPCSummary] S WITH(NOLOCK) LEFT JOIN [PMS1].[dbo].[SPCRunObservations] R WITH(NOLOCK) ON S.[ExperimentId] = R.[ExperimentId] LEFT JOIN [PMS1].[dbo].[SPC_DL_RunObservations] D WITH(NOLOCK) ON R.[RunObservation] = D.[ID] WHERE (S.[PouchSerialNumber] = @PouchSerialNumber)">
                 <SelectParameters>
                     <asp:ControlParameter ControlID="ComboBox1" Name="PouchSerialNumber" PropertyName="SelectedValue" />
                 </SelectParameters>

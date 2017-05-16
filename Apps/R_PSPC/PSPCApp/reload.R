@@ -1,7 +1,7 @@
 #Load in data for Pouch SPC app
 setwd('~/WebHub/AnalyticsWebHub/Apps/R_PSPC/PSPCApp')
 # Open the connection to PMS1
-PMScxn <- odbcConnect("PMS1_LOC")
+PMScxn <- odbcConnect("PMS_PROD")
 
 queryText <- readLines("SQL/SummaryAnomalyTable.sql")
 query <- paste(queryText,collapse="\n")
