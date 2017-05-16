@@ -56,10 +56,10 @@ rna.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', subset(IQC.
 rna.review.rate <- mergeCalSparseFrames(rna.review.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
 rna.review.lims <- addStatsToSparseHandledData(rna.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper')
 rna.review.lims <- rna.review.lims[!(rna.review.lims$Version=='FA1.5' & rna.review.lims$Key=='Production'), ]
-x_positions <- c('2016-17')
-annotations <- c('Evaluated for\nCAPA 13259')
-y_positions <- 0.10
-p.rna.review <- ggplot(subset(rna.review.lims,Key != 'PouchQC'), aes(x=DateGroup, y=Rate, color=Color, group=1)) + geom_line(color='black') + geom_point() + facet_grid(Key~Version, scale='free_y') + scale_color_manual(values=c('blue','red'), guide=FALSE) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + geom_hline(aes(yintercept=UL), color='red', lty=2) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date', y='4 Week Rolling Average', title='Yeast Control Review Rates:\nLimit = mean + 3sdev   (Torch limits not actionable)') + annotate(geom='text', x=x_positions, y=y_positions, label=annotations)
+# x_positions <- c('2016-17')
+# annotations <- c('Evaluated for\nCAPA 13259')
+# y_positions <- 0.10
+p.rna.review <- ggplot(subset(rna.review.lims,Key != 'PouchQC'), aes(x=DateGroup, y=Rate, color=Color, group=1)) + geom_line(color='black') + geom_point() + facet_grid(Key~Version, scale='free_y') + scale_color_manual(values=c('blue','red'), guide=FALSE) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + geom_hline(aes(yintercept=UL), color='red', lty=2) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date', y='4 Week Rolling Average', title='Yeast Control Review Rates:\nLimit = mean + 3sdev   (Torch limits not actionable)') # + annotate(geom='text', x=x_positions, y=y_positions, label=annotations)
 
 mp.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', IQC.df[IQC.df[,'60TmRange'] %in% c('Review','Fail'),], c('Key','Version'), startDate, 'Record', 'sum', 0)
 mp.review.rate <- mergeCalSparseFrames(mp.review.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
@@ -72,7 +72,12 @@ mp.review.lims <- mp.review.lims[!(mp.review.lims$Version=='FA1.5' & mp.review.l
 y_positions <- 0.12
 p.mp.df.review <- ggplot(subset(mp.review.lims,Key != 'PouchQC'), aes(x=DateGroup, y=Rate, color=Color, group=1)) + geom_line(color='black') + geom_point() + facet_grid(Key~Version) + scale_color_manual(values=c('blue','red'), guide=FALSE) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + geom_hline(aes(yintercept=UL), color='red', lty=2) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date', y='4 Week Rolling Average', title='60D Melt Probe Median dF Review Rates:\nLimit = mean + 3sdev   (Torch limits not actionable)')
 
-noise.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', IQC.df[IQC.df[,'Noise'] %in% c('Review','Fail'),], c('Key','Version'), startDate, 'Record', 'sum', 0)
+if(nrow(IQC.df[IQC.df[,'Noise'] %in% c('Review','Fail') & IQC.df$DateGroup >= startDate,])!=0) { 
+  noise.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', IQC.df[IQC.df[,'Noise'] %in% c('Review','Fail'),], c('Key','Version'), startDate, 'Record', 'sum', 0)
+} else {
+  noise.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', IQC.df, c('Key','Version'), startDate, 'Record', 'sum', 0)
+  noise.review.fill$Record <- 0
+}
 noise.review.rate <- mergeCalSparseFrames(noise.review.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
 noise.review.lims <- addStatsToSparseHandledData(noise.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper')
 p.noise.review <- ggplot(subset(noise.review.lims,Key != 'PouchQC'), aes(x=DateGroup, y=Rate, color=Color, group=1)) + geom_line(color='black') + geom_point() + facet_grid(Key~Version, scale='free_y') + scale_color_manual(values=c('blue','red'), guide=FALSE) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + geom_hline(aes(yintercept=UL), color='red', lty=2) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date', y='4 Week Rolling Average', title='Noise Review Rates:\nLimit = mean + 3sdev')
@@ -191,17 +196,19 @@ errors.denom <- errors.df; errors.denom[,'RunError'] <- 1
 errors.num <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', errors.num, c('Version','Key','RecordedValue'), startDate, 'RunError', 'sum', 0)
 errors.denom <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', errors.denom, c('Version','Key'), startDate, 'RunError', 'sum', 1)
 errors.rate <- mergeCalSparseFrames(errors.num, errors.denom, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'RunError','RunError', 0)
-errors.all.num <- with(errors.num, aggregate(RunError~DateGroup+Key, FUN=sum))
-errors.all.denom <- with(errors.denom, aggregate(RunError~DateGroup+Key, FUN=sum))
-errors.all.rate <- mergeCalSparseFrames(errors.all.num, errors.all.denom, c('DateGroup','Key'), c('DateGroup','Key'), 'RunError', 'RunError', 0, 4)
+errors.all.num <- with(errors.num, aggregate(RunError~DateGroup+Version+Key, FUN=sum))
+errors.all.denom <- with(errors.denom, aggregate(RunError~DateGroup+Version+Key, FUN=sum))
+errors.all.rate <- mergeCalSparseFrames(errors.all.num, errors.all.denom, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'RunError', 'RunError', 0, 4)
 colnames(errors.all.rate)[colnames(errors.all.rate) == 'Rate'] <- 'OverallRate'
 myPal <- createPaletteOfVariableLength(errors.rate, 'RecordedValue')
-errors.fix.x <- errors.rate[errors.rate$Rate > 0.1, 'DateGroup']
-errors.fix.y <- errors.rate[errors.rate$Rate > 0.1, 'Rate']
-errors.rate[errors.rate$Rate > 0.1, 'Rate'] <- NA
-errors.rate[is.na(errors.rate$Rate), 'Annotation'] <- paste(round(100*errors.fix.y,0), '%', sep='')
-errors.rate[is.na(errors.rate$Annotation), 'Annotation'] <- ''
-p.errormessages <- ggplot(errors.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue, label=Annotation)) + geom_bar(stat='identity', aes(label=Annotation), data=errors.rate) + geom_line(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate, group = 1)) + geom_point(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate)) + geom_text() + facet_grid(Key~Version, scales='free_y') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + scale_y_continuous(label=percent) + labs(x='Date', y='Errors/Number of Runs', title='Instrument Error Rate in Final QC by Type') + scale_fill_manual(values = myPal, name='') + guides(fill=guide_legend(nrow=3, byrow=TRUE)) + geom_text(aes(x=DateGroup, y=0.1, label=Annotation), data=errors.rate)
+# errors.fix.x <- errors.all.rate[errors.all.rate$OverallRate > 0.1, 'DateGroup'] # errors.rate[errors.rate$Rate > 0.1, 'DateGroup']
+# errors.fix.y <- errors.all.rate[errors.all.rate$OverallRate > 0.1, 'OverallRate'] # errors.rate[errors.rate$Rate > 0.1, 'Rate']
+errors.rate <- merge(errors.rate, errors.all.rate[errors.all.rate$OverallRate > 0.1, ], by=c('DateGroup','Version','Key'), all.x=TRUE)
+errors.rate[!(is.na(errors.rate$OverallRate)), 'Rate'] <- NA
+# errors.rate[is.na(errors.rate$Rate), 'Annotation'] <- paste(round(100*errors.fix.y,0), '%', sep='')
+errors.rate[!(is.na(errors.rate$OverallRate)), 'Annotation'] <- paste(round(100*errors.rate[!(is.na(errors.rate$OverallRate)), 'OverallRate'],0), '%', sep='')
+p.errormessages <- ggplot(errors.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + geom_line(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate, group = 1)) + geom_point(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate)) + facet_grid(Key~Version, scales='free_y') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + scale_y_continuous(label=percent, limits = c(0,0.1)) + labs(x='Date', y='Errors/Number of Runs', title='Instrument Error Rate in Final QC by Type') + scale_fill_manual(values = myPal, name='') + guides(fill=guide_legend(nrow=3, byrow=TRUE)) + geom_text(aes(x=DateGroup, y = 0.1, label=Annotation), data=errors.rate, size=2, angle=90) 
+  # ggplot(errors.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue, label=Annotation)) + geom_bar(stat='identity', aes(label=Annotation), data=errors.rate) + geom_line(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate, group = 1)) + geom_point(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate)) + geom_text() + facet_grid(Key~Version, scales='free_y') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + scale_y_continuous(label=percent, limits = c(0,0.1)) + labs(x='Date', y='Errors/Number of Runs', title='Instrument Error Rate in Final QC by Type') + scale_fill_manual(values = myPal, name='') + guides(fill=guide_legend(nrow=3, byrow=TRUE)) # + geom_text(aes(x=DateGroup, y=0.1, label=Annotation), data=errors.rate)
 p.errormessages.count <- ggplot(errors.num, aes(x=DateGroup, y=RunError, fill=RecordedValue)) + geom_bar(stat='identity') + facet_grid(Key~Version, scales='free_y') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + labs(x='Date', y='Errors', title='Instrument Error Count in Final QC by Type') + scale_fill_manual(values = myPal, name='') + guides(fill=guide_legend(nrow=3, byrow=TRUE))
 
 # add a first-pass yield chart
