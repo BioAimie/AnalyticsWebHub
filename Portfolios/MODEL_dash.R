@@ -1,6 +1,6 @@
 imgDir <- '~/WebHub/images/Dashboard_ReliabilityModeling'
 workDir <- '~/WebHub/AnalyticsWebHub/'
-csvDir = 'G:/Departments/PostMarket/DataScienceGroup/Data Science Products/ReliabilityModels/csv/';
+csvDir = '\\\\Filer01/Data/Departments/PostMarket/DataScienceGroup/Data Science Products/ReliabilityModels/csv/'
 
 setwd(workDir);
 library(dplyr);
