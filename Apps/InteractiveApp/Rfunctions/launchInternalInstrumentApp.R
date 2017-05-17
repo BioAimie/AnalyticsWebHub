@@ -63,9 +63,9 @@ if(wday(Sys.Date()) == 4){
 	alert.location.frames <- list()
 	#alert.location.frames[["dungeon"]] <- location.frames[["dungeon"]][which(location.frames[["dungeon"]]$Date >= date.ranges[["7"]][1] & location.frames[["dungeon"]]$Protocol != "Custom") , ]
 	
-	alert.location.frames[["dungeon"]] <- subset(location.frames[["dungeon"]], Date >= date.ranges[["7"]][1] & !(grepl("Custom", Protocol)) & (LastServiceDate < date.ranges[["7"]][1] | is.na(LastServiceDate)))
+	alert.location.frames[["dungeon"]] <- subset(location.frames[["dungeon"]], Date >= Sys.Date() - 7  & !(grepl("Custom", Protocol)) & (LastServiceDate < Sys.Date() - 7 | is.na(LastServiceDate)))
 	#alert.location.frames[["pouchqc"]] <- location.frames[["pouchqc"]][which(location.frames[["pouchqc"]]$Date >= date.ranges[["7"]][1] & location.frames[["pouchqc"]]$LastServiceDate > ), ]
-	alert.location.frames[["pouchqc"]] <- subset(location.frames[["pouchqc"]], Date >= date.ranges[["7"]][1] & (LastServiceDate < date.ranges[["7"]][1] | is.na(LastServiceDate)))
+	alert.location.frames[["pouchqc"]] <- subset(location.frames[["pouchqc"]], Date >= Sys.Date() - 7 & (LastServiceDate < Sys.Date() - 7 | is.na(LastServiceDate)))
 	
 	from <-"Anna.Hoffee.testing@biofiredx.com"
 	#dungeon.people <- c("Anna.Hoffee@biofiredx.com", "Aimie.Faucett@biofiredx.com", "Lisa.Ogden@biofiredx.com", "Bartek.Ksok@biofiredx.com", "Shane.Woodhouse@biofiredx.com" )
