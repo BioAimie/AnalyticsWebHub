@@ -18,7 +18,7 @@ source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 
 calendar.week <- createCalendarLikeMicrosoft(year(Sys.Date())-2, 'Week')
-startString.week <- findStartDate(calendar.week, 'Week', 54, 5)
+startString.week <- findStartDate(calendar.week, 'Week', 54, 5, keepPeriods=0)
 calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
 
 theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))

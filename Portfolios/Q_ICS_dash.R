@@ -25,7 +25,7 @@ startYear <- year(Sys.Date()) - 2
 
 # create a calendar so values can be displayed for the last year
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
-startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=0)
 
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12

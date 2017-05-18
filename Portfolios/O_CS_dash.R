@@ -19,18 +19,21 @@ source('Portfolios/O_CS_load.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 
+
 calendar.week <- createCalendarLikeMicrosoft(year(Sys.Date())-3, 'Week')
-startString.week <- findStartDate(calendar.week, 'Week', 54, 4)
+startString.week <- findStartDate(calendar.week, 'Week', 54, 4, keepPeriods=0)
 calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
-startString.month <- findStartDate(calendar.month, 'Month', 13, 0)
-startString.monthRoll <- findStartDate(calendar.month, 'Month', 12, 4)
-startString.month3yr <- findStartDate(calendar.month, 'Month', 36, 0)
-startString.month3yr.rolling <- findStartDate(calendar.month, 'Month', 36, 4)
+startString.month <- findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0)
+startString.monthRoll <- findStartDate(calendar.month, 'Month', 12, 4, keepPeriods=0)
+startString.month3yr <- findStartDate(calendar.month, 'Month', 36, 0, keepPeriods=0)
+startString.month3yr.rolling <- findStartDate(calendar.month, 'Month', 36, 4, keepPeriods=0)
+
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startString.week,'DateGroup']))[order(as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startString.week,'DateGroup'])))][seq(4,length(as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startString.week,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
 theme_set(theme_grey()+theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(color='black',size=fontSize,face=fontFace)))
+
 
 currentMonth <- ifelse(month(Sys.Date()) < 10, paste0(year(Sys.Date()),'-','0',month(Sys.Date())), paste0(year(Sys.Date()),'-',month(Sys.Date())))
 curMonthName <- month.name[month(Sys.Date())]
@@ -41,6 +44,7 @@ prevMonthName <- ifelse(month(Sys.Date()) == 1, 'December', month.name[month(Sys
 
 # Reburb Inventory Stock Levels
 refurbStock <- subset(stockInv.df, grepl('R$',ItemID))
+
 
 #add all ItemIDs to be sure there is at least one row for each
 refurbStock$ItemID <- as.character(refurbStock$ItemID)
@@ -79,6 +83,7 @@ ship15 <- merge(ship15, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
 ship15$Key <- factor(ship15$Key, levels=shipLevels)
 p.Refurb1.5Shipments <- ggplot(ship15, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(ship15, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished FA 1.5 Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(ship15, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') 
 
+
 #---FLM2-ASY-0002R - by month
 ship20 <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(refurbShip.df, Product == 'FA2.0R'), c('Product', 'Key'), startString.monthRoll, 'Record', 'sum', 0)
 ship20 <- ship20[order(ship20$DateGroup), ]
@@ -90,6 +95,7 @@ colnames(temp.agg)[3] <- 'RollingAvg'
 ship20 <- merge(ship20, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
 ship20$Key <- factor(ship20$Key, levels=shipLevels)
 p.Refurb2.0Shipments <- ggplot(ship20, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(ship20, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished FA 2.0 Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(ship20, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') 
+
 
 #---HTFA-ASY-0001R - by week
 if(nrow(subset(refurbShip.df, Product == 'Torch Base R')) > 0) {
@@ -108,7 +114,6 @@ if(nrow(subset(refurbShip.df, Product == 'Torch Base R')) > 0) {
   p.RefurbTorchBaseShipments <- ggplot(shipBase, aes(x=DateGroup, y=Record)) + geom_bar(stat='identity') + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Torch Base Shipments', x = 'Date\n(Year-Week)', y ='Shipments\n4 Week Moving Average Line') + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(limits = c(0,1))
 }
 
-#---HTFA-ASY-0003R - by week
 shipTorch <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', subset(refurbShip.df, Product == 'Torch Module R'), c('Product', 'Key'), startString.week, 'Record', 'sum', 0)
 shipTorch<- shipTorch[order(shipTorch$DateGroup), ]
 #4 week moving avg
@@ -119,6 +124,7 @@ colnames(temp.agg)[3] <- 'RollingAvg'
 shipTorch <- merge(shipTorch, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
 shipTorch$Key <- factor(shipTorch$Key, levels=shipLevels)
 p.RefurbTorchModuleShipments <- ggplot(shipTorch, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(shipTorch, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Torch Module Shipments', subtitle = paste('Rolling Average for Week', tail(shipTorch,1)[,'DateGroup'], ': ', format(tail(shipTorch,1)[,'RollingAvg'],digits=3)), x = 'Date\n(Year-Week)', y ='Shipments\n4 Week Moving Average Line') + scale_x_discrete(breaks=dateBreaks) 
+
 
 #---COMP-SUB-0016R - by week
 shipComp <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', subset(refurbShip.df, Product == 'Computer'), c('Product', 'Key'), startString.week, 'Record', 'sum', 0)
@@ -132,9 +138,12 @@ shipComp <- merge(shipComp, subset(temp.agg, select=c('DateGroup', 'RollingAvg')
 shipComp$Key <- factor(shipComp$Key, levels=shipLevels)
 p.RefurbComputerShipments <- ggplot(shipComp, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(shipComp, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Computer Shipments', subtitle = paste('Rolling Average for Week', tail(shipComp,1)[,'DateGroup'], ': ', format(tail(shipComp,1)[,'RollingAvg'],digits=3)), x = 'Date\n(Year-Week)', y ='Shipments') + scale_x_discrete(breaks=dateBreaks) 
 
+
+
 # Sales Source of Refurb Shipments by month 
 refurbSource <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbShip.df, c('Product', 'SalesSource', 'SalesType'), startString.month, 'Record', 'sum', 0)
 p.RefurbSalesType <- ggplot(refurbSource, aes(x=DateGroup, y=Record, fill=SalesType)) + geom_bar(stat='identity') + scale_fill_manual(name='Sales Source', values = createPaletteOfVariableLength(refurbSource, 'SalesType')) + facet_wrap(~Product, scales = 'free_y') + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Sales Source of Refurbished Shipments', x = 'Date\n(Year-Month)', y ='Shipments') + geom_text(data = with(refurbSource, aggregate(Record~DateGroup+Product, FUN=sum)), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), size=4, fontface='bold', vjust = -0.5)
+
 
 # New Inventory Stock Levels 
 newStock <- subset(stockInv.df, !(grepl('R$',ItemID)))
@@ -151,6 +160,8 @@ newStock$ItemID <- as.factor(newStock$ItemID)
 newStock.agg <- with(newStock, aggregate(Record~ItemID, FUN=sum))
 newStock.agg$Key <- ' '
 p.NewStockInventory <- ggplot(newStock.agg, aes(x=Key, y=Record)) + geom_bar(stat='identity', width = 0.5) + xlab(' ') + ylab('Inventory') + facet_wrap(~ItemID, scales='free_y', strip.position = 'bottom') + theme(strip.background = element_blank(), strip.placement = 'outside') + ggtitle('New Stock Inventory Levels') + scale_y_continuous(breaks=pretty_breaks(n=10)) + geom_text(aes(label=Record), color='lightgrey', size = 5, vjust = 1.5, fontface='bold')
+
+
 
 # Service Tiers
 #---by RMA type
@@ -170,7 +181,7 @@ tier.counts$Percent <- c(sum(tier.all$Record[which(tier.all$ServiceTier == "Tier
 tier.counts$Percent <- (tier.counts$Percent/sum(tier.counts$Percent))*100
 tier.counts$labels <- paste0(as.character(round(tier.counts$Percent, 1)), '%')
 p.AllTiers <- ggplot(tier.counts, aes(x=Tier, y=Percent)) + geom_bar(stat='identity', fill='cornflowerblue') + ylim(c(0, 100)) + geom_text(aes(label=labels), position=position_dodge(width=0.9), vjust=-.8, size=6) + labs(title = 'Service Tier Repairs of Customer RMAs since 11/2014', x="", y ='Percent of Repairs')
-#---by tier and version
+
 tier.version.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', tier.df, c('ServiceTier', 'Version'), startDate.Tier, 'Record', 'sum', 0)
 tier.version.counts <- data.frame(matrix(ncol=3))
 colnames(tier.version.counts) <- c('Tier', 'Version', 'Percent') 
@@ -187,6 +198,7 @@ tier.version.counts$Tier <- factor(tier.version.counts$Tier, levels=c('Tier 3', 
 tier.version.counts$labels <- paste0(as.character(round(tier.version.counts$Percent, 1)), '%')
 p.AllTiersVersions <- ggplot(tier.version.counts, aes(x=Version, y=Percent, fill=Tier)) + coord_flip() + geom_bar(stat='identity') + geom_text(aes(label=labels), position=position_stack(vjust=0.5), size=5) + labs(title = 'Service Tier Repairs of Customer RMAs since 11/2014', x="", y ='Percent of Repairs')
 
+
 # Current Open Complaints
 OpenComplaints <- with(subset(complaints.df, Status == 'Open'), aggregate(Record~Key, FUN=sum))
 OpenComplaints$Key <- factor(OpenComplaints$Key, levels = c('0 - 30', '31 - 60', '61 - 90', '91 - 120', '121+'))
@@ -196,6 +208,8 @@ complaints.df$DateMonthOpen <- with(complaints.df, ifelse(MonthOpen < 10, paste0
 prevopen <- with(subset(complaints.df, Status == 'Open' & DateMonthOpen <= lastMonth), aggregate(Record~Key, FUN=sum))
 prevopen$Key <- factor(prevopen$Key, levels = c('0 - 30', '31 - 60', '61 - 90', '91 - 120', '121+'))
 p.PrevOpenComplaints <- ggplot(prevopen, aes(x=Key, y=Record)) + geom_bar(stat='identity', fill='midnightblue') + geom_text(aes(label=Record), vjust=-1, fontface=fontFace, size = 5) + labs(title = 'Aging Open Complaints - Days Open', subtitle = paste('Open Complaints as of', tail(subset(calendar.month, DateGroup == lastMonth), 1)[,'Date'], ':', sum(prevopen$Record)), x = 'Days Open', y ='Number of Complaints')
+
+
 
 # Complaints Open by month
 OpenDate <- subset(complaints.df, select = c('YearOpen', 'MonthOpen', 'Record'))
@@ -282,25 +296,25 @@ p.RMATaT.SaltLake <- ggplot(avgDaysperPhase.SL, aes(x=DateGroup, y=Record, fill=
 # current month table 
 avgDaysinReceiving.cur <- mean(subset(rmaTAT.SL, DateGroup == currentMonth)[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysinReceiving.prev <- mean(subset(rmaTAT.SL, DateGroup == lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
-avgDaysinReceiving.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInReceiving'], na.rm=TRUE)
+avgDaysinReceiving.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysInQuarantineDecon.cur <- subset(avgDaysperPhase.SL, DateGroup == currentMonth & Key == 'Days In Quarantine/Decon')[,'Record']
 avgDaysInQuarantineDecon.prev <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days In Quarantine/Decon')[,'Record']
-avgDaysInQuarantineDecon.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInQuarantine/Decon'], na.rm=TRUE)
+avgDaysInQuarantineDecon.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInQuarantine/Decon'], na.rm=TRUE)
 avgDaysInService.cur <- subset(avgDaysperPhase.SL, DateGroup == currentMonth & Key == 'Days In Service')[,'Record']
 avgDaysInService.prev <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days In Service')[,'Record']
-avgDaysInService.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInService'], na.rm=TRUE)
+avgDaysInService.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInService'], na.rm=TRUE)
 avgDaysInQC.cur <- subset(avgDaysperPhase.SL, DateGroup == currentMonth & Key == 'Days In QC')[,'Record']
 avgDaysInQC.prev <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days In QC')[,'Record']
-avgDaysInQC.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInQC'], na.rm=TRUE)
+avgDaysInQC.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInQC'], na.rm=TRUE)
 avgDaysInLoaner.cur <- subset(avgDaysperPhase.SL, DateGroup == currentMonth & Key == 'Days In Loaner RMA')[,'Record']
 avgDaysInLoaner.prev <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days In Loaner RMA')[,'Record']
-avgDaysInLoaner.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInLoanerRMA'], na.rm=TRUE)
+avgDaysInLoaner.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInLoanerRMA'], na.rm=TRUE)
 avgDaysInSO.cur <- subset(avgDaysperPhase.SL, DateGroup == currentMonth & Key == 'Days To Sales Order')[,'Record']
 avgDaysInSO.prev <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days To Sales Order')[,'Record']
-avgDaysInSO.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysToSalesOrder'], na.rm=TRUE)
+avgDaysInSO.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysToSalesOrder'], na.rm=TRUE)
 avgDaysInShip.cur <- subset(avgDaysperPhase.SL, DateGroup == currentMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.prev <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days To Ship')[,'Record']
-avgDaysInShip.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysToShip'], na.rm=TRUE)
+avgDaysInShip.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysToShip'], na.rm=TRUE)
 #checks
 avgDaysinReceiving.cur <- ifelse(length(avgDaysinReceiving.cur) == 0 || is.na(avgDaysinReceiving.cur), NA, avgDaysinReceiving.cur) 
 avgDaysinReceiving.prev <- ifelse(length(avgDaysinReceiving.prev) == 0 || is.na(avgDaysinReceiving.prev), NA, avgDaysinReceiving.prev) 
@@ -458,25 +472,25 @@ if(month(Sys.Date()) < 3) {
 prevprevMonth <- ifelse(llm < 10, paste0(lly,'-0',llm), paste0(lly,'-',llm))
 avgDaysinReceiving.cur <- mean(subset(rmaTAT.SL, DateGroup == lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysinReceiving.prev <- mean(subset(rmaTAT.SL, DateGroup == prevprevMonth)[,'DaysInReceiving'], na.rm=TRUE)
-avgDaysinReceiving.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
+avgDaysinReceiving.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysInQuarantineDecon.cur <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days In Quarantine/Decon')[,'Record']
 avgDaysInQuarantineDecon.prev <- subset(avgDaysperPhase.SL, DateGroup == prevprevMonth & Key == 'Days In Quarantine/Decon')[,'Record']
-avgDaysInQuarantineDecon.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInQuarantine/Decon'], na.rm=TRUE)
+avgDaysInQuarantineDecon.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInQuarantine/Decon'], na.rm=TRUE)
 avgDaysInService.cur <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days In Service')[,'Record']
 avgDaysInService.prev <- subset(avgDaysperPhase.SL, DateGroup == prevprevMonth & Key == 'Days In Service')[,'Record']
-avgDaysInService.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInService'], na.rm=TRUE)
+avgDaysInService.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInService'], na.rm=TRUE)
 avgDaysInQC.cur <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days In QC')[,'Record']
 avgDaysInQC.prev <- subset(avgDaysperPhase.SL, DateGroup == prevprevMonth & Key == 'Days In QC')[,'Record']
-avgDaysInQC.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInQC'], na.rm=TRUE)
+avgDaysInQC.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInQC'], na.rm=TRUE)
 avgDaysInLoaner.cur <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days In Loaner RMA')[,'Record']
 avgDaysInLoaner.prev <- subset(avgDaysperPhase.SL, DateGroup == prevprevMonth & Key == 'Days In Loaner RMA')[,'Record']
-avgDaysInLoaner.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInLoanerRMA'], na.rm=TRUE)
+avgDaysInLoaner.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInLoanerRMA'], na.rm=TRUE)
 avgDaysInSO.cur <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days To Sales Order')[,'Record']
 avgDaysInSO.prev <- subset(avgDaysperPhase.SL, DateGroup == prevprevMonth & Key == 'Days To Sales Order')[,'Record']
-avgDaysInSO.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysToSalesOrder'], na.rm=TRUE)
+avgDaysInSO.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysToSalesOrder'], na.rm=TRUE)
 avgDaysInShip.cur <- subset(avgDaysperPhase.SL, DateGroup == lastMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.prev <- subset(avgDaysperPhase.SL, DateGroup == prevprevMonth & Key == 'Days To Ship')[,'Record']
-avgDaysInShip.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysToShip'], na.rm=TRUE)
+avgDaysInShip.year <- mean(subset(rmaTAT.SL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysToShip'], na.rm=TRUE)
 #checks
 avgDaysinReceiving.cur <- ifelse(length(avgDaysinReceiving.cur) == 0 || is.na(avgDaysinReceiving.cur), NA, avgDaysinReceiving.cur) 
 avgDaysinReceiving.prev <- ifelse(length(avgDaysinReceiving.prev) == 0 || is.na(avgDaysinReceiving.prev), NA, avgDaysinReceiving.prev) 
@@ -643,19 +657,19 @@ p.RMATaT.Florence <- ggplot(avgDaysperPhase.FL, aes(x=DateGroup, y=Record, fill=
 # current month table 
 avgDaysinReceiving.cur <- mean(subset(rmaTAT.FL, DateGroup == currentMonth)[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysinReceiving.prev <- mean(subset(rmaTAT.FL, DateGroup == lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
-avgDaysinReceiving.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInReceiving'], na.rm=TRUE)
+avgDaysinReceiving.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysInQuarantineDecon.cur <- subset(avgDaysperPhase.FL, DateGroup == currentMonth & Key == 'Days In Quarantine/Decon')[,'Record']
 avgDaysInQuarantineDecon.prev <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days In Quarantine/Decon')[,'Record']
-avgDaysInQuarantineDecon.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInQuarantine/Decon'], na.rm=TRUE)
+avgDaysInQuarantineDecon.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInQuarantine/Decon'], na.rm=TRUE)
 avgDaysInService.cur <- subset(avgDaysperPhase.FL, DateGroup == currentMonth & Key == 'Days In Service')[,'Record']
 avgDaysInService.prev <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days In Service')[,'Record']
-avgDaysInService.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInService'], na.rm=TRUE)
+avgDaysInService.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInService'], na.rm=TRUE)
 avgDaysInQC.cur <- subset(avgDaysperPhase.FL, DateGroup == currentMonth & Key == 'Days In QC')[,'Record']
 avgDaysInQC.prev <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days In QC')[,'Record']
-avgDaysInQC.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysInQC'], na.rm=TRUE)
+avgDaysInQC.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysInQC'], na.rm=TRUE)
 avgDaysInShip.cur <- subset(avgDaysperPhase.FL, DateGroup == currentMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.prev <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days To Ship')[,'Record']
-avgDaysInShip.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0))[,'DaysToShip'], na.rm=TRUE)
+avgDaysInShip.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0))[,'DaysToShip'], na.rm=TRUE)
 #checks
 avgDaysinReceiving.cur <- ifelse(length(avgDaysinReceiving.cur) == 0 || is.na(avgDaysinReceiving.cur), NA, avgDaysinReceiving.cur) 
 avgDaysinReceiving.prev <- ifelse(length(avgDaysinReceiving.prev) == 0 || is.na(avgDaysinReceiving.prev), NA, avgDaysinReceiving.prev) 
@@ -767,19 +781,19 @@ table3 <- gtable_add_grob(
 # prev month table 
 avgDaysinReceiving.cur <- mean(subset(rmaTAT.FL, DateGroup == lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysinReceiving.prev <- mean(subset(rmaTAT.FL, DateGroup == prevprevMonth)[,'DaysInReceiving'], na.rm=TRUE)
-avgDaysinReceiving.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
+avgDaysinReceiving.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInReceiving'], na.rm=TRUE)
 avgDaysInQuarantineDecon.cur <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days In Quarantine/Decon')[,'Record']
 avgDaysInQuarantineDecon.prev <- subset(avgDaysperPhase.FL, DateGroup == prevprevMonth & Key == 'Days In Quarantine/Decon')[,'Record']
-avgDaysInQuarantineDecon.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInQuarantine/Decon'], na.rm=TRUE)
+avgDaysInQuarantineDecon.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInQuarantine/Decon'], na.rm=TRUE)
 avgDaysInService.cur <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days In Service')[,'Record']
 avgDaysInService.prev <- subset(avgDaysperPhase.FL, DateGroup == prevprevMonth & Key == 'Days In Service')[,'Record']
-avgDaysInService.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInService'], na.rm=TRUE)
+avgDaysInService.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInService'], na.rm=TRUE)
 avgDaysInQC.cur <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days In QC')[,'Record']
 avgDaysInQC.prev <- subset(avgDaysperPhase.FL, DateGroup == prevprevMonth & Key == 'Days In QC')[,'Record']
-avgDaysInQC.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysInQC'], na.rm=TRUE)
+avgDaysInQC.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysInQC'], na.rm=TRUE)
 avgDaysInShip.cur <- subset(avgDaysperPhase.FL, DateGroup == lastMonth & Key == 'Days To Ship')[,'Record']
 avgDaysInShip.prev <- subset(avgDaysperPhase.FL, DateGroup == prevprevMonth & Key == 'Days To Ship')[,'Record']
-avgDaysInShip.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0) & DateGroup <= lastMonth)[,'DaysToShip'], na.rm=TRUE)
+avgDaysInShip.year <- mean(subset(rmaTAT.FL, DateGroup >= findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0) & DateGroup <= lastMonth)[,'DaysToShip'], na.rm=TRUE)
 #checks
 avgDaysinReceiving.cur <- ifelse(length(avgDaysinReceiving.cur) == 0 || is.na(avgDaysinReceiving.cur), NA, avgDaysinReceiving.cur) 
 avgDaysinReceiving.prev <- ifelse(length(avgDaysinReceiving.prev) == 0 || is.na(avgDaysinReceiving.prev), NA, avgDaysinReceiving.prev) 
@@ -1142,4 +1156,7 @@ grid.newpage()
 grid.draw(table4)
 dev.off()
 
-rm(list = ls())
+rm(list=ls())
+
+
+
