@@ -1,3 +1,4 @@
+
 workDir <- '~/WebHub/AnalyticsWebHub/'
 imgDir <- '~/WebHub/images/Dashboard_PouchManufacturingQuality/'
 pdfDir <- '~/WebHub/pdfs/'
@@ -9,12 +10,7 @@ library(lubridate)
 library(zoo)
 library(ggplot2)
 library(devtools)
-source("~/forked/dateManip/R/createCalendarLikeMicrosoft.R")
-source("~/forked/dateManip/R/findStartDate.R")
-source("~/forked/dateManip/R/aggregateAndFillDateGroupGaps.R")
-source("~/forked/dateManip/R/mergeCalSparseFrames.R")
-source("~/forked/dateManip/R/addStatsToSparseHandledData.R")
-#library(dateManip)
+library(dateManip)
 
 # Load data and functions
 source('Portfolios/Q_PM_load.R')
@@ -266,7 +262,7 @@ faivLineWater.df[,'DateGroup'] <- with(faivLineWater.df, ifelse(Week < 10, paste
 
 calendar.df <- createCalendarLikeMicrosoft(year(Sys.Date())-2, 'Week')
 calendar.df[,'Date'] <- as.character(calendar.df[,'Date'])
-startDate <- findStartDate(calendar.df, 'Week', 53, keepPeriods=0)
+startDate <- findStartDate(calendar.df, 'Week', 53, keepPeriods=53)
 burst.trend <- analyzeOrderIMR(burst.df, 'Result', 'DateOpened', points.burst, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
 hydra.wsw.trend <- analyzeOrderIMR(hydration.df, 'WaterSideWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
 hydra.ssw.trend <- analyzeOrderIMR(hydration.df, 'SampleSideWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
