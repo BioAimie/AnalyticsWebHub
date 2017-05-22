@@ -19,7 +19,7 @@ WHERE TR.[TypeCode] = 'control' AND
 	R.[SampleId] LIKE 'QC_BCID%' OR 
 	R.[SampleId] LIKE 'QC_GI%' OR
 	R.[SampleId] LIKE 'QC_ME%'
-) AND R.[StartTime] >= GETDATE() - 400
+) AND R.[StartTime] >= GETDATE() - 800
 
 SELECT
 	YEAR([Date]) AS [Year],

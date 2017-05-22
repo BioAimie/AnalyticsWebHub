@@ -4,5 +4,5 @@ SELECT
 	[RecordedValue] AS [Key],
 	COUNT([TicketId]) AS [Record]
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Issue CI' AND [CreatedDate] > GETDATE() - 400
+WHERE [PropertyName] LIKE 'Issue CI' AND [CreatedDate] > GETDATE() - 800
 GROUP BY YEAR([CreatedDate]), DATEPART(ww,[CreatedDate]), [RecordedValue]
