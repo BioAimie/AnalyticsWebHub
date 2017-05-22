@@ -1,11 +1,11 @@
 SET NOCOUNT ON
 
-SELECT 
+SELECT
 	[TicketId],
 	[RecordedValue] AS [Date]
 INTO #awareDate
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] = 'COMPLAINT' AND [PropertyName] = 'Became Aware Date' AND [CreatedDate] > GETDATE()  - 400
+WHERE [Tracker] = 'COMPLAINT' AND [PropertyName] = 'Became Aware Date' AND [CreatedDate] > GETDATE()  - 800
 
 SELECT 
 	[TicketId],
@@ -15,14 +15,14 @@ SELECT
 	[RecordedValue]
 INTO #fail
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] = 'COMPLAINT' AND [ObjectName] = 'BFDX Part Number' AND [CreatedDate] > GETDATE() - 400
+WHERE [Tracker] = 'COMPLAINT' AND [ObjectName] = 'BFDX Part Number' AND [CreatedDate] > GETDATE() - 800
 
 SELECT 
 	[TicketId],
 	[RecordedValue] AS [CustId]
 INTO #cust
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [Tracker] = 'COMPLAINT' AND [PropertyName] = 'Customer Id' AND [CreatedDate] > GETDATE() - 400
+WHERE [Tracker] = 'COMPLAINT' AND [PropertyName] = 'Customer Id' AND [CreatedDate] > GETDATE() - 800
 
 SELECT 
 	[TicketString],
@@ -65,10 +65,11 @@ FROM #awareDate D INNER JOIN
 
 SELECT
 	[CustID],
-	MAX([SalesTerritoryID]) AS [CustType]
+	IIF(LEFT([CustID],2)='99', 'Demo', 
+		IIF([SalesTerritoryID] IS NULL, 'Other', [SalesTerritoryID])) AS [CustType]
 INTO #custType
-FROM [PMS1].[dbo].[vPouchShipmentsWithAnnotations] WITH(NOLOCK)
-GROUP BY [CustID]
+FROM [PMS1].[dbo].[vPouchShipmentsWithAnnotations_IOID] WITH(NOLOCK)
+WHERE [CustID] IS NOT NULL
 
 SELECT 
 	[TicketString],
@@ -89,7 +90,7 @@ INTO #agg
 FROM #cat C LEFT JOIN #custType T
 	ON C.[CustId] = T.[CustId]
 
-SELECT 
+SELECT
 	[Year],
 	[Week],
 	IIF([CustType] LIKE 'International','International','Domestic') AS [Version],
