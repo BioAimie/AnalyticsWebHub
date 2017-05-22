@@ -123,7 +123,7 @@ SELECT
 	[RecordedValue]
 INTO #partsUsed
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] = 'Parts Used' AND [TicketId] IN (SELECT [TicketId] FROM #partInfoAll) AND [Tracker] = 'RMA'
+WHERE [ObjectName] = 'Parts Used' AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
@@ -179,8 +179,6 @@ FROM
 		ON T.[TicketId] = S.[TicketId]
 WHERE [Config] IS NOT NULL;
 
-
-
 WITH [BirthLot] ([TopLotID], [BottomLot], [BottomPart])
 AS (
 	SELECT
@@ -214,7 +212,6 @@ WHERE [BottomPart] = 'FLM1-SUB-0006'
 	AND TP.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103') 
 	AND U.[PartNumber] = 'MOTR-DCM-0006'
 	AND U.[Quantity]>0
-
 
 --SELECT DISTINCT
 --	P.[PartNumber],
