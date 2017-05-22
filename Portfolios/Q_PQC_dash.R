@@ -1,3 +1,4 @@
+
 workDir <- '~/WebHub/AnalyticsWebHub/'
 imgDir <- '~/WebHub/images/Dashboard_PouchQC/'
 pdfDir <- '~/WebHub/pdfs/'
@@ -182,3 +183,5 @@ for(i in 1:length(plots.alt)) {
 dev.off()
 
 rm(list = ls())
+Contact GitHub API Training Shop Blog About
+© 2017 GitHub, Inc. Terms Privacy Security Status Help
