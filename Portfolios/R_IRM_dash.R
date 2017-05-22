@@ -80,10 +80,15 @@ runs.abort.lims <- addStatsToSparseHandledData(runs.abort.rate, c('Version','Key
 p.aborted.runs <- ggplot(runs.abort.lims, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point(color='black') + facet_grid(Version~Key, scales='free_y') + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), legend.position='bottom') + labs(title='Runs Aborted per Total Runs:\nFYI Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-Week Average Rate')
 
 # Average capacity utilized by hour
-capacityByDay <- capacityUtilized(runs.df, 14, TRUE)
-capacityByHour <- capacityUtilized(runs.df, 14, FALSE)
+capacityByDay <- capacityUtilized(runs.df, 12, TRUE)
+capacityByHour <- capacityUtilized(runs.df, 12, FALSE)
 p.capacity.day <- ggplot(capacityByDay, aes(x=Date, y=RollingRate, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace),axis.text=element_text(color='black',size=fontSize, face=fontFace)) + labs(title='Average Capacity Utilized:\nActual Runs/Theoretical Capacity',x='Date',y='Rolling 5-Day Average')
 p.capacity.hour <- ggplot(capacityByHour, aes(x=Hour, y=CapacityUtilized, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace),axis.text=element_text(color='black',size=fontSize, face=fontFace)) + labs(title='Average Capacity Utilized by Hour:\nInstruments Used/Instruments in Area',x='Hour',y='Capacity Utilized (3 week average)')
+
+# Average Runs per Week as a Rolling 4-Week Trend
+
+
+
 
 # Average Runs per Week as a Rolling 4-Week Trend
 denom.one <- data.frame(DateGroup = as.character(unique(runs.fill[,'DateGroup'])), Record = 1)
