@@ -7,7 +7,11 @@ setwd(workDir)
 
 library(ggplot2)
 library(scales)
-library(dateManip)
+source("~/forked/dateManip/R/addStatsToSparseHandledData.R")
+source("~/forked/dateManip/R/aggregateAndFillDateGroupGaps.R")
+source("~/forked/dateManip/R/createCalendarLikeMicrosoft.R")
+source("~/forked/dateManip/R/findStartDate.R")
+source("~/forked/dateManip/R/mergeCalSparseFrames.R")
 library(lubridate)
 
 # load user-created functions
@@ -21,9 +25,9 @@ bigGroup <- 'Year'
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
 startYear <- year(Sys.Date()) - 3
 calendar.mon <- createCalendarLikeMicrosoft(startYear, 'Month')
-startDate.mon <- findStartDate(calendar.mon, 'Month', 13)
+startDate.mon <- findStartDate(calendar.mon, 'Month', 13, keepPeriods=0)
 calendar.week <- createCalendarLikeMicrosoft(startYear, 'Week')
-startDate.week <- findStartDate(calendar.week, 'Week', 54)
+startDate.week <- findStartDate(calendar.week, 'Week', 54, keepPeriods=0)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startDate.week,'DateGroup']))[order(as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startDate.week,'DateGroup'])))][seq(1,length(as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startDate.week,'DateGroup']))), seqBreak)]

@@ -10,6 +10,8 @@ library(scales)
 library(zoo)
 library(dateManip)
 
+
+
 # load the data from SQL
 source('Portfolios/O_PMG_load.R')
 
@@ -43,13 +45,13 @@ ltd.ncr.90 <- subset(MeqNCR.df, CreatedDate >= D90 & CreatedDate < D60); ltd.ncr
 ltd.ncr.60 <- subset(MeqNCR.df, CreatedDate >= D60); ltd.ncr.60 <- with(ltd.ncr.60, aggregate(Record~MEQ+MEQType+Status+Type, FUN=sum)); ltd.ncr.60$Key <- '60 Day'
 ltd.ncr <- rbind(ltd.ncr.120, ltd.ncr.90, ltd.ncr.60)
 
-startstring.week <- findStartDate(calendar.week, 'Week',54, lagPeriods)
+startstring.week <- findStartDate(calendar.week, 'Week',54, lagPeriods, keepPeriods=0)
 #show since beginning of 2016 or 1 year
 if(startstring.week < '2015-51') {
   startstring.week <- '2015-51'
 }
 
-startstring.month <- findStartDate(calendar.month, 'Month', 13)
+startstring.month <- findStartDate(calendar.month, 'Month', 13, keepPeriods=0)
 #show since beginning of 2016 or 1 year
 if(startstring.month < '2016-01') {
   startstring.month <- '2016-01'

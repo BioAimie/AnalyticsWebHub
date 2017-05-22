@@ -17,8 +17,8 @@ source('Rfunctions/makeTimeStamp.R')
 
 calendar.month <- createCalendarLikeMicrosoft(2014,'Month')
 calendar.quarter <- createCalendarLikeMicrosoft(2014, 'Quarter')
-start <- findStartDate(calendar.month, 'Month', 12,0)
-start.quarter <- findStartDate(calendar.quarter, 'Quarter', 5)
+start <- findStartDate(calendar.month, 'Month', 12,0, keepPeriods=0)
+start.quarter <- findStartDate(calendar.quarter, 'Quarter', 5, keepPeriods=0)
 
 theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
 

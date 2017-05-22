@@ -91,6 +91,11 @@ p.capacity.hour <- ggplot(capacityByHour, aes(x=Hour, y=CapacityUtilized, group=
 
 
 # Average Runs per Week as a Rolling 4-Week Trend
+
+
+
+
+# Average Runs per Week as a Rolling 4-Week Trend
 denom.one <- data.frame(DateGroup = as.character(unique(runs.fill[,'DateGroup'])), Record = 1)
 runs.weekly.rate <- mergeCalSparseFrames(runs.fill, denom.one, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 pal.weekly <- createPaletteOfVariableLength(runs.weekly.rate, 'Version')
