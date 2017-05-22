@@ -7,11 +7,6 @@ setwd(workDir)
 
 library(ggplot2)
 library(scales)
-source("~/forked/dateManip/R/addStatsToSparseHandledData.R")
-source("~/forked/dateManip/R/aggregateAndFillDateGroupGaps.R")
-source("~/forked/dateManip/R/createCalendarLikeMicrosoft.R")
-source("~/forked/dateManip/R/findStartDate.R")
-source("~/forked/dateManip/R/mergeCalSparseFrames.R")
 library(lubridate)
 
 # load user-created functions
