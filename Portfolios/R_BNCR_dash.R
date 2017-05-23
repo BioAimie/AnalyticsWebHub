@@ -11,13 +11,8 @@ library(scales)
 library(lubridate)
 library(RColorBrewer)
 library(devtools)
-source("~/forked/dateManip/R/addStatsToSparseHandledData.R")
-source("~/forked/dateManip/R/aggregateAndFillDateGroupGaps.R")
-source("~/forked/dateManip/R/createCalendarLikeMicrosoft.R")
-source("~/forked/dateManip/R/findStartDate.R")
-source("~/forked/dateManip/R/mergeCalSparseFrames.R")
-#install_github('BioAimie/dateManip')
-#library(dateManip)
+install_github('BioAimie/dateManip')
+library(dateManip)
 
 # load the necessary files and functions that are user-created
 source('Portfolios/R_BNCR_load.R')
@@ -41,7 +36,6 @@ dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.
 fontSize <- 20
 fontFace <- 'bold'
 theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
-
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # All BioReagent NCRs per Pouches Manufactured (final pouch product)
