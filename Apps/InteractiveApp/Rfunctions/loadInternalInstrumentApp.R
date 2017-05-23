@@ -176,7 +176,7 @@ postmarketscxn <- odbcConnect("postmarkets")
 anomalies <- sqlQuery(postmarketscxn, anomaly.query)
 odbcClose(postmarketscxn)
 
-pouchTrackercxn <- odbcConnect('pouchTracker')
+pouchTrackercxn <- odbcConnect('pouch_tracker')
 pouchLeaks <- sqlQuery(pouchTrackercxn, pouch.leaks.query)
 odbcClose(pouchTrackercxn)
 
