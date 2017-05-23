@@ -36,7 +36,6 @@ dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.
 fontSize <- 20
 fontFace <- 'bold'
 theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
-
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 
 # All BioReagent NCRs per Pouches Manufactured (final pouch product)
