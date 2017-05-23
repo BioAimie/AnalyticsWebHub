@@ -74,44 +74,60 @@ capacityUtilized <- function(dataFrame, workDay=14, byDay=TRUE, byVersion=FALSE)
   # if it's by version, that's for the dungeon and it should be handled differently
   else if(byVersion) {
     
-    dataFrame <- dataFrame[dataFrame[,'Date'] >= Sys.Date() - 30 & dataFrame$Key=='Dungeon', ]
-
-    # how many working days are there in the last 30 days?
-    dataFrame$WeekDay <- weekdays(dataFrame$Date, TRUE)
-    off.fri <- with(dataFrame[dataFrame$Date %in% unique(dataFrame[dataFrame$WeekDay=='Fri', 'Date']),], aggregate(Record~Date, FUN=sum))
-    on.fri <- off.fri[off.fri$Record > median(off.fri$Record), 'Date']
-    subFrame <- dataFrame[dataFrame$WeekDay %in% c('Mon','Tue','Wed','Thu') | dataFrame$Date %in% on.fri, ]
-    working.days <- length(unique(subFrame$Date))
+    dataFrame <- dataFrame[dataFrame$Key=='Dungeon', ]
+    date.breaks <- seq(min(dataFrame$Date), max(dataFrame$Date), 30)
+    if(max(date.breaks) < max(dataFrame$Date)) { date.breaks <- c(date.breaks, max(dataFrame$Date)) }
     
-    # how many runs can be done on an average day?
-    avg.run.time <- mean(subFrame$MinutesRun)/60
-    hours.per.day <- 9
-    runs.per.day <- hours.per.day/(avg.run.time*1.15)
-    
-    # how many instruments are running during the thirty day period (do some tricks to make it more accurate!)
-    work.dates <- unique(subFrame$Date)[order(unique(subFrame$Date))]
-    inst.dates <- work.dates[seq(3, length(work.dates), 3)]
-    if(max(work.dates) > max(inst.dates)) {
-      inst.dates[length(inst.dates)] <- max(work.dates)
+    for(i in 2:length(date.breaks)) {
+      
+      dataFrame[dataFrame$Date >= date.breaks[i-1] & dataFrame$Date <= date.breaks[i], 'Period'] <- i-1
     }
-    subFrame$index <- cut(subFrame$Date, breaks = inst.dates, right = TRUE, left = TRUE, labels = seq(1, length(inst.dates)-1, 1))
-    subFrame$index <- as.numeric(as.character(subFrame$index))
-    subFrame[is.na(subFrame$index), 'index'] <- 0
-    subFrame$Version <- ifelse(subFrame$InstrumentProtocolVersion==2, 'FA1.5', ifelse(substring(subFrame$InstrumentSerialNumber, 1, 2) %in% c('FA','2F'), 'FA2.0', 'Torch'))
-    inst.versions.running <- do.call(rbind, lapply(1:length(unique(subFrame$index)), function(x) with(with(unique(subFrame[subFrame$index==(x-1), c('Date','Version','InstrumentSerialNumber','Record'), ]), aggregate(Record~Date+Version, FUN=sum)), aggregate(Record~Version, FUN=mean))))
-    inst.versions.running <- with(inst.versions.running, aggregate(Record~Version, FUN=median))
     
-    # using the inst.versions.running, the runs.per.day, and working.days, find the theoretical capacity
-    theoretical.capacity <- data.frame(inst.versions.running, RunsPerDay = runs.per.day, WorkingDays = working.days)
-    theoretical.capacity$TheoreticalCapacity <- with(theoretical.capacity, round(Record, 0)*RunsPerDay*WorkingDays)
-    
-    # calcualte the total number of runs actually performed in the same period
-    actual.runs <- with(subFrame, aggregate(Record~Version, FUN=sum))
-    
-    # now get the end product... WHAT IS THE END CHART SUPPOSED TO LOOK LIKE????
-    return(merge(theoretical.capacity, actual.runs, by='Version'))
-    # if b is what is returned on the above line, then the code below will make a chart
-    # ggplot(b, aes(x=Version, y=Record.y/TheoreticalCapacity)) + geom_bar(stat='identity') + scale_y_continuous(label=percent) + geom_text(aes(x=Version, y=Record.y/TheoreticalCapacity+0.05, label=paste(round(100*Record.y/TheoreticalCapacity, 0), '%', sep='')))
+    upper.iter <- max(dataFrame$Period)
+    out <- c()
+    for(i in 1:upper.iter) {
+      
+      periodFrame <- dataFrame[dataFrame$Period==i, ]
+      # how many working days are there in the last 30 days?
+      periodFrame$WeekDay <- weekdays(periodFrame$Date, TRUE)
+      off.fri <- with(periodFrame[periodFrame$Date %in% unique(periodFrame[periodFrame$WeekDay=='Fri', 'Date']),], aggregate(Record~Date, FUN=sum))
+      on.fri <- off.fri[off.fri$Record > median(off.fri$Record), 'Date']
+      subFrame <- periodFrame[periodFrame$WeekDay %in% c('Mon','Tue','Wed','Thu') | periodFrame$Date %in% on.fri, ]
+      working.days <- length(unique(subFrame$Date))
+      
+      # how many runs can be done on an average day?
+      avg.run.time <- mean(subFrame$MinutesRun)/60
+      hours.per.day <- 9
+      runs.per.day <- hours.per.day/(avg.run.time*1.15)
+      
+      # how many instruments are running during the thirty day period (do some tricks to make it more accurate!)
+      work.dates <- unique(subFrame$Date)[order(unique(subFrame$Date))]
+      inst.dates <- work.dates[seq(3, length(work.dates), 3)]
+      if(max(work.dates) > max(inst.dates)) {
+        inst.dates[length(inst.dates)] <- max(work.dates)
+      }
+      subFrame$index <- cut(subFrame$Date, breaks = inst.dates, right = TRUE, left = TRUE, labels = seq(1, length(inst.dates)-1, 1))
+      subFrame$index <- as.numeric(as.character(subFrame$index))
+      subFrame[is.na(subFrame$index), 'index'] <- 0
+      subFrame$Version <- ifelse(subFrame$InstrumentProtocolVersion==2, 'FA1.5', ifelse(substring(subFrame$InstrumentSerialNumber, 1, 2) %in% c('FA','2F'), 'FA2.0', 'Torch'))
+      inst.versions.running <- do.call(rbind, lapply(1:length(unique(subFrame$index)), function(x) with(with(unique(subFrame[subFrame$index==(x-1), c('Date','Version','InstrumentSerialNumber','Record'), ]), aggregate(Record~Date+Version, FUN=sum)), aggregate(Record~Version, FUN=mean))))
+      inst.versions.running <- with(inst.versions.running, aggregate(Record~Version, FUN=median))
+      
+      # using the inst.versions.running, the runs.per.day, and working.days, find the theoretical capacity
+      theoretical.capacity <- data.frame(inst.versions.running, RunsPerDay = runs.per.day, WorkingDays = working.days)
+      theoretical.capacity$TheoreticalCapacity <- with(theoretical.capacity, round(Record, 0)*RunsPerDay*WorkingDays)
+      colnames(theoretical.capacity) <- c('Version','MedianInstrumentsRunningInPeriod','RunsPerDay','WorkingDays','TheoreticalCapacity')
+            
+      # calcualte the total number of runs actually performed in the same period
+      actual.runs <- with(subFrame, aggregate(Record~Version, FUN=sum))
+      colnames(actual.runs)[2] <- 'ActualRuns'
+      
+      # now get the end product... 
+      temp <- merge(theoretical.capacity, actual.runs, by='Version')
+      temp$Date <- date.breaks[i+1]
+      out <- rbind(out, temp)
+    }
+    return(out)
   }
   
   # if it's not by day, assume it's by hour... then take the last three weeks of data and plot by day

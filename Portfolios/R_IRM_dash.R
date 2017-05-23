@@ -32,12 +32,13 @@ weeks <- 53
 lagPeriods <- 4
 
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
-startYear <- year(Sys.Date()) - 2
+startYear <- year(Sys.Date()) - 3
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
-startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods, 53)
+plotStart <- findStartDate(calendar.df, 'Week', weeks, periods, 0)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
-dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
+dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plotStart,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plotStart,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
 theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
@@ -68,16 +69,16 @@ runs.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', runs.trim, c('Ve
 runs.err.df <- clean.runs[!(clean.runs[,'RunStatus'] %in% c('In Progress','Aborted','Completed')), c('Year','Week','Version','Key','RunStatus','Record')]
 runs.err.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', runs.err.df, c('Version','Key','RunStatus'), startDate, 'Record', 'sum', 0)
 runs.err.rate <- mergeCalSparseFrames(runs.err.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', 0, periods)
-runs.err.lims <- addStatsToSparseHandledData(runs.err.rate, c('Version','Key'), lagPeriods, TRUE, 3, 'upper', 0)
+runs.err.lims <- addStatsToSparseHandledData(runs.err.rate, c('Version','Key'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods = 53)
 pal.err <- createPaletteOfVariableLength(runs.err.lims, 'RunStatus')
-p.instrument.errors <- ggplot(runs.err.lims, aes(x=DateGroup, y=Rate, fill=RunStatus)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.err, name='') + facet_grid(Version~Key, scales='free_y') + geom_hline(aes(yintercept=UL), color='black', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), legend.position='bottom') + labs(title='Run Errors per Total Runs:\nFYI Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-Week Average Rate')
+p.instrument.errors <- ggplot(runs.err.lims, aes(x=DateGroup, y=Rate, fill=RunStatus)) + geom_bar(stat='identity') + scale_fill_manual(values=pal.err, name='') + facet_grid(Version~Key, scales='free_y') + geom_line(aes(x=DateGroup, y=UL, group=1), color='black', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), legend.position='bottom') + labs(title='Run Errors per Total Runs:\nFYI Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-Week Average Rate')
 
 # 4-Week Rolling Average of Aborted Runs per Total Runs
 runs.trim.abort <- clean.runs[clean.runs[,'RunStatus'] == 'Aborted', c('Year','Week','Version','Key','Record')]
 runs.fill.abort <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', runs.trim.abort, c('Version','Key'), startDate, 'Record', 'sum', 0)
 runs.abort.rate <- mergeCalSparseFrames(runs.fill.abort, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', 0, periods)
-runs.abort.lims <- addStatsToSparseHandledData(runs.abort.rate, c('Version','Key'), lagPeriods, TRUE, 3, 'upper', 0)
-p.aborted.runs <- ggplot(runs.abort.lims, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point(color='black') + facet_grid(Version~Key, scales='free_y') + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), legend.position='bottom') + labs(title='Runs Aborted per Total Runs:\nFYI Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-Week Average Rate')
+runs.abort.lims <- addStatsToSparseHandledData(runs.abort.rate, c('Version','Key'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods = 53)
+p.aborted.runs <- ggplot(runs.abort.lims, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point(color='black') + facet_grid(Version~Key, scales='free_y') + geom_line(aes(x=DateGroup, y=UL, group=1), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), legend.position='bottom') + labs(title='Runs Aborted per Total Runs:\nFYI Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-Week Average Rate')
 
 # Average capacity utilized by hour
 capacityByDay <- capacityUtilized(runs.df, 12, TRUE)
@@ -86,9 +87,8 @@ p.capacity.day <- ggplot(capacityByDay, aes(x=Date, y=RollingRate, group='1')) +
 p.capacity.hour <- ggplot(capacityByHour, aes(x=Hour, y=CapacityUtilized, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace),axis.text=element_text(color='black',size=fontSize, face=fontFace)) + labs(title='Average Capacity Utilized by Hour:\nInstruments Used/Instruments in Area',x='Hour',y='Capacity Utilized (3 week average)')
 
 # Average capacity utilized by day for the last month in the Dungeon by version
-
-
-
+dungeonUtilization <- capacityUtilized(runs.df, 9, TRUE, TRUE)
+p.capacity.dungeon <- ggplot(dungeonUtilization, aes(x=Date, y=ActualRuns/TheoreticalCapacity, group=Version, color=Version)) + geom_line() + geom_point() + scale_y_continuous(label=percent, limits=c(0, 1)) + theme(text=element_text(size=fontSize, face=fontFace),axis.text=element_text(color='black',size=fontSize, face=fontFace)) + labs(title='Dungeon Average Capacity Utilized:\nActual Runs/Theoretical Capacity',x='Date',y='30-Day Average') + scale_color_manual(values=createPaletteOfVariableLength(dungeonUtilization, 'Version'))
 
 # Average Runs per Week as a Rolling 4-Week Trend
 denom.one <- data.frame(DateGroup = as.character(unique(runs.fill[,'DateGroup'])), Record = 1)
