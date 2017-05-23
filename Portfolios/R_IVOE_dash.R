@@ -188,7 +188,7 @@ p.sealBar.voe <- p.sealBar.voe + geom_text(data=sealBarNCRAnnotation.df, inherit
 # Calendar for wire harness:
 months = 24
 wireharness.calendar.df <- createCalendarLikeMicrosoft(startYear, 'Month')
-wireharness.startDate <- findStartDate(wireharness.calendar.df, 'Month', months, periods)
+wireharness.startDate <- findStartDate(wireharness.calendar.df, 'Month', months, periods, keepPeriods=0)
 wireharness.seqBreak <- 3
 wireharness.dates = as.character(unique(wireharness.calendar.df[wireharness.calendar.df[,'DateGroup'] >= wireharness.startDate,'DateGroup']))
 wireharness.dateBreaks <- sort(wireharness.dates)[seq(1,length(wireharness.dates), wireharness.seqBreak)]
@@ -307,7 +307,7 @@ for(i in 1:wireharness.numCharts){
 
 # create the charts for early failures of computers per 2.0 instruments shipped in a month (non-rolling), by version of computer
 calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
-startMonth <- findStartDate(calendar.month, 'Month', 24, 0)
+startMonth <- findStartDate(calendar.month, 'Month', 24, 0, keepPeriods=0)
 computerEF2.df <- subset(computerEF.df, Version=='FA2.0')
 compShip2.df <- subset(compShip.df, Version=='FA2.0')
 computerEF.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', computerEF2.df, c('Version','CompVersion','Key'), startMonth, 'Record', 'sum', 0)

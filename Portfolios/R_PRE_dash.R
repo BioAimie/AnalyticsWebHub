@@ -31,9 +31,9 @@ limit <- 15
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
 startYear <- year(Sys.Date()) - 3
 calendar.df <- createCalendarLikeMicrosoft(startYear, smallGroup)
-startDate <- findStartDate(calendar.df, 'Month', 13, 0)
+startDate <- findStartDate(calendar.df, 'Month', 13, 0, keepPeriods=0)
 calendar.week <- createCalendarLikeMicrosoft(startYear, 'Week')
-startDate.week <- findStartDate(calendar.week, 'Week', 53, 0)
+startDate.week <- findStartDate(calendar.week, 'Week', 53, 0, keepPeriods=0)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startDate.week,'DateGroup']))[order(as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startDate.week,'DateGroup'])))][seq(1,length(as.character(unique(calendar.week[calendar.week[,'DateGroup'] >= startDate.week,'DateGroup']))), seqBreak)]
@@ -75,7 +75,7 @@ p.AllOpenedCIs <- ggplot(opened, aes(x=DateGroup, y=Record, fill=AssignedTo)) + 
 
 # Invest Start to Close vs Invest Start to PRE
 investStarttoPRE.df$DateGroup <- with(investStarttoPRE.df, ifelse(Month < 10, paste0(Year, '-0', Month), paste0(Year, '-', Month)))
-investStarttoPRE.year <- subset(investStarttoPRE.df, DateGroup >= findStartDate(calendar.df, 'Month', 12, 0))
+investStarttoPRE.year <- subset(investStarttoPRE.df, DateGroup >= findStartDate(calendar.df, 'Month', 12, 0, keepPeriods=0))
 dategroups <- sort(unique(investStarttoPRE.year$DateGroup))
 avgDays.investtopre <- c()
 for(i in 1:length(dategroups)) {

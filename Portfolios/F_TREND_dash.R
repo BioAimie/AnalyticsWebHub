@@ -30,6 +30,7 @@ source('Rfunctions/makeTimeStamp.R')
 # Determine a smart start date for each panel by figuring out when 3 sites have data for a consecutive amount of time
 start.year <- 2014
 panel.dates <- with(data.frame(unique(runs.df[,c('Date','Panel','CustomerSiteId')]), Record = 1), aggregate(Record~Date+Panel, FUN=sum))
+panel.dates$Date <- as.Date(panel.dates$Date)
 rp.date <- min(panel.dates[panel.dates$Panel=='RP' & panel.dates$Record >= 3, 'Date'])
 bcid.date <- min(panel.dates[panel.dates$Panel=='BCID' & panel.dates$Record >= 3, 'Date'])
 gi.date <- min(panel.dates[panel.dates$Panel=='GI' & panel.dates$Record >= 3, 'Date'])
@@ -42,6 +43,7 @@ calendar.week <- transformToEpiWeeks(calendar.week)
 calendar.week$YearWeek <- with(calendar.week, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))
 
 # cumulative total run counts uploaded by panel
+runs.df$Date <- as.Date(runs.df$Date)
 runs.month <- merge(runs.df, calendar.month, by='Date')
 panel.runs.fill <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', runs.month, c('Panel'), min(calendar.month$DateGroup), 'Record', 'sum', 0)
 panel.runs.cumulative <- do.call(rbind, lapply(1:length(unique(panel.runs.fill$Panel)), function(x) data.frame(DateGroup = panel.runs.fill[panel.runs.fill$Panel == unique(panel.runs.fill$Panel)[x], 'DateGroup'], Panel = unique(panel.runs.fill$Panel)[x], Record = sapply(1:length(panel.runs.fill[panel.runs.fill$Panel == unique(panel.runs.fill$Panel)[x], 'DateGroup']), function(y) sum(panel.runs.fill[panel.runs.fill$Panel == unique(panel.runs.fill$Panel)[x], 'Record'][1:y])))))
@@ -163,14 +165,14 @@ if(wday(Sys.Date())==5) {
 
 # Continue on with making charts, both the Trend and Pareto charts
 colnames(calendar.week)[grep('YearWeek', colnames(calendar.week))] <- 'DateGroup'
-start.week.rp <- ifelse(findStartDate(calendar.week, 'Week', 106, 1) > calendar.week[calendar.week$Date == rp.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 106, 1), calendar.week[calendar.week$Date == rp.date, 'DateGroup'])
+start.week.rp <- ifelse(findStartDate(calendar.week, 'Week', 106, 1, keepPeriods=0) > calendar.week[calendar.week$Date == rp.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 106, 1, keepPeriods=0), calendar.week[calendar.week$Date == rp.date, 'DateGroup'])
 rp.count.trim <- rp.prev.reg.count[as.character(rp.prev.reg.count$YearWeek) >= start.week.rp, ]
 rp.count.wrap <- do.call(rbind, lapply(1:length(grep(paste('^', paste(letters, collapse='|^'), sep=''), colnames(rp.count.trim))), function(x) data.frame(YearWeek = rp.count.trim$YearWeek, CustomerSiteId = rp.count.trim$CustomerSiteId, Runs = rp.count.trim$Runs, Code = letters[x], Positives = rp.count.trim[,letters[x]])))
 rp.prev.wrap <- data.frame(YearWeek = rp.count.wrap$YearWeek, CustomerSiteId = rp.count.wrap$CustomerSiteId, Code = rp.count.wrap$Code, Prevalence = rp.count.wrap$Positives/rp.count.wrap$Runs)
 rp.prev.wrap <- with(rp.prev.wrap, aggregate(Prevalence~YearWeek+Code, FUN=mean))
 rp.prev.wrap <- merge(merge(rp.prev.wrap, decoder, by='Code'), shortnames.df, by.x='Bug', by.y='Interpretation')
 p.rp.prev.trend <- ggplot(rp.prev.wrap[with(rp.prev.wrap, order(ShortName, decreasing=TRUE)), ], aes(x=YearWeek)) + geom_area(aes(y=Prevalence, group=ShortName, fill=ShortName, order=ShortName)) + scale_fill_manual(values=createPaletteOfVariableLength(rp.prev.wrap,'ShortName'), name='') + scale_y_continuous(labels=percent) + scale_x_discrete(breaks = as.character(unique(rp.prev.wrap$YearWeek))[order(as.character(unique(rp.prev.wrap$YearWeek)))][seq(1, length(as.character(unique(rp.prev.wrap$YearWeek))), 8)]) + theme(panel.background=element_rect(color='white',fill='white'),plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1, vjust=0.5), legend.position='bottom') + labs(title='Percent Detection of Organisms in RP Tests', x='Year-Week', y='Percent Detection')
-start.week.rp.pareto <- ifelse(findStartDate(calendar.week, 'Week', 16, 1) > calendar.week[calendar.week$Date == rp.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 16, 1), calendar.week[calendar.week$Date == rp.date, 'DateGroup'])
+start.week.rp.pareto <- ifelse(findStartDate(calendar.week, 'Week', 16, 1, keepPeriods=0) > calendar.week[calendar.week$Date == rp.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 16, 1, keepPeriods=0), calendar.week[calendar.week$Date == rp.date, 'DateGroup'])
 rp.count.pareto <- rp.count.wrap[as.character(rp.count.wrap$YearWeek) >= start.week.rp.pareto, ]
 rp.prev.pareto <- with(rp.count.pareto, aggregate(cbind(Runs, Positives)~CustomerSiteId+Code, FUN=sum))
 rp.prev.pareto$Prevalence <- with(rp.prev.pareto, Positives/Runs)
@@ -233,14 +235,14 @@ gi.prev.reg.count <- data.frame(unique(gi.positives.count.all[,c('YearWeek','Cus
 gi.prev.reg.count[gi.prev.reg.count$Runs < 10, 'Runs'] <- NA
 
 # Continue on with making charts, both the Trend and Pareto charts
-start.week.gi <- ifelse(findStartDate(calendar.week, 'Week', 106, 1) > calendar.week[calendar.week$Date == gi.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 106, 1), calendar.week[calendar.week$Date == gi.date, 'DateGroup'])
+start.week.gi <- ifelse(findStartDate(calendar.week, 'Week', 106, 1, keepPeriods=0) > calendar.week[calendar.week$Date == gi.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 106, 1, keepPeriods=0), calendar.week[calendar.week$Date == gi.date, 'DateGroup'])
 gi.count.trim <- gi.prev.reg.count[as.character(gi.prev.reg.count$YearWeek) >= start.week.gi, ]
 gi.count.wrap <- do.call(rbind, lapply(1:length(grep(paste('^', paste(letters, collapse='|^'), sep=''), colnames(gi.count.trim))), function(x) data.frame(YearWeek = gi.count.trim$YearWeek, CustomerSiteId = gi.count.trim$CustomerSiteId, Runs = gi.count.trim$Runs, Code = letters[x], Positives = gi.count.trim[,letters[x]])))
 gi.prev.wrap <- data.frame(YearWeek = gi.count.wrap$YearWeek, CustomerSiteId = gi.count.wrap$CustomerSiteId, Code = gi.count.wrap$Code, Prevalence = gi.count.wrap$Positives/gi.count.wrap$Runs)
 gi.prev.wrap <- with(gi.prev.wrap, aggregate(Prevalence~YearWeek+Code, FUN=mean))
 gi.prev.wrap <- merge(merge(gi.prev.wrap, decoder, by='Code'), shortnames.df, by.x='Bug', by.y='Interpretation')
 p.gi.prev.trend <- ggplot(gi.prev.wrap[with(gi.prev.wrap, order(ShortName, decreasing=TRUE)), ], aes(x=YearWeek)) + geom_area(aes(y=Prevalence, group=ShortName, fill=ShortName, order=ShortName)) + scale_fill_manual(values=createPaletteOfVariableLength(gi.prev.wrap,'ShortName'), name='') + scale_y_continuous(labels=percent) + scale_x_discrete(breaks = as.character(unique(gi.prev.wrap$YearWeek))[order(as.character(unique(gi.prev.wrap$YearWeek)))][seq(1, length(as.character(unique(gi.prev.wrap$YearWeek))), 8)]) + theme(panel.background=element_rect(color='white',fill='white'),plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1, vjust=0.5), legend.position='bottom') + labs(title='Percent Detection of Organisms in GI Tests', x='Year-Week', y='Percent Detection')
-start.week.gi.pareto <- ifelse(findStartDate(calendar.week, 'Week', 16, 1) > calendar.week[calendar.week$Date == gi.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 16, 1), calendar.week[calendar.week$Date == gi.date, 'DateGroup'])
+start.week.gi.pareto <- ifelse(findStartDate(calendar.week, 'Week', 16, 1, keepPeriods=0) > calendar.week[calendar.week$Date == gi.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 16, 1, keepPeriods=0), calendar.week[calendar.week$Date == gi.date, 'DateGroup'])
 gi.count.pareto <- gi.count.wrap[as.character(gi.count.wrap$YearWeek) >= start.week.gi.pareto, ]
 gi.prev.pareto <- with(gi.count.pareto, aggregate(cbind(Runs, Positives)~CustomerSiteId+Code, FUN=sum))
 gi.prev.pareto$Prevalence <- with(gi.prev.pareto, Positives/Runs)
@@ -354,14 +356,14 @@ me.prev.reg.count <- data.frame(unique(me.positives.count.all[,c('YearWeek','Cus
 me.prev.reg.count[me.prev.reg.count$Runs < 5, 'Runs'] <- NA
 
 # Continue on with making charts, both the Trend and Pareto charts
-start.week.me <- ifelse(findStartDate(calendar.week, 'Week', 106, 1) > calendar.week[calendar.week$Date == me.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 106, 1), calendar.week[calendar.week$Date == me.date, 'DateGroup'])
+start.week.me <- ifelse(findStartDate(calendar.week, 'Week', 106, 1, keepPeriods=0) > calendar.week[calendar.week$Date == me.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 106, 1, keepPeriods=0), calendar.week[calendar.week$Date == me.date, 'DateGroup'])
 me.count.trim <- me.prev.reg.count[as.character(me.prev.reg.count$YearWeek) >= start.week.me, ]
 me.count.wrap <- do.call(rbind, lapply(1:length(grep(paste('^', paste(letters, collapse='|^'), sep=''), colnames(me.count.trim))), function(x) data.frame(YearWeek = me.count.trim$YearWeek, CustomerSiteId = me.count.trim$CustomerSiteId, Runs = me.count.trim$Runs, Code = letters[x], Positives = me.count.trim[,letters[x]])))
 me.prev.wrap <- data.frame(YearWeek = me.count.wrap$YearWeek, CustomerSiteId = me.count.wrap$CustomerSiteId, Code = me.count.wrap$Code, Prevalence = me.count.wrap$Positives/me.count.wrap$Runs)
 me.prev.wrap <- with(me.prev.wrap, aggregate(Prevalence~YearWeek+Code, FUN=mean))
 me.prev.wrap <- merge(merge(me.prev.wrap, decoder, by='Code'), shortnames.df, by.x='Bug', by.y='Interpretation')
 p.me.prev.trend <- ggplot(me.prev.wrap[with(me.prev.wrap, order(ShortName, decreasing=TRUE)), ], aes(x=YearWeek)) + geom_area(aes(y=Prevalence, group=ShortName, fill=ShortName, order=ShortName)) + scale_fill_manual(values=createPaletteOfVariableLength(me.prev.wrap,'ShortName'), name='') + scale_y_continuous(labels=percent) + scale_x_discrete(breaks = as.character(unique(me.prev.wrap$YearWeek))[order(as.character(unique(me.prev.wrap$YearWeek)))][seq(1, length(as.character(unique(me.prev.wrap$YearWeek))), 8)]) + theme(panel.background=element_rect(color='white',fill='white'),plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1, vjust=0.5), legend.position='bottom') + labs(title='Percent Detection of Organisms in ME Tests', x='Year-Week', y='Percent Detection')
-start.week.me.pareto <- ifelse(findStartDate(calendar.week, 'Week', 16, 1) > calendar.week[calendar.week$Date == me.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 16, 1), calendar.week[calendar.week$Date == me.date, 'DateGroup'])
+start.week.me.pareto <- ifelse(findStartDate(calendar.week, 'Week', 16, 1, keepPeriods=0) > calendar.week[calendar.week$Date == me.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 16, 1, keepPeriods=0), calendar.week[calendar.week$Date == me.date, 'DateGroup'])
 me.count.pareto <- me.count.wrap[as.character(me.count.wrap$YearWeek) >= start.week.me.pareto, ]
 me.prev.pareto <- with(me.count.pareto, aggregate(cbind(Runs, Positives)~CustomerSiteId+Code, FUN=sum))
 me.prev.pareto$Prevalence <- with(me.prev.pareto, Positives/Runs)
@@ -430,14 +432,14 @@ bcid.prev.reg.count <- data.frame(unique(bcid.positives.count.all[,c('YearWeek',
 bcid.prev.reg.count[bcid.prev.reg.count$Runs < 10, 'Runs'] <- NA
 
 # Continue on with making charts, both the Trend and Pareto charts
-start.week.bcid <- ifelse(findStartDate(calendar.week, 'Week', 106, 1) > calendar.week[calendar.week$Date == bcid.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 106, 1), calendar.week[calendar.week$Date == bcid.date, 'DateGroup'])
+start.week.bcid <- ifelse(findStartDate(calendar.week, 'Week', 106, 1, keepPeriods=0) > calendar.week[calendar.week$Date == bcid.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 106, 1, keepPeriods=0), calendar.week[calendar.week$Date == bcid.date, 'DateGroup'])
 bcid.count.trim <- bcid.prev.reg.count[as.character(bcid.prev.reg.count$YearWeek) >= start.week.bcid, ]
 bcid.count.wrap <- do.call(rbind, lapply(1:length(grep(paste('^', paste(letters, collapse='|^'), sep=''), colnames(bcid.count.trim))), function(x) data.frame(YearWeek = bcid.count.trim$YearWeek, CustomerSiteId = bcid.count.trim$CustomerSiteId, Runs = bcid.count.trim$Runs, Code = letters[x], Positives = bcid.count.trim[,letters[x]])))
 bcid.prev.wrap <- data.frame(YearWeek = bcid.count.wrap$YearWeek, CustomerSiteId = bcid.count.wrap$CustomerSiteId, Code = bcid.count.wrap$Code, Prevalence = bcid.count.wrap$Positives/bcid.count.wrap$Runs)
 bcid.prev.wrap <- with(bcid.prev.wrap, aggregate(Prevalence~YearWeek+Code, FUN=mean))
 bcid.prev.wrap <- merge(merge(bcid.prev.wrap, decoder, by='Code'), shortnames.df, by.x='Bug', by.y='Interpretation')
 p.bcid.prev.trend <- ggplot(bcid.prev.wrap[with(bcid.prev.wrap, order(ShortName, decreasing=TRUE)), ], aes(x=YearWeek)) + geom_area(aes(y=Prevalence, group=ShortName, fill=ShortName, order=ShortName)) + scale_fill_manual(values=createPaletteOfVariableLength(bcid.prev.wrap,'ShortName'), name='') + scale_y_continuous(labels=percent) + scale_x_discrete(breaks = as.character(unique(bcid.prev.wrap$YearWeek))[order(as.character(unique(bcid.prev.wrap$YearWeek)))][seq(1, length(as.character(unique(bcid.prev.wrap$YearWeek))), 8)]) + theme(panel.background=element_rect(color='white',fill='white'),plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1, vjust=0.5), legend.position='bottom') + labs(title='Percent Detection of Organisms in BCID Tests', x='Year-Week', y='Percent Detection')
-start.week.bcid.pareto <- ifelse(findStartDate(calendar.week, 'Week', 16, 1) > calendar.week[calendar.week$Date == bcid.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 16, 1), calendar.week[calendar.week$Date == bcid.date, 'DateGroup'])
+start.week.bcid.pareto <- ifelse(findStartDate(calendar.week, 'Week', 16, 1, keepPeriods=0) > calendar.week[calendar.week$Date == bcid.date, 'DateGroup'], findStartDate(calendar.week, 'Week', 16, 1, keepPeriods=0), calendar.week[calendar.week$Date == bcid.date, 'DateGroup'])
 bcid.count.pareto <- bcid.count.wrap[as.character(bcid.count.wrap$YearWeek) >= start.week.bcid.pareto, ]
 bcid.prev.pareto <- with(bcid.count.pareto, aggregate(cbind(Runs, Positives)~CustomerSiteId+Code, FUN=sum))
 bcid.prev.pareto$Prevalence <- with(bcid.prev.pareto, Positives/Runs)

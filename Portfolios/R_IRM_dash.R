@@ -91,6 +91,11 @@ dungeonUtilization <- capacityUtilized(runs.df, 9, TRUE, TRUE)
 p.capacity.dungeon <- ggplot(dungeonUtilization, aes(x=Date, y=ActualRuns/TheoreticalCapacity, group=Version, color=Version)) + geom_line() + geom_point() + scale_y_continuous(label=percent, limits=c(0, 1)) + theme(text=element_text(size=fontSize, face=fontFace),axis.text=element_text(color='black',size=fontSize, face=fontFace)) + labs(title='Dungeon Average Capacity Utilized:\nActual Runs/Theoretical Capacity',x='Date',y='30-Day Average') + scale_color_manual(values=createPaletteOfVariableLength(dungeonUtilization, 'Version'))
 
 # Average Runs per Week as a Rolling 4-Week Trend
+
+
+
+
+# Average Runs per Week as a Rolling 4-Week Trend
 denom.one <- data.frame(DateGroup = as.character(unique(runs.fill[,'DateGroup'])), Record = 1)
 runs.weekly.rate <- mergeCalSparseFrames(runs.fill, denom.one, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 pal.weekly <- createPaletteOfVariableLength(runs.weekly.rate, 'Version')
