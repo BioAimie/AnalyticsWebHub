@@ -157,11 +157,12 @@ dungeon.instrument.serial.numbers <- as.vector(FA.Instruments$Instrument[which(F
 dungeon.instrument.serial.numbers <- paste(dungeon.instrument.serial.numbers, collapse="', '")
 dungeon.instrument.serial.numbers <- paste0("( '", dungeon.instrument.serial.numbers, "') ")
 
-### scan in the SQL queries 
-dungeon.query <- gsub('serialnumbervector', dungeon.instrument.serial.numbers, paste(scan("SQL\\dungeon_instruments.txt",what=character(),quote=""), collapse=' '))   
-pouch.qc.query <- paste(scan("SQL\\pouch_qc_instruments.txt",what=character(),quote=""), collapse=" ")
-anomaly.query <- paste(scan("SQL\\anomaly_tables.txt", what=character(), quote=""), collapse= " ")
-
+### read in the SQL queries 
+dungeon.query <- gsub('serialnumbervector', dungeon.instrument.serial.numbers, paste(readLines('SQL\\dungeon_instruments.sql'), collapse=' '))   
+pouch.qc.query <- readLines('SQL\\pouch_qc_instruments.sql')
+pouch.qc.query <- paste(pouch.qc.query, collapse='\n')
+anomaly.query <- paste(readLines("SQL\\anomaly_tables.sql"), collapse= " ")
+pouch.leaks.query <- paste(readLines('SQL\\pouch_leaks.sql'), collapse=" ")
 location.frames <<- list()
 
 print("running sql queries..")
@@ -175,7 +176,19 @@ postmarketscxn <- odbcConnect("postmarkets")
 anomalies <- sqlQuery(postmarketscxn, anomaly.query)
 odbcClose(postmarketscxn)
 
-location.frames[["pouchqc"]] <- merge(location.frames[["pouchqc"]], anomalies, by = "PouchSerialNumber", all.x=TRUE)
+pouchTrackercxn <- odbcConnect('pouchTracker')
+pouchLeaks <- sqlQuery(pouchTrackercxn, pouch.leaks.query)
+odbcClose(pouchTrackercxn)
+
+pouchLeaks$PouchSerialNumber <- gsub('\t', '', as.character(pouchLeaks$PouchSerialNumber))
+
+# add the pouch leak data to location.frames
+for( l in c("dungeon", "pouchqc")){
+	location.frames[[l]] <- merge(location.frames[[l]], pouchLeaks, by ="PouchSerialNumber", all.x=TRUE)
+	location.frames[[l]]$PouchLeak[which(is.na(location.frames[[l]]$PouchLeak))] <- 0 
+}
+rm(l)
+location.frames[["pouchqc"]] <- merge(location.frames[["pouchqc"]], anomalies, by ="PouchSerialNumber", all.x=TRUE)
 
 # get rid of PouchSerialNumber Column
 location.frames[["pouchqc"]] <- location.frames[["pouchqc"]][, subset(names(location.frames[["pouchqc"]]), names(location.frames[["pouchqc"]]) != "PouchSerialNumber")]
