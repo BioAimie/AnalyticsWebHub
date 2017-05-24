@@ -5,13 +5,13 @@ SELECT
 	BT.[TicketId],
 	CAST(MIN(GH.[CreatedDate]) AS DATE) AS [HoursRunRecordedDate]
 INTO #hoursRunDate
-FROM [Trackers].[dbo].[BaseTicket] BT WITH(NOLOCK)
-INNER JOIN [Trackers].[dbo].[TicketStages] TS WITH(NOLOCK) ON TS.[TicketId] = BT.[TicketId]
-INNER JOIN [Trackers].[dbo].[GeneralTicketHistories] GH WITH(NOLOCK) ON GH.[TicketStageId] = TS.[TicketStageId]
-INNER JOIN [Trackers].[dbo].[TicketProperties] TP WITH(NOLOCK) ON TP.[GeneralTicketHistoryId] = GH.[GeneralTicketHistoryId]
-INNER JOIN [Trackers].[dbo].[Properties] P WITH(NOLOCK) ON P.[PropertyId] = TP.[PropertyId]
-INNER JOIN [Trackers].[dbo].[TrackableProperties] TKP WITH(NOLOCK) ON TKP.[TrackablePropertyId] = P.[TrackablePropertyId]
-INNER JOIN [Trackers].[dbo].[DecimalProperties] DP WITH(NOLOCK) ON DP.[PropertyId] = TP.[PropertyId]
+FROM [RO_TRACKERS].[Trackers].[dbo].[BaseTicket] BT WITH(NOLOCK)
+INNER JOIN [RO_TRACKERS].[Trackers].[dbo].[TicketStages] TS WITH(NOLOCK) ON TS.[TicketId] = BT.[TicketId]
+INNER JOIN [RO_TRACKERS].[Trackers].[dbo].[GeneralTicketHistories] GH WITH(NOLOCK) ON GH.[TicketStageId] = TS.[TicketStageId]
+INNER JOIN [RO_TRACKERS].[Trackers].[dbo].[TicketProperties] TP WITH(NOLOCK) ON TP.[GeneralTicketHistoryId] = GH.[GeneralTicketHistoryId]
+INNER JOIN [RO_TRACKERS].[Trackers].[dbo].[Properties] P WITH(NOLOCK) ON P.[PropertyId] = TP.[PropertyId]
+INNER JOIN [RO_TRACKERS].[Trackers].[dbo].[TrackableProperties] TKP WITH(NOLOCK) ON TKP.[TrackablePropertyId] = P.[TrackablePropertyId]
+INNER JOIN [RO_TRACKERS].[Trackers].[dbo].[DecimalProperties] DP WITH(NOLOCK) ON DP.[PropertyId] = TP.[PropertyId]
 WHERE TKP.[Name] = 'Hours Run' AND ISNUMERIC(DP.[RecordedValue])=1
 GROUP BY BT.[TicketId]
 

@@ -174,33 +174,6 @@ FROM #experimentStatus
 
 
 SELECT
-       R.[StartTime] AS [Date],
-       R.[InstrumentSerialNumber] AS [SerialNo],
-	   R.[PouchSerialNumber] AS [PouchSerialNumber],
-	   R.[SampleType] AS [Protocol],
-	   ISNULL(P.[PouchLeak], 0 ) AS [Value]
-INTO #pouchLeaks
-FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK) INNER JOIN [PouchTracker].[dbo].[PostRunPouchObservations] P WITH(NOLOCK) 
-		ON P.[SerialNumber] = R.[PouchSerialNumber] 
-WHERE
-	(
-		R.[SampleId] LIKE 'QC_RP%' OR 
-		R.[SampleId] LIKE 'QC_BCID%' OR 
-		R.[SampleId] LIKE 'QC_GI%' OR
-		R.[SampleId] LIKE 'QC_ME%' OR
-		R.[SampleId] LIKE '%PouchQC%'
-	)   AND R.[StartTime] >= GETDATE() - 400 AND 
-	(
-
-		R.[SampleId] NOT LIKE '%NewBuild%' AND
-		R.[SampleId] NOT LIKE '%PostRepair%' AND
-		R.[SampleId] NOT LIKE '%service%'
-
-	)
-
-
-
-SELECT
        ER.[PouchSerialNumber] AS [PouchSerialNumber],
        CAST(ER.[StartTime]  AS DATE) AS [Date],
        AA.[Name],
@@ -243,7 +216,7 @@ SELECT
 	v.[Version], 
 	ISNULL(ie.[Value], 0) AS [InstrumentError],
 	ISNULL(se.[Value], 0) AS [SoftwareError], 
-	ISNULL(pl.[Value],0 ) AS [PouchLeak], 
+	--ISNULL(pl.[Value],0 ) AS [PouchLeak], 
 	ISNULL(c.[PCR2], 0) AS [PCR2],
 	ISNULL(c.[PCR1], 0) AS [PCR1],
 	ISNULL(c.[yeast], 0) AS [yeast],
@@ -252,8 +225,7 @@ SELECT
 	ie.[PouchSerialNumber]
 INTO #fa2
 FROM #instrumentErrors ie LEFT JOIN #softwareErrors se 
-	ON ie.[PouchSerialNumber] = se.[PouchSerialNumber] LEFT JOIN #pouchLeaks pl 
-		ON ie.[PouchSerialNumber] = pl.[PouchSerialNumber] LEFT JOIN #controls c
+	ON ie.[PouchSerialNumber] = se.[PouchSerialNumber] LEFT JOIN #controls c
 			ON ie.[PouchSerialNumber] = c.[PouchSerialNumber] LEFT JOIN #cpAvg cp
 				ON ie.[PouchSerialNumber] = cp.[PouchSerialNumber] LEFT JOIN #tmAvg tm
 					ON ie.[PouchSerialNumber] = tm.[PouchSerialNumber] LEFT JOIN #versions v
@@ -375,33 +347,6 @@ INTO #softwareErrors1
 FROM #experimentStatus1
 
 
-
-SELECT
-       R1.[StartTime] AS [Date],
-       R1.[InstrumentSerialNumber] AS [SerialNo],
-	   R1.[PouchSerialNumber] AS [PouchSerialNumber],
-	   R1.[SampleType] AS [Protocol],
-	   ISNULL(P1.[PouchLeak], 0 ) AS [Value]
-INTO #pouchLeaks1
-FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] R1 WITH(NOLOCK) INNER JOIN [PouchTracker].[dbo].[PostRunPouchObservations] P1 WITH(NOLOCK) 
-		ON P1.[SerialNumber] = R1.[PouchSerialNumber] 
-WHERE
-	(
-		R1.[SampleId] LIKE 'QC_RP%' OR 
-		R1.[SampleId] LIKE 'QC_BCID%' OR 
-		R1.[SampleId] LIKE 'QC_GI%' OR
-		R1.[SampleId] LIKE 'QC_ME%' OR
-		R1.[SampleId] LIKE '%PouchQC%'
-	)  AND R1.[StartTime] >= GETDATE() - 400 AND 
-	(
-
-		R1.[SampleId] NOT LIKE '%NewBuild%' AND
-		R1.[SampleId] NOT LIKE '%PostRepair%' AND
-		R1.[SampleId] NOT LIKE '%service%'
-
-	)
-
-
 SELECT
        ER1.[PouchSerialNumber] AS [PouchSerialNumber],
        CAST(ER1.[StartTime]  AS DATE) AS [Date],
@@ -446,7 +391,6 @@ SELECT
 	v1.[Version],
 	ISNULL(ie1.[Value], 0 ) AS [InstrumentError],
 	ISNULL(se1.[Value], 0)  AS [SoftwareError], 
-	ISNULL(pl1.[Value], 0)  AS [PouchLeak], 
 	ISNULL(c1.[PCR2], 0) AS [PCR2],
 	ISNULL(c1.[PCR1], 0) AS [PCR1],
 	ISNULL(c1.[yeast], 0) AS [yeast],
@@ -455,8 +399,7 @@ SELECT
 	ie1.[PouchSerialNumber]
 INTO #fa1
 FROM #instrumentErrors1 ie1 LEFT JOIN #softwareErrors1 se1 
-	ON ie1.[PouchSerialNumber] = se1.[PouchSerialNumber] LEFT JOIN #pouchLeaks1 pl1 
-		ON ie1.[PouchSerialNumber] = pl1.[PouchSerialNumber] LEFT JOIN #controls1 c1
+	ON ie1.[PouchSerialNumber] = se1.[PouchSerialNumber] LEFT JOIN #controls1 c1
 			ON ie1.[PouchSerialNumber] = c1.[PouchSerialNumber] LEFT JOIN #cpAvg1 cp1
 				ON ie1.[PouchSerialNumber] = cp1.[PouchSerialNumber] LEFT JOIN #tmAvg1 tm1
 					ON ie1.[PouchSerialNumber] = tm1.[PouchSerialNumber] LEFT JOIN #versions v1
@@ -508,7 +451,6 @@ select
 	e.[Version], 
 	e.[InstrumentError], 
 	e.[SoftwareError],
-	e.[PouchLeak],
 	e.[PCR2], 
 	e.[PCR1], 
 	e.[yeast], 
@@ -518,7 +460,6 @@ select
 	e.[PouchSerialNumber]
 from #errors e left join #mostRecentServiceDates m 
 	on e.[SerialNo] = m.[SerialNo]
-where e.[SerialNo] like 'TM272C7' 
-order by [Date]
 
---DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #pouchLeaks, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #pouchLeaks1, #fa1, #cptm, #cpAvg,  #tmAvg, #cptm1, #cpAvg1, #tmAvg1, #version1, #version2, #allVersions, #versions, #serviceDates, #partNumbers, #mostRecentServiceDates, #errors
+
+DROP TABLE #controls, #allcontrols, #experimentStatus, #instrumentErrors, #softwareErrors, #fa2, #controls1, #allcontrols1, #experimentStatus1, #instrumentErrors1, #softwareErrors1, #fa1, #cptm, #cpAvg,  #tmAvg, #cptm1, #cpAvg1, #tmAvg1, #version1, #version2, #allVersions, #versions, #serviceDates, #partNumbers, #mostRecentServiceDates, #errors

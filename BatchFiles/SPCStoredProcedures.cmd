@@ -1,0 +1,1 @@
+sqlcmd -S PMS1.PRODSQL.BIOFIREDX.NET -E -d PMS1  -Q "EXEC dbo.sp_SPCStoredProcedures" 

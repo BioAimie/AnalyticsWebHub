@@ -1,4 +1,4 @@
-capacityUtilized <- function(dataFrame, workDay=14, byDay=TRUE) {
+capacityUtilized <- function(dataFrame, workDay=14, byDay=TRUE, byVersion=FALSE) {
   
   # get rid of instrument QC runs and service runs as best as possible (also burn ins and engineering runs as much as possible)
 #   instQC.toRemove <- dataFrame[grep('^FA|NewBuild|PostRepair|Service|service', dataFrame[,'SampleId']),'PouchSerialNumber']
@@ -16,18 +16,23 @@ capacityUtilized <- function(dataFrame, workDay=14, byDay=TRUE) {
   
 #   dataFrame <- dataFrame[dataFrame[,'RunStatus']=='Completed' & dataFrame[,'InstrumentSerialNumber'] %in% keepInsts, 
 #                          c('InstrumentSerialNumber','Year','Week','SampleId','StartTime','MinutesRun')]
+  
+  # remove new build and service runs
+  serv.build <- dataFrame[grep('Service|NewBuild', dataFrame$SampleId), 'PouchSerialNumber']
+  dataFrame <- dataFrame[!(dataFrame[,'PouchSerialNumber'] %in% serv.build), ]
+  
   dungeon <- dataFrame[dataFrame[,'RunStatus']=='Completed' & dataFrame[,'InstrumentSerialNumber'] %in% dungInsts$Instrument, 
-                         c('InstrumentSerialNumber','Week','SampleId','StartTime','MinutesRun','Date')]
+                         c('InstrumentSerialNumber','Week','SampleId','StartTime','InstrumentProtocolVersion','MinutesRun','Date')]
   pouchqc <- dataFrame[grep('^QC_|PouchQC',dataFrame[,'SampleId']), 
-                       c('InstrumentSerialNumber','Week','SampleId','StartTime','MinutesRun','RunStatus','Date')]
-  pouchqc <- pouchqc[pouchqc$RunStatus=='Completed', c('InstrumentSerialNumber','Week','SampleId','StartTime','MinutesRun','Date')]
-  dataFrame <- rbind(dungeon, pouchqc)  
+                       c('InstrumentSerialNumber','Week','SampleId','StartTime','InstrumentProtocolVersion','MinutesRun','RunStatus','Date')]
+  pouchqc <- pouchqc[pouchqc$RunStatus=='Completed', c('InstrumentSerialNumber','Week','SampleId','StartTime','InstrumentProtocolVersion','MinutesRun','Date')]
+  dataFrame <- rbind(dungeon, pouchqc)
   dataFrame[,'Key'] <- NA
   dataFrame[grep('^QC_|PouchQC',dataFrame[,'SampleId']), 'Key'] <- 'PouchQC'
   dataFrame[is.na(dataFrame[,'Key']),'Key'] <- 'Dungeon'
   dataFrame[,'Record'] <- 1
   
-  if(byDay) {
+  if(byDay==TRUE & byVersion==FALSE) {
     
     subFrame <- dataFrame
     
@@ -37,8 +42,8 @@ capacityUtilized <- function(dataFrame, workDay=14, byDay=TRUE) {
     instByDate <- with(instByDate, aggregate(Record~Week+Key, FUN=sum))
     colnames(instByDate) <- c('Week','Key','InstsRunning')
     
-    # assume a mean run time determined by the runs.df table (completed runs only) and a 1.1 factor for time between runs
-    avgRunDurationHours <- 1.1*mean(dataFrame[,'MinutesRun'], na.rm=TRUE)/60
+    # assume a mean run time determined by the runs.df table (completed runs only) and a 1.15 factor for time between runs
+    avgRunDurationHours <- 1.15*mean(dataFrame[,'MinutesRun'], na.rm=TRUE)/60
     theoreticalRunLoad <- workDay/avgRunDurationHours
     
     # for each day, determine the theoretical maximum capacity for the instruments
@@ -64,6 +69,65 @@ capacityUtilized <- function(dataFrame, workDay=14, byDay=TRUE) {
     colnames(pouchqc)[length(colnames(pouchqc))] <- 'RollingRate'
     
     out <- rbind(dungeon, pouchqc)
+  }
+  
+  # if it's by version, that's for the dungeon and it should be handled differently
+  else if(byVersion) {
+    
+    dataFrame <- dataFrame[dataFrame$Key=='Dungeon', ]
+    date.breaks <- seq(min(dataFrame$Date), max(dataFrame$Date), 30)
+    if(max(date.breaks) < max(dataFrame$Date)) { date.breaks <- c(date.breaks, max(dataFrame$Date)) }
+    
+    for(i in 2:length(date.breaks)) {
+      
+      dataFrame[dataFrame$Date >= date.breaks[i-1] & dataFrame$Date <= date.breaks[i], 'Period'] <- i-1
+    }
+    
+    upper.iter <- max(dataFrame$Period)
+    out <- c()
+    for(i in 1:upper.iter) {
+      
+      periodFrame <- dataFrame[dataFrame$Period==i, ]
+      # how many working days are there in the last 30 days?
+      periodFrame$WeekDay <- weekdays(periodFrame$Date, TRUE)
+      off.fri <- with(periodFrame[periodFrame$Date %in% unique(periodFrame[periodFrame$WeekDay=='Fri', 'Date']),], aggregate(Record~Date, FUN=sum))
+      on.fri <- off.fri[off.fri$Record > median(off.fri$Record), 'Date']
+      subFrame <- periodFrame[periodFrame$WeekDay %in% c('Mon','Tue','Wed','Thu') | periodFrame$Date %in% on.fri, ]
+      working.days <- length(unique(subFrame$Date))
+      
+      # how many runs can be done on an average day?
+      avg.run.time <- mean(subFrame$MinutesRun)/60
+      hours.per.day <- 9
+      runs.per.day <- hours.per.day/(avg.run.time*1.15)
+      
+      # how many instruments are running during the thirty day period (do some tricks to make it more accurate!)
+      work.dates <- unique(subFrame$Date)[order(unique(subFrame$Date))]
+      inst.dates <- work.dates[seq(3, length(work.dates), 3)]
+      if(max(work.dates) > max(inst.dates)) {
+        inst.dates[length(inst.dates)] <- max(work.dates)
+      }
+      subFrame$index <- cut(subFrame$Date, breaks = inst.dates, right = TRUE, left = TRUE, labels = seq(1, length(inst.dates)-1, 1))
+      subFrame$index <- as.numeric(as.character(subFrame$index))
+      subFrame[is.na(subFrame$index), 'index'] <- 0
+      subFrame$Version <- ifelse(subFrame$InstrumentProtocolVersion==2, 'FA1.5', ifelse(substring(subFrame$InstrumentSerialNumber, 1, 2) %in% c('FA','2F'), 'FA2.0', 'Torch'))
+      inst.versions.running <- do.call(rbind, lapply(1:length(unique(subFrame$index)), function(x) with(with(unique(subFrame[subFrame$index==(x-1), c('Date','Version','InstrumentSerialNumber','Record'), ]), aggregate(Record~Date+Version, FUN=sum)), aggregate(Record~Version, FUN=mean))))
+      inst.versions.running <- with(inst.versions.running, aggregate(Record~Version, FUN=median))
+      
+      # using the inst.versions.running, the runs.per.day, and working.days, find the theoretical capacity
+      theoretical.capacity <- data.frame(inst.versions.running, RunsPerDay = runs.per.day, WorkingDays = working.days)
+      theoretical.capacity$TheoreticalCapacity <- with(theoretical.capacity, round(Record, 0)*RunsPerDay*WorkingDays)
+      colnames(theoretical.capacity) <- c('Version','MedianInstrumentsRunningInPeriod','RunsPerDay','WorkingDays','TheoreticalCapacity')
+            
+      # calcualte the total number of runs actually performed in the same period
+      actual.runs <- with(subFrame, aggregate(Record~Version, FUN=sum))
+      colnames(actual.runs)[2] <- 'ActualRuns'
+      
+      # now get the end product... 
+      temp <- merge(theoretical.capacity, actual.runs, by='Version')
+      temp$Date <- date.breaks[i+1]
+      out <- rbind(out, temp)
+    }
+    return(out)
   }
   
   # if it's not by day, assume it's by hour... then take the last three weeks of data and plot by day

@@ -22,10 +22,10 @@ calendar.week <- createCalendarLikeMicrosoft(2012, 'Week')
 calendar.month <- createCalendarLikeMicrosoft(2012, 'Month')
 
 # Find start date for Year-Month charts
-startString.month <- findStartDate(calendar.month, 'Month', 13, 0)
+startString.month <- findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0)
 
 # Find start date for Year-Week charts with rolling rate
-startString.week <- findStartDate(calendar.week, 'Week', 54, 4)
+startString.week <- findStartDate(calendar.week, 'Week', 54, 4, keepPeriods=0)
 
 theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
 

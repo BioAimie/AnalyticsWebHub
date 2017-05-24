@@ -9,14 +9,14 @@ SELECT
 	[RecordedValue] AS [ComplaintId]
 INTO #C
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK) 
-WHERE [PropertyName] = 'Complaint Number' AND [CreatedDate] >= (GETDATE() - 400)  AND [Tracker] = 'RMA'
+WHERE [PropertyName] = 'Complaint Number' AND [CreatedDate] >= (GETDATE() - 2*400)  AND [Tracker] = 'RMA'
 
 SELECT 
 	[TicketId],
 	[RecordedValue]
 INTO #D
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK) 
-WHERE [PropertyName] = 'Part Disposition' AND [CreatedDate] >= (GETDATE() - 400) AND [Tracker] = 'RMA'
+WHERE [PropertyName] = 'Part Disposition' AND [CreatedDate] >= (GETDATE() - 2*400) AND [Tracker] = 'RMA'
 
 SELECT
 	[TicketId],
