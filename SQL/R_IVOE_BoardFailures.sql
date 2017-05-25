@@ -1,12 +1,4 @@
-SET NOCOUNT ON
-
-SELECT * INTO #parts
-FROM (VALUES 
-('PCBA-SUB-0836', 'Thermoboard'),
-('PCBA-SUB-0838', 'Camera board'),
-('PCBA-SUB-0839', 'Image master board'),
-('PCBA-SUB-0847', 'Valve board')
-) V(PartNumber, PartName);
+SET NOCOUNT ON;
 
 WITH [BirthLot] ([TopLotID], [BottomLot], [BottomPart])
 AS (
@@ -66,37 +58,24 @@ FROM (
 	WHERE LEFT(REPLACE([LotSerialNumber], ' ', ''),3) IN ('2FA','FA4')
 ) Q
 
-SELECT * INTO #boardPlaced
-FROM (
-	SELECT
-		REPLACE(I.[LotSerialNumber],' ','') AS [SerialNo],
-		REPLACE(U.[PartUsed],' ','') AS [PartNumber],
-		REPLACE(SUBSTRING(U.[LotSerialNumber],1,PATINDEX('%[:/]%',U.[LotSerialNumber]+':')-1),' ','') AS [LotNumber],
-		U.[CreatedDate] AS [Date],
-		U.[TicketString],
-		R.[Failure] AS [FailureRMA]
-	FROM [PMS1].[dbo].[RMAPartsUsed] U 
-	INNER JOIN [PMS1].[dbo].[RMAPartInformation] I ON I.[TicketId] = U.[TicketId]
-	INNER JOIN #failureRMA R ON R.[TicketId] = U.[TicketId]
-	WHERE (I.[PartNumber] LIKE 'FLM_-ASY-0001%' OR I.[PartNumber] LIKE 'HTFA-SUB-0103%' OR I.[PartNumber] LIKE 'HTFA-ASY-0003%')
-	AND REPLACE(U.[PartUsed],' ','') IN (SELECT [PartNumber] FROM #parts)
-	UNION
-	SELECT 
-		*,
-		NULL AS [TicketString],
-		0 AS [FailureRMA]
-	FROM #boardProd
-) Q
-
+SELECT
+	REPLACE(I.[LotSerialNumber],' ','') AS [SerialNo],
+	REPLACE(U.[PartUsed],' ','') AS [PartNumber],
+	REPLACE(SUBSTRING(U.[LotSerialNumber],1,PATINDEX('%[:/]%',U.[LotSerialNumber]+':')-1),' ','') AS [LotNumber],
+	U.[CreatedDate] AS [Date],
+	U.[TicketString],
+	R.[Failure] AS [FailureRMA]
+FROM [PMS1].[dbo].[RMAPartsUsed] U 
+INNER JOIN [PMS1].[dbo].[RMAPartInformation] I ON I.[TicketId] = U.[TicketId]
+INNER JOIN #failureRMA R ON R.[TicketId] = U.[TicketId]
+WHERE (I.[PartNumber] LIKE 'FLM_-ASY-0001%' OR I.[PartNumber] LIKE 'HTFA-SUB-0103%' OR I.[PartNumber] LIKE 'HTFA-ASY-0003%')
+AND REPLACE(U.[PartUsed],' ','') IN ('PCBA-SUB-0836', 'PCBA-SUB-0838', 'PCBA-SUB-0839', 'PCBA-SUB-0847')
+UNION
 SELECT 
-	[SerialNo],
-	[PartNumber],
-	[PartName],
-	[LotNumber],
-	[Date],
-	[TicketString],
-	[FailureRMA]
-FROM #boardPlaced B
-INNER JOIN #parts P ON P.[PartNumber] = B.[PartNumber]
+	*,
+	NULL AS [TicketString],
+	0 AS [FailureRMA]
+FROM #boardProd
+ORDER BY [PartNumber], [SerialNo], [Date]
 
-DROP TABLE #parts, #boardProd, #boardPlaced, #failureRMA
+DROP TABLE #boardProd, #failureRMA
