@@ -8,7 +8,7 @@ FROM [PMS1].[dbo].[vSerialTransactions] WITH(NOLOCK)
 
 SELECT 
 	IIF([Week] <= 40, [Year], [Year] + 1) AS [Year],
-	IIF([Week] <= 40, [Week] + 13, [Week] - 40) AS [Week],
+	IIF([Week] <= 40, [Week] + 13, [Week] - 40) AS [Week], 
 	IIF(LEFT([ItemID],4) LIKE 'FLM1','FA1.5',
 		IIF(LEFT([ItemID],4) LIKE 'FLM2','FA2.0','Torch')) AS [Version],
 	[SerialNo],
@@ -26,31 +26,97 @@ SELECT
 INTO #concatDate
 FROM #adj
 
-SELECT
+SELECT 
 	[DateGroup],
 	[Version],
 	MAX([Record]) AS [Record]
-FROM
+FROM 
 (
 	SELECT 
 		[DateGroup],
-		[Version],
+		'FA1.5' AS [Version],
 		(
-			SELECT COUNT([SerialNo])
-			FROM 
+			SELECT 
+				COUNT([SerialNo])
+			FROM
 			(
-				SELECT 
+				SELECT
 					[SerialNo],
 					SUM([DistQty]) AS [Location]
-				FROM #concatDate C1
-				WHERE C1.[DateGroup] <= C2.DateGroup AND C1.[Version] = C2.[Version]
+				FROM #concatDate C2
+				WHERE [SerialNo] IN
+				(
+					SELECT 
+						[SerialNo]
+					FROM #concatDate C1
+					WHERE C1.[DateGroup] <= C3.[DateGroup]
+					GROUP BY [SerialNo]
+					HAVING MAX([Version]) LIKE 'FA1.5'
+				)
+					AND C2.[DateGroup] <= C3.[DateGroup]
 				GROUP BY [SerialNo]
-			) T
+			) A
 			WHERE [Location] = 0
 		) AS [Record]
-	FROM #concatDate C2
-) S
+	FROM #concatDate C3
+	UNION ALL
+	SELECT 
+		[DateGroup],
+		'FA2.0' AS [Version],
+		(
+			SELECT 
+				COUNT([SerialNo])
+			FROM
+			(
+				SELECT
+					[SerialNo],
+					SUM([DistQty]) AS [Location]
+				FROM #concatDate C2
+				WHERE [SerialNo] IN
+				(
+					SELECT 
+						[SerialNo]
+					FROM #concatDate C1
+					WHERE C1.[DateGroup] <= C3.[DateGroup]
+					GROUP BY [SerialNo]
+					HAVING MAX([Version]) LIKE 'FA2.0'
+				)
+					AND C2.[DateGroup] <= C3.[DateGroup]
+				GROUP BY [SerialNo]
+			) A
+			WHERE [Location] = 0
+		) AS [Record]
+	FROM #concatDate C3
+	UNION ALL
+	SELECT 
+		[DateGroup],
+		'Torch' AS [Version],
+		(
+			SELECT 
+				COUNT([SerialNo])
+			FROM
+			(
+				SELECT
+					[SerialNo],
+					SUM([DistQty]) AS [Location]
+				FROM #concatDate C2
+				WHERE [SerialNo] IN
+				(
+					SELECT 
+						[SerialNo]
+					FROM #concatDate C1
+					WHERE C1.[DateGroup] <= C3.[DateGroup]
+					GROUP BY [SerialNo]
+					HAVING MAX([Version]) LIKE 'Torch'
+				)
+					AND C2.[DateGroup] <= C3.[DateGroup]
+				GROUP BY [SerialNo]
+			) A
+			WHERE [Location] = 0
+		) AS [Record]
+	FROM #concatDate C3
+) A
 GROUP BY [DateGroup], [Version] 
-ORDER BY [DateGroup], [Version]
+ORDER BY [DateGroup], [Version] 
 
 DROP TABLE #invTrans, #adj, #concatDate
