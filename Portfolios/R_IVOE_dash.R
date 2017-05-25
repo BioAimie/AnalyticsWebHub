@@ -7,6 +7,8 @@ setwd(workDir)
 
 # Load needed libraries
 library(dplyr);
+library(tidyr);
+library(forcats);
 library(ggplot2)
 library(zoo)
 library(scales)
@@ -32,6 +34,7 @@ startDate <- '2014-51'
 
 # create a calendar and set some other variables 
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
+calendar.quarter <- createCalendarLikeMicrosoft(startYear, 'Quarter')
 
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
@@ -353,7 +356,26 @@ edgeLoad.annot = rbind(
 );
 p.edgeLoad.voe <- ggplot(subset(edgeLoad.all, DateGroup>='2016-06'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', color='black') + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Torch - Failure to Eject Pouch Complaints', y='Complaints/Torch Module Manufactured, Complaint Count', x='Date of Torch Module Manufacture\n(Year-Month)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = edgeLoad.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=5) 
 
-
+# Board failure RMAs
+boardPlacements = boardPlacements.df %>% inner_join(calendar.quarter, by=c('BoardManufactureDate'='Date'));
+boardFailures = boardPlacements %>% filter(BoardFail == 1);
+boardFailures.count = boardFailures %>% group_by(DateGroup, PartNumber) %>% summarize(FailureCount=n())
+boardFailures.denom = boardPlacements %>% group_by(DateGroup, PartNumber) %>% summarize(LotSizeInField=n())
+boardFailures.rate = boardFailures.count %>%
+  inner_join(boardFailures.denom, by=c('DateGroup', 'PartNumber')) %>%
+  mutate(Rate = FailureCount/LotSizeInField);
+boardFailures.gather = boardFailures.rate %>% gather(Key, Value, c(FailureCount, Rate), factor_key=TRUE) %>% 
+  mutate(Key = fct_recode(Key, 'Failure count'='FailureCount', 'Failure count/Lot size in field'='Rate'));
+boardFailures.pal = createPaletteOfVariableLength(as.data.frame(boardFailures.gather), 'PartNumber')
+p.boardFailures = ggplot(boardFailures.gather) + 
+  facet_wrap(~Key, ncol=1, scale='free_y') +
+  geom_bar(aes(x=DateGroup, y=Value, fill=PartNumber), stat='identity') +
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  scale_fill_manual(values = boardFailures.pal) +
+  labs(x='Board manufacture date (Year-Quarter)',
+       y=element_blank(),
+       fill='Part number',
+       title='Board failure RMAs')
 
 # #Thermoboard date settings
 # bigGroup <- 'Year'

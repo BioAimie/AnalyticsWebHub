@@ -107,7 +107,10 @@ query.charVec = readLines("SQL/R_IVOE_EdgeLoadComplaints.sql")
 query = paste(query.charVec,collapse="\n")
 edgeLoad.df = sqlQuery(PMScxn,query)
 
-
+# get board failures
+query.charVec = readLines("SQL/R_IVOE_BoardPlacements.sql")
+query = paste(query.charVec,collapse="\n")
+boardPlacements.df = sqlQuery(PMScxn,query)
 
 # close remote connection
 close(PMScxn)
