@@ -6,9 +6,10 @@ pdfDir <- '~/WebHub/pdfs/'
 setwd(workDir)
 
 # Load needed libraries
-library(dplyr);
-library(tidyr);
-library(forcats);
+library(dplyr)
+library(lubridate)
+library(tidyr)
+library(forcats)
 library(ggplot2)
 library(zoo)
 library(scales)
@@ -34,6 +35,7 @@ startDate <- '2014-51'
 
 # create a calendar and set some other variables 
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
+calendar.month <- createCalendarLikeMicrosoft(startYear, 'Month')
 calendar.quarter <- createCalendarLikeMicrosoft(startYear, 'Quarter')
 
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
@@ -357,24 +359,31 @@ edgeLoad.annot = rbind(
 p.edgeLoad.voe <- ggplot(subset(edgeLoad.all, DateGroup>='2016-06'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', color='black') + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Torch - Failure to Eject Pouch Complaints', y='Complaints/Torch Module Manufactured, Complaint Count', x='Date of Torch Module Manufacture\n(Year-Month)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = edgeLoad.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=5) 
 
 # Board failure RMAs
-boardPlacements = boardPlacements.df %>% inner_join(calendar.quarter, by=c('BoardManufactureDate'='Date'));
+boardPlacements.filter = boardPlacements.df %>% 
+  filter(BoardManufactureDate >= '2015-01-01') %>%
+  mutate(PartDesc = fct_reorder(PartDesc, BoardFail, sum));
+boardPlacements = boardPlacements.filter %>% 
+  filter(!is.na(BoardManufactureDate)) %>% 
+  mutate(Date = floor_date(BoardManufactureDate, "3 months"));
 boardFailures = boardPlacements %>% filter(BoardFail == 1);
-boardFailures.count = boardFailures %>% group_by(DateGroup, PartNumber) %>% summarize(FailureCount=n())
-boardFailures.denom = boardPlacements %>% group_by(DateGroup, PartNumber) %>% summarize(LotSizeInField=n())
+boardFailures.count = boardFailures %>% group_by(Date, PartDesc) %>% summarize(FailureCount=n())
+boardFailures.denom = boardPlacements %>% group_by(Date, PartDesc) %>% summarize(LotSizeInField=n())
 boardFailures.rate = boardFailures.count %>%
-  inner_join(boardFailures.denom, by=c('DateGroup', 'PartNumber')) %>%
+  inner_join(boardFailures.denom, by=c('Date', 'PartDesc')) %>%
   mutate(Rate = FailureCount/LotSizeInField);
 boardFailures.gather = boardFailures.rate %>% gather(Key, Value, c(FailureCount, Rate), factor_key=TRUE) %>% 
-  mutate(Key = fct_recode(Key, 'Failure count'='FailureCount', 'Failure count/Lot size in field'='Rate'));
-boardFailures.pal = createPaletteOfVariableLength(as.data.frame(boardFailures.gather), 'PartNumber')
+  mutate(Key = fct_recode(Key, 'Failure count'='FailureCount', 'Failure count/Lot size in field'='Rate')) %>%
+  arrange(Key, Date, PartDesc);
+boardFailures.pal = createPaletteOfVariableLength(as.data.frame(boardFailures.gather), 'PartDesc')
 p.boardFailures = ggplot(boardFailures.gather) + 
   facet_wrap(~Key, ncol=1, scale='free_y') +
-  geom_bar(aes(x=DateGroup, y=Value, fill=PartNumber), stat='identity') +
+  geom_bar(aes(x=Date, y=Value, fill=PartDesc), stat='identity') +
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  scale_x_date(date_breaks="3 months", labels=function(d){ paste0(year(d),'-',quarter(d)) }) +
   scale_fill_manual(values = boardFailures.pal) +
-  labs(x='Board manufacture date (Year-Quarter)',
+  labs(x='Board receipt date (Year-Quarter)',
        y=element_blank(),
-       fill='Part number',
+       fill=element_blank(),
        title='Board failure RMAs')
 
 # #Thermoboard date settings
@@ -402,17 +411,17 @@ p.boardFailures = ggplot(boardFailures.gather) +
 # p.thermoBoard.voe <- ggplot(thermoBoard.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=myPal.tb, name='Type') + scale_x_discrete(breaks=dateBreaks.tb) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1))+ labs(title='Effect of Thermoboard Rework:\nThermoards Serviced/Instruments Released', y='Failures/Instruments Released', x='Date of Transaction\n(Year-Month)') + facet_wrap(~RecordedValue, ncol=1, scale='free_y') + geom_text(aes(label=annotations.tb, x=x_position.tb, y=0), angle=90, hjust=-0.5, size=4) + geom_vline(xintercept=indices.tb, color = "black")
 
 # export images for web hub
-  setwd(imgDir)
-  plots <- ls()[grep('^p\\.', ls())]
-  for(i in 1:length(plots)) {
-    
-    imgName <- paste(substring(plots[i],3),'.png',sep='')
-    
-    png(file=imgName, width=1200, height=800, units='px')
-    print(eval(parse(text = plots[i])))
-    makeTimeStamp(author='Data Science')
-    dev.off()
-  }
+setwd(imgDir)
+plots <- ls()[grep('^p\\.', ls())]
+for(i in 1:length(plots)) {
+  
+  imgName <- paste(substring(plots[i],3),'.png',sep='')
+  
+  png(file=imgName, width=1200, height=800, units='px')
+  print(eval(parse(text = plots[i])))
+  makeTimeStamp(author='Data Science')
+  dev.off()
+}
 
 # Make pdf report for the web hub
 setwd(pdfDir)
