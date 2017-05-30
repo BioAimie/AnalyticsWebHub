@@ -100,7 +100,7 @@ calculateRatesQC <- function(serial.num, dataFrameSN, version){
 	yeast.rate <- round((sum(dataFrameSN[, "yeast"], na.rm=TRUE)/nrows), 3)
 	pouchleak.rate <- round((sum(dataFrameSN[, "PouchLeak"], na.rm=TRUE)/nrows), 3)
 	anomaly.rate <- round((sum(dataFrameSN[, "Anomaly"], na.rm=TRUE)/nrows), 3)
-	total.rate.numerator <- sum(apply(dataFrameSN, 1, function(k)if(sum(as.numeric(k[5]), as.numeric(k[6]), as.numeric(k[7]), as.numeric(k[8]), as.numeric(k[9]), as.numeric(k[10]), as.numeric(k[14]), na.rm=TRUE) > 0){return(1)}else{return(0)}))
+	total.rate.numerator <- sum(apply(dataFrameSN, 1, function(k)if(sum(as.numeric(k[6]), as.numeric(k[7]), as.numeric(k[8]), as.numeric(k[9]), as.numeric(k[10]), as.numeric(k[14]), na.rm=TRUE) > 0){return(1)}else{return(0)}))
 	total.rate <- round((total.rate.numerator/nrows), 3)
 	return(data.frame("1" = serial.num , "2"=version, "3"= nrow(dataFrameSN), "4" =  total.rate, "5" = instrument.rate, 
 		"6"=software.rate,"7"=pcr1.rate, "8"=pcr2.rate, "9" =yeast.rate , "10"=pouchleak.rate, "11"=anomaly.rate))
@@ -110,7 +110,6 @@ calculateRatesQC <- function(serial.num, dataFrameSN, version){
 calculateRatesDungeon <- function(serial.num, dataFrameSN, version){
 	# input: a serial number, the data frame given to createRateTable, and the instrument version 
 	# output: a row off the data frame of rates 
-	
 	dataFrameSN <- subset(dataFrameSN, SerialNo == serial.num)
 	version <- dataFrameSN$Version[1]
 	nrows <- nrow(dataFrameSN)
@@ -120,7 +119,7 @@ calculateRatesDungeon <- function(serial.num, dataFrameSN, version){
 	pcr1.rate <-round((sum(dataFrameSN[, "PCR1"], na.rm=TRUE)/nrows), 3)
 	yeast.rate <- round((sum(dataFrameSN[, "yeast"], na.rm=TRUE)/nrows), 3)
 	pouchleak.rate <- round((sum(dataFrameSN[, "PouchLeak"], na.rm=TRUE)/nrows), 3)
-	total.rate.numerator <- sum(apply(dataFrameSN, 1, function(k)if(sum(as.numeric(k[5]), as.numeric(k[6]), as.numeric(k[7]), as.numeric(k[8]), as.numeric(k[9]), as.numeric(k[10]), na.rm=TRUE) > 0){return(1)}else{return(0)}))
+	total.rate.numerator <- sum(apply(dataFrameSN, 1, function(k)if(sum(as.numeric(k[6]), as.numeric(k[7]), as.numeric(k[8]), as.numeric(k[9]), as.numeric(k[10]), as.numeric(k[14]), na.rm=TRUE) > 0){return(1)}else{return(0)}))
 	total.rate <- round((total.rate.numerator/nrows), 3)
 	return(data.frame("1" = serial.num , "2"=version, "3"= nrow(dataFrameSN), "4" =  total.rate, "5" = instrument.rate, 
 		"6"=software.rate,"7"=pcr1.rate, "8"=pcr2.rate, "9" =yeast.rate , "10"=pouchleak.rate))
