@@ -31,19 +31,24 @@ PIVOT
 		[Customer Id]
 	)
 ) PIV
-WHERE [RMA Type] LIKE 'Customer%' AND [Assigned Service Center] NOT LIKE 'Field Service'
+WHERE [RMA Type] LIKE 'Loaner%' AND [Assigned Service Center] LIKE 'Salt Lake'
 
-SELECT 
-	YEAR([CreatedDate]) AS [Year],
-	MONTH([CreatedDate]) AS [Month],
-	[ServiceCenter],
-	IIF([CustID] LIKE 'BMX-NC%', 'US Other',
-		IIF([CustID] LIKE 'BMX%', 'BMX',
-		IIF([CustID] LIKE 'DIST%', 'BMX',
-		IIF([CustID] IN ('BIODEF','NGDS') , 'Defense', 'US Other')))) AS [CustomerType],
-	[CustID],
-	IIF(DATEDIFF(day, [CreatedDate], [ReceivedDate]) < 0, 0, DATEDIFF(day, [CreatedDate], [ReceivedDate])) AS [DaysUntilReceipt] 
-FROM #Master
-WHERE [CustID] NOT LIKE 'IDATEC'
+SELECT *
+FROM
+(
+	SELECT 
+		YEAR([CreatedDate]) AS [Year],
+		MONTH([CreatedDate]) AS [Month],
+		[ServiceCenter],
+		IIF([CustID] LIKE 'BMX-NC%', 'US Other',
+			IIF([CustID] LIKE 'BMX%', 'BMX',
+			IIF([CustID] LIKE 'DIST%', 'BMX',
+			IIF([CustID] IN ('BIODEF','NGDS') , 'Defense', 'US Other')))) AS [CustomerType],
+		[CustID],
+		IIF(DATEDIFF(day, [CreatedDate], [ReceivedDate]) < 0, 0, DATEDIFF(day, [CreatedDate], [ReceivedDate])) AS [DaysUntilReceipt] 
+	FROM #Master
+	WHERE [CustID] NOT LIKE 'IDATEC'
+) A
+WHERE [CustomerType] LIKE 'US Other'
 
 DROP TABLE #Master

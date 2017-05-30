@@ -1,23 +1,28 @@
 SET NOCOUNT ON
 
 SELECT 
-	[TicketId] 
+	[TicketId],
+	[CustId],
+	[Type]  
 INTO #Tickets
 FROM 
 (
 	SELECT 
 		[TicketId],
 		IIF([CustId] LIKE 'BMX-NC', 'Keep',
-			IIF([CustId] IN ('BIODEF','NGDS'),'DoNotKeep',
-			IIF([CustId] LIKE 'BMX%', 'DoNotKeep', 'Keep'))) AS [CustKeep],
+			IIF([CustId] IN ('BIODEF','NGDS','IDATEC'),'DoNotKeep',
+			IIF([CustId] LIKE 'DIST%','DoNotKeep',
+			IIF([CustId] LIKE 'BMX%', 'DoNotKeep', 'Keep')))) AS [CustKeep],
 		[CustId],
-		[Type]
+		[Type],
+		[ServiceCenter] 
 	FROM 
 	(
 		SELECT
 			[TicketId],
 			[Customer Id] AS [CustId],
-			[RMA Type] AS [Type]
+			[RMA Type] AS [Type],
+			[Assigned Service Center]  AS [ServiceCenter]
 		FROM
 		(
 			SELECT 
@@ -25,7 +30,7 @@ FROM
 				[PropertyName],
 				[RecordedValue] 
 			FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-			WHERE [PropertyName] IN ('RMA Type', 'Customer Id') AND [Tracker] LIKE 'RMA'
+			WHERE [PropertyName] IN ('RMA Type', 'Customer Id', 'Assigned Service Center') AND [Tracker] LIKE 'RMA'
 		) A
 		PIVOT
 		(
@@ -34,11 +39,12 @@ FROM
 			IN
 			(
 				[Customer Id],
-				[RMA Type] 
+				[RMA Type],
+				[Assigned Service Center] 
 			)
 		) PIV
 	) B
-	WHERE [Type] LIKE 'Customer%' 
+	WHERE [Type] LIKE 'Customer%' AND [ServiceCenter] LIKE 'Salt Lake' 
 ) C
 WHERE [CustKeep] LIKE 'Keep'
 
@@ -47,7 +53,8 @@ SELECT
 	[TicketString],
 	[CreatedDate],
 	[Part Number] AS [PartNo],
-	[Loaner Needed] AS [Loaner]
+	[Loaner Needed] AS [Loaner],
+	[Disposition]
 INTO #Master
 FROM 
 (
@@ -69,9 +76,11 @@ PIVOT
 	(
 		[Product Type],
 		[Part Number],
-		[Loaner Needed]
+		[Loaner Needed], 
+		[Disposition] 
 	)
 ) PIV
+--WHERE [Disposition] LIKE 'Return to Customer' --do not include for now
 ORDER BY [TicketId]
 
 SELECT 
@@ -81,7 +90,8 @@ SELECT
 	[Loaner],
 	'CustRMAs' AS [Key],
 	1 AS [Record]
-FROM #Master
-WHERE [PartNo] LIKE 'FLM%-ASY-0001%' OR [PartNo] LIKE 'HTFA-ASY-000%' OR [PartNo] LIKE 'HTFA-SUB-0103%'
+FROM #Master M 
+WHERE ([PartNo] LIKE 'FLM1-ASY-0001%' OR [PartNo] LIKE 'FLM2-ASY-0001%') --only include these part numbers per Matt 
+	AND [Loaner] NOT LIKE 'N/A'
 
 DROP TABLE #Tickets, #Master

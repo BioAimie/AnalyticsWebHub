@@ -17,6 +17,8 @@ GROUP BY
 	[Status]
 
 SELECT	
+	[DateOpened],
+	[DateClosed], 
 	[YearOpen],
 	[MonthOpen],
 	[WeekOpen],
@@ -33,6 +35,8 @@ SELECT
 FROM
 (
 	SELECT
+		CAST([CreatedDate] AS DATE) AS [DateOpened],
+		CAST([InitialCloseDate] AS DATE) AS [DateClosed], 
 		YEAR([CreatedDate]) AS [YearOpen],
 		MONTH([CreatedDate]) AS [MonthOpen],
 		DATEPART(ww,[CreatedDate]) AS [WeekOpen],

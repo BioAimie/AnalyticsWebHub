@@ -35,4 +35,20 @@ queryText <- readLines("SQL/O_CS_ServiceCenterReceived.sql")
 query <- paste(queryText,collapse="\n")
 serviceCenter.df <- sqlQuery(PMScxn,query)
 
+queryText <- readLines("SQL/O_CS_LoanerRMAReceived.sql")
+query <- paste(queryText,collapse="\n")
+loanerReceipt.df <- sqlQuery(PMScxn,query)
+
+queryText <- readLines("SQL/O_CS_TradeUpRMAReceived.sql")
+query <- paste(queryText,collapse="\n")
+tradeupReceipt.df <- sqlQuery(PMScxn,query)
+
+queryText <- readLines("SQL/O_CS_CustPouchesShippedYear.sql")
+query <- paste(queryText,collapse="\n")
+custPouches.df <- sqlQuery(PMScxn,query)
+
+queryText <- readLines("SQL/O_CS_CustomerComplaints.sql")
+query <- paste(queryText,collapse="\n")
+custComplaints.df <- sqlQuery(PMScxn,query)
+
 odbcClose(PMScxn)
