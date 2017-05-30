@@ -33,9 +33,11 @@ model.df = do.call(rbind,lapply(1:nrow(latestModels),function(i){
   df %>% mutate(Model=latestModels$Model[i], Date=as.Date(latestModels$Date[i]));
 }));
 
-metrics.df = do.call(rbind,lapply(metrics_i,function(i){
-  model = s[[i]][1];
-  date = s[[i]][3];
-  df = read.csv(paste(csvDir,filenames[i],sep=""), stringsAsFactors=FALSE)
-  df %>% mutate(Model=model, Date=as.Date(date));
+metricsfile.df = do.call(rbind,lapply(metrics_i,function(i){
+  data.frame(File=filenames[i], Model=s[[i]][1], Date=s[[i]][3])
+}));
+latestMetrics = metricsfile.df %>% group_by(Model) %>% arrange(Date) %>% top_n(1)
+metrics.df = do.call(rbind,lapply(1:nrow(latestMetrics),function(i){
+  df = read.csv(paste(csvDir,latestMetrics$File[i],sep=""), stringsAsFactors=FALSE)
+  df %>% mutate(Model=latestMetrics$Model[i], Date=as.Date(latestMetrics$Date[i]));
 }));

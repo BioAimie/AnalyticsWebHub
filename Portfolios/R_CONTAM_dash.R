@@ -8,6 +8,7 @@ setwd(workDir)
 library(ggplot2)
 library(scales)
 library(lubridate)
+library(dateManip)
 
 # load user-created functions
 source('Portfolios/R_CONTAM_load.R')
