@@ -81,9 +81,7 @@ temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,
 colnames(temp.agg)[3] <- 'RollingAvg'
 ship15 <- merge(ship15, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
 ship15$Key <- factor(ship15$Key, levels=shipLevels)
-p.Refurb1.5Shipments <- ggplot(ship15, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(ship15, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished FA 1.5 Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(ship15, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') 
-
-
+p.Refurb1.5Shipments <- ggplot(ship15, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(ship15, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished FA 1.5 Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(ship15, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') + geom_text(data=with(ship15, aggregate(Record~DateGroup, FUN=sum)), inherit.aes = FALSE, aes(x=DateGroup, y=Record, label=Record), fontface='bold', size = 5, vjust = -.5) 
 #---FLM2-ASY-0002R - by month
 ship20 <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(refurbShip.df, Product == 'FA2.0R'), c('Product', 'Key'), startString.monthRoll, 'Record', 'sum', 0)
 ship20 <- ship20[order(ship20$DateGroup), ]
@@ -94,56 +92,49 @@ temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,
 colnames(temp.agg)[3] <- 'RollingAvg'
 ship20 <- merge(ship20, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
 ship20$Key <- factor(ship20$Key, levels=shipLevels)
-p.Refurb2.0Shipments <- ggplot(ship20, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(ship20, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished FA 2.0 Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(ship20, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') 
-
-
-#---HTFA-ASY-0001R - by week
+p.Refurb2.0Shipments <- ggplot(ship20, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(ship20, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished FA 2.0 Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(ship20, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') + geom_text(data=with(ship20, aggregate(Record~DateGroup, FUN=sum)), inherit.aes = FALSE, aes(x=DateGroup, y=Record, label=Record), fontface='bold', size = 5, vjust = -.5) #---HTFA-ASY-0001R - by week
+#---HTFA-ASY-0001R - by month
 if(nrow(subset(refurbShip.df, Product == 'Torch Base R')) > 0) {
-  shipBase <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', subset(refurbShip.df, Product == 'Torch Base R'), c('Product', 'Key'), startString.week, 'Record', 'sum', 0)
+  shipBase <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(refurbShip.df, Product == 'Torch Base R'), c('Product', 'Key'), startString.monthRoll, 'Record', 'sum', 0)
   shipBase <- shipBase[order(shipBase$DateGroup), ]
-  #4 week moving avg
+  #4 month moving avg
   temp.agg <- with(shipBase, aggregate(Record~DateGroup, FUN=sum))
   l <- length(temp.agg$DateGroup)
   temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
   colnames(temp.agg)[3] <- 'RollingAvg'
   shipBase <- merge(shipBase, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
   shipBase$Key <- factor(shipBase$Key, levels=shipLevels)
-  p.RefurbTorchBaseShipments <- ggplot(shipBase, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(shipBase, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Torch Base Shipments', subtitle = paste('Rolling Average for Week', tail(shipBase,1)[,'DateGroup'], ': ', format(tail(shipBase,1)[,'RollingAvg'],digits=3)), x = 'Date\n(Year-Week)', y ='Shipments\n4 Week Moving Average Line') + scale_x_discrete(breaks=dateBreaks) 
+  p.RefurbTorchBaseShipments <- ggplot(shipBase, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(shipBase, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Torch Base Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(shipBase, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') + geom_text(data=with(shipBase, aggregate(Record~DateGroup, FUN=sum)), inherit.aes = FALSE, aes(x=DateGroup, y=Record, label=Record), fontface='bold', size = 5, vjust = -.5)  
 } else {
   shipBase <- data.frame(DateGroup = unique(ship20$DateGroup), Record = 0)
-  p.RefurbTorchBaseShipments <- ggplot(shipBase, aes(x=DateGroup, y=Record)) + geom_bar(stat='identity') + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Torch Base Shipments', x = 'Date\n(Year-Week)', y ='Shipments\n4 Week Moving Average Line') + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(limits = c(0,1))
+  p.RefurbTorchBaseShipments <- ggplot(shipBase, aes(x=DateGroup, y=Record)) + geom_bar(stat='identity') + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Torch Base Shipments', x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Moving Average Line') + scale_y_continuous(limits = c(0,1))
 }
-
-shipTorch <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', subset(refurbShip.df, Product == 'Torch Module R'), c('Product', 'Key'), startString.week, 'Record', 'sum', 0)
+#---HTFA-ASY-0003R - by month
+shipTorch <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(refurbShip.df, Product == 'Torch Module R'), c('Product', 'Key'), startString.monthRoll, 'Record', 'sum', 0)
 shipTorch<- shipTorch[order(shipTorch$DateGroup), ]
-#4 week moving avg
+#4 month moving avg
 temp.agg <- with(shipTorch, aggregate(Record~DateGroup, FUN=sum))
 l <- length(temp.agg$DateGroup)
 temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
 colnames(temp.agg)[3] <- 'RollingAvg'
 shipTorch <- merge(shipTorch, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
 shipTorch$Key <- factor(shipTorch$Key, levels=shipLevels)
-p.RefurbTorchModuleShipments <- ggplot(shipTorch, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(shipTorch, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Torch Module Shipments', subtitle = paste('Rolling Average for Week', tail(shipTorch,1)[,'DateGroup'], ': ', format(tail(shipTorch,1)[,'RollingAvg'],digits=3)), x = 'Date\n(Year-Week)', y ='Shipments\n4 Week Moving Average Line') + scale_x_discrete(breaks=dateBreaks) 
-
-
-#---COMP-SUB-0016R - by week
-shipComp <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', subset(refurbShip.df, Product == 'Computer'), c('Product', 'Key'), startString.week, 'Record', 'sum', 0)
+p.RefurbTorchModuleShipments <- ggplot(shipTorch, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(shipTorch, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Torch Module Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(shipTorch, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') + geom_text(data=with(shipTorch, aggregate(Record~DateGroup, FUN=sum)), inherit.aes = FALSE, aes(x=DateGroup, y=Record, label=Record), fontface='bold', size = 5, vjust = -.5) 
+#---COMP-SUB-0016R - by month
+shipComp <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(refurbShip.df, Product == 'Computer'), c('Product', 'Key'), startString.monthRoll, 'Record', 'sum', 0)
 shipComp <- shipComp[order(shipComp$DateGroup), ]
-#4 week moving avg
+#4 month moving avg
 temp.agg <- with(shipComp, aggregate(Record~DateGroup, FUN=sum))
 l <- length(temp.agg$DateGroup)
 temp.agg <- cbind(temp.agg[4:l,], sapply(4:l, function(x) mean(temp.agg[(x-3):x,'Record'])))
 colnames(temp.agg)[3] <- 'RollingAvg'
 shipComp <- merge(shipComp, subset(temp.agg, select=c('DateGroup', 'RollingAvg')))
 shipComp$Key <- factor(shipComp$Key, levels=shipLevels)
-p.RefurbComputerShipments <- ggplot(shipComp, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(shipComp, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Computer Shipments', subtitle = paste('Rolling Average for Week', tail(shipComp,1)[,'DateGroup'], ': ', format(tail(shipComp,1)[,'RollingAvg'],digits=3)), x = 'Date\n(Year-Week)', y ='Shipments') + scale_x_discrete(breaks=dateBreaks) 
-
-
+p.RefurbComputerShipments <- ggplot(shipComp, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(name='Shipment Type', values=createPaletteOfVariableLength(shipComp, 'Key')) + geom_line(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + geom_point(inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Refurbished Computer Shipments', subtitle = paste('Rolling Average for', curMonthName, ': ', format(unique(subset(shipComp, DateGroup == currentMonth)[,'RollingAvg']),digits=3)), x = 'Date\n(Year-Month)', y ='Shipments\n4 Month Rolling Average Line') + geom_text(data=with(shipComp, aggregate(Record~DateGroup, FUN=sum)), inherit.aes = FALSE, aes(x=DateGroup, y=Record, label=Record), fontface='bold', size = 5, vjust = -.5)
 
 # Sales Source of Refurb Shipments by month 
 refurbSource <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', refurbShip.df, c('Product', 'SalesSource', 'SalesType'), startString.month, 'Record', 'sum', 0)
 p.RefurbSalesType <- ggplot(refurbSource, aes(x=DateGroup, y=Record, fill=SalesType)) + geom_bar(stat='identity') + scale_fill_manual(name='Sales Source', values = createPaletteOfVariableLength(refurbSource, 'SalesType')) + facet_wrap(~Product, scales = 'free_y') + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Sales Source of Refurbished Shipments', x = 'Date\n(Year-Month)', y ='Shipments') + geom_text(data = with(refurbSource, aggregate(Record~DateGroup+Product, FUN=sum)), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), size=4, fontface='bold', vjust = -0.5)
-
 
 # New Inventory Stock Levels 
 newStock <- subset(stockInv.df, !(grepl('R$',ItemID)))
@@ -161,18 +152,15 @@ newStock.agg <- with(newStock, aggregate(Record~ItemID, FUN=sum))
 newStock.agg$Key <- ' '
 p.NewStockInventory <- ggplot(newStock.agg, aes(x=Key, y=Record)) + geom_bar(stat='identity', width = 0.5) + xlab(' ') + ylab('Inventory') + facet_wrap(~ItemID, scales='free_y', strip.position = 'bottom') + theme(strip.background = element_blank(), strip.placement = 'outside') + ggtitle('New Stock Inventory Levels') + scale_y_continuous(breaks=pretty_breaks(n=10)) + geom_text(aes(label=Record), color='lightgrey', size = 5, vjust = 1.5, fontface='bold')
 
-
-
 # Service Tiers
 #---by RMA type
 tier.type <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', tier.df, c('Type', 'ServiceTier'), startString.week, 'Record', 'sum', 0)
-p.ServiceTiersbyType <- ggplot(tier.type, aes(x=DateGroup, y=Record, fill=ServiceTier)) + geom_bar(stat='identity') + scale_fill_manual(name='Service Tier', values = createPaletteOfVariableLength(tier.type, 'ServiceTier')) + facet_wrap(~Type, scales = 'free_y', ncol=1) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Service Tier Repairs of FA 1.5, FA 2.0, and Torch', x = 'Date\n(Year-Week)', y ='Repairs') + scale_x_discrete(breaks=dateBreaks)
+p.ServiceTiersbyType <- ggplot(tier.type, aes(x=DateGroup, y=Record, fill=ServiceTier)) + geom_bar(stat='identity') + scale_fill_manual(name='Service Tier', values = createPaletteOfVariableLength(tier.type, 'ServiceTier')) + facet_wrap(~Type, scales = 'free_y', ncol=1) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Service Tier Repairs of FA 1.5, FA 2.0, and Torch', x = 'Date\n(Year-Week)', y ='Repairs', caption = 'Salt Lake Service Center; US Customers only') + scale_x_discrete(breaks=dateBreaks) + theme(plot.caption = element_text(hjust=0, size = 14))
 #---by version
 tier.version <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', tier.df, c('Version', 'ServiceTier'), startString.week, 'Record', 'sum', 0)
-p.ServiceTiersbyVersion <- ggplot(tier.version, aes(x=DateGroup, y=Record, fill=ServiceTier)) + geom_bar(stat='identity') + scale_fill_manual(name='Service Tier', values = createPaletteOfVariableLength(tier.version, 'ServiceTier')) + facet_wrap(~Version, scales = 'free_y', ncol=1) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Service Tier Repairs of Customer RMAs', x = 'Date\n(Year-Week)', y ='Repairs') + scale_x_discrete(breaks=dateBreaks)
+p.ServiceTiersbyVersion <- ggplot(tier.version, aes(x=DateGroup, y=Record, fill=ServiceTier)) + geom_bar(stat='identity') + scale_fill_manual(name='Service Tier', values = createPaletteOfVariableLength(tier.version, 'ServiceTier')) + facet_wrap(~Version, scales = 'free_y', ncol=1) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Service Tier Repairs of Customer RMAs', x = 'Date\n(Year-Week)', y ='Repairs', caption = 'Salt Lake Service Center; US Customers only') + scale_x_discrete(breaks=dateBreaks) + theme(plot.caption = element_text(hjust=0, size = 14))
 #---by Tier
-#calendar.week.all <- createCalendarLikeMicrosoft('2014', 'Week')
-startDate.Tier <- paste('2014', as.character(min(tier.df$Week[which(tier.df$Year == '2014')])), sep='-')
+startDate.Tier <- paste('2015', as.character(min(tier.df$Week[which(tier.df$Year == '2015')])), sep='-')
 tier.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', tier.df, c('ServiceTier'), startDate.Tier, 'Record', 'sum', 0)
 tier.counts <- data.frame(matrix(nrow=3, ncol=2))
 colnames(tier.counts) <- c('Tier', 'Percent') 
@@ -180,7 +168,7 @@ tier.counts$Tier <- c('Tier 1', 'Tier 2', 'Tier 3')
 tier.counts$Percent <- c(sum(tier.all$Record[which(tier.all$ServiceTier == "Tier 1")], na.rm=TRUE), sum(tier.all$Record[which(tier.all$ServiceTier == "Tier 2")], na.rm=TRUE), sum(tier.all$Record[which(tier.all$ServiceTier == "Tier 3")], na.rm=TRUE))
 tier.counts$Percent <- (tier.counts$Percent/sum(tier.counts$Percent))*100
 tier.counts$labels <- paste0(as.character(round(tier.counts$Percent, 1)), '%')
-p.AllTiers <- ggplot(tier.counts, aes(x=Tier, y=Percent)) + geom_bar(stat='identity', fill='cornflowerblue') + ylim(c(0, 100)) + geom_text(aes(label=labels), position=position_dodge(width=0.9), vjust=-.8, size=6) + labs(title = 'Service Tier Repairs of Customer RMAs since 11/2014', x="", y ='Percent of Repairs')
+p.AllTiers <- ggplot(tier.counts, aes(x=Tier, y=Percent)) + geom_bar(stat='identity', fill='cornflowerblue') + ylim(c(0, 100)) + geom_text(aes(label=labels), position=position_dodge(width=0.9), vjust=-.8, size=6) + labs(title = 'Service Tier Repairs of Customer RMAs since 12/2015', x="", y ='Percent of Repairs', caption = 'Salt Lake Service Center; US Customers only') + theme(plot.caption = element_text(hjust=0, size = 14))
 
 tier.version.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', tier.df, c('ServiceTier', 'Version'), startDate.Tier, 'Record', 'sum', 0)
 tier.version.counts <- data.frame(matrix(ncol=3))
@@ -196,20 +184,30 @@ for (v in unique(tier.version.all$Version)){
 tier.version.counts <- tier.version.counts[-1, ]
 tier.version.counts$Tier <- factor(tier.version.counts$Tier, levels=c('Tier 3', 'Tier 2', 'Tier 1'))
 tier.version.counts$labels <- paste0(as.character(round(tier.version.counts$Percent, 1)), '%')
-p.AllTiersVersions <- ggplot(tier.version.counts, aes(x=Version, y=Percent, fill=Tier)) + coord_flip() + geom_bar(stat='identity') + geom_text(aes(label=labels), position=position_stack(vjust=0.5), size=5) + labs(title = 'Service Tier Repairs of Customer RMAs since 11/2014', x="", y ='Percent of Repairs')
-
+p.AllTiersVersions <- ggplot(tier.version.counts, aes(x=Version, y=Percent, fill=Tier)) + coord_flip() + geom_bar(stat='identity') + geom_text(aes(label=labels), position=position_stack(vjust=0.5), size=5) + labs(title = 'Service Tier Repairs of Customer RMAs since 12/2015', x="", y ='Percent of Repairs', caption = 'Salt Lake Service Center; US Customers only') + theme(plot.caption = element_text(hjust=0, size = 14))
 
 # Current Open Complaints
 OpenComplaints <- with(subset(complaints.df, Status == 'Open'), aggregate(Record~Key, FUN=sum))
 OpenComplaints$Key <- factor(OpenComplaints$Key, levels = c('0 - 30', '31 - 60', '61 - 90', '91 - 120', '121+'))
 p.CurrentOpenComplaints <- ggplot(OpenComplaints, aes(x=Key, y=Record)) + geom_bar(stat='identity', fill='midnightblue') + geom_text(aes(label=Record), vjust=-1, fontface=fontFace, size = 5) + labs(title = 'Aging Open Complaints - Days Open', subtitle = paste('Current Open Complaints:', sum(OpenComplaints$Record)), x = 'Days Open', y ='Number of Complaints')
 #previous month freeze
-complaints.df$DateMonthOpen <- with(complaints.df, ifelse(MonthOpen < 10, paste0(YearOpen,'-0', MonthOpen), paste0(YearOpen,'-', MonthOpen)))
-prevopen <- with(subset(complaints.df, Status == 'Open' & DateMonthOpen <= lastMonth), aggregate(Record~Key, FUN=sum))
-prevopen$Key <- factor(prevopen$Key, levels = c('0 - 30', '31 - 60', '61 - 90', '91 - 120', '121+'))
-p.PrevOpenComplaints <- ggplot(prevopen, aes(x=Key, y=Record)) + geom_bar(stat='identity', fill='midnightblue') + geom_text(aes(label=Record), vjust=-1, fontface=fontFace, size = 5) + labs(title = 'Aging Open Complaints - Days Open', subtitle = paste('Open Complaints as of', tail(subset(calendar.month, DateGroup == lastMonth), 1)[,'Date'], ':', sum(prevopen$Record)), x = 'Days Open', y ='Number of Complaints')
-
-
+lastMonthDate <- tail(subset(calendar.month, DateGroup == lastMonth), 1)[,'Date']
+complaints.freeze <- subset(complaints.df, DateOpened <= lastMonthDate & (is.na(DateClosed) | DateClosed > lastMonthDate), select = c('DateOpened', 'DateClosed','Record'))
+complaints.freeze$DaysOpen <- with(complaints.freeze, difftime(lastMonthDate, DateOpened, 'days'))
+for(i in 1:length(complaints.freeze$DateOpened)) {
+  if(as.numeric(complaints.freeze$DaysOpen[i]) > 120)
+    complaints.freeze$Key[i] <- '121+'
+  else if(as.numeric(complaints.freeze$DaysOpen[i]) <= 120 & as.numeric(complaints.freeze$DaysOpen[i]) > 90)
+    complaints.freeze$Key[i] <- '91 - 120'
+  else if(as.numeric(complaints.freeze$DaysOpen[i]) <= 90 & as.numeric(complaints.freeze$DaysOpen[i]) > 60)
+    complaints.freeze$Key[i] <- '61 - 90'
+  else if(as.numeric(complaints.freeze$DaysOpen[i]) <= 60 & as.numeric(complaints.freeze$DaysOpen[i]) > 30)
+    complaints.freeze$Key[i] <- '31 - 60'
+  else if(as.numeric(complaints.freeze$DaysOpen[i]) <= 30)
+    complaints.freeze$Key[i] <- '0 - 30'
+}
+complaints.freeze$Key <- factor(complaints.freeze$Key, levels = c('0 - 30', '31 - 60', '61 - 90', '91 - 120', '121+'))
+p.PrevOpenComplaints <- ggplot(complaints.freeze, aes(x=Key, y=Record)) + geom_bar(stat='identity', fill='midnightblue') + geom_text(data = with(complaints.freeze, aggregate(Record~Key, FUN=sum)), inherit.aes=FALSE, aes(x=Key, y=Record, label=Record), vjust=-1, fontface=fontFace, size = 5) + labs(title = 'Aging Open Complaints - Days Open', subtitle = paste('Open Complaints as of', lastMonthDate, ':', sum(complaints.freeze$Record)), x = 'Days Open', y ='Number of Complaints')
 
 # Complaints Open by month
 OpenDate <- subset(complaints.df, select = c('YearOpen', 'MonthOpen', 'Record'))
@@ -244,7 +242,14 @@ p.CurrentClosedRMA <- ggplot(currentClosedRMA, aes(x=Part, y=Record)) + geom_bar
 p.LastMonthClosedRMA <- ggplot(lastMonthClosedRMA, aes(x=Part, y=Record)) + geom_bar(stat='identity', fill='midnightblue') + labs(title = paste('RMAs Closed in', prevMonthName), x = 'RMA Type', y ='Number of RMAs') + geom_text(aes(label=Record), vjust = -0.75, size = 5)
 
 # RMAs closed over time by month
-p.AllClosedRMA <- ggplot(closedRMA, aes(DateGroup, y=Record, fill=Part)) + geom_bar(stat='identity') + scale_fill_manual(name='RMA Type', values = createPaletteOfVariableLength(closedRMA, 'Part')) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Closed RMAs', x = 'Date\n(Year-Month)', y ='Number of RMAs') 
+# 4 month moving average
+closedRMA.agg <- with(closedRMA, aggregate(Record~DateGroup, FUN=sum))
+l <- length(closedRMA.agg$DateGroup)
+closedRMA.agg <- cbind(closedRMA.agg[4:l,], sapply(4:l, function(x) mean(closedRMA.agg[(x-3):x,'Record'])))
+colnames(closedRMA.agg)[3] <- 'RollingAvg'
+closedRMA <- subset(closedRMA, DateGroup >= min(closedRMA.agg$DateGroup))
+p.AllClosedRMA <- ggplot(closedRMA, aes(DateGroup, y=Record, fill=Part)) + geom_bar(stat='identity') + geom_line(data=closedRMA.agg, inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group=1)) + geom_point(data=closedRMA.agg, inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + scale_fill_manual(name='RMA Type', values = createPaletteOfVariableLength(closedRMA, 'Part')) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Closed RMAs', subtitle = paste0('Rolling Average for ', curMonthName,': ', format(subset(closedRMA.agg, DateGroup == currentMonth)[,'RollingAvg'], digits=3)), x = 'Date\n(Year-Month)', y ='Number of RMAs\n4-Month Rolling Average Line') + geom_text(data=closedRMA.agg, inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), vjust=-.5, fontface='bold', size=4)
+p.AllClosedRMA.Prev <- ggplot(subset(closedRMA, DateGroup < currentMonth), aes(DateGroup, y=Record, fill=Part)) + geom_bar(stat='identity') + geom_line(data=subset(closedRMA.agg, DateGroup < currentMonth), inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group=1)) + geom_point(data=subset(closedRMA.agg, DateGroup < currentMonth), inherit.aes = FALSE, aes(x=DateGroup, y=RollingAvg, group = 1)) + scale_fill_manual(name='RMA Type', values = createPaletteOfVariableLength(closedRMA, 'Part')) + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Closed RMAs', subtitle = paste0('Rolling Average for ', prevMonthName,': ', format(subset(closedRMA.agg, DateGroup == lastMonth)[,'RollingAvg'], digits=3)), x = 'Date\n(Year-Month)', y ='Number of RMAs\n4-Month Rolling Average Line') + geom_text(data=subset(closedRMA.agg, DateGroup < currentMonth), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), vjust=-.5, fontface='bold', size=4)
 
 # RMA TAT for all service centers
 rmaTAT.levels <- c('Days To Ship','Days To Sales Order','Days In Loaner RMA','Days In QC','Days In Service','Days In Quarantine/Decon')
@@ -907,9 +912,9 @@ serviceCenter.df$DateGroup <- with(serviceCenter.df, ifelse(Month < 10, paste0(Y
 #average days per month, overall average and 4 month moving average
 dategroups <- sort(unique(as.character(subset(calendar.month, DateGroup >= '2015-01')[,'DateGroup'])))
 l <- length(dategroups)
-# Salt Lake - US customers (including biofire defense)
+# Salt Lake - US customers
 avgreceived.saltlake <- c()
-temp <- subset(serviceCenter.df, ServiceCenter == 'Salt Lake' & CustomerType != 'BMX' & DateGroup >= '2015-01')
+temp <- subset(serviceCenter.df, ServiceCenter == 'Salt Lake' & CustomerType == 'US Other' & DateGroup >= '2015-01')
 for(i in 1:l) {
   temp2 <- subset(temp, DateGroup == dategroups[i])
   if(nrow(temp2) > 0) {
@@ -970,6 +975,60 @@ avgreceived.fl$facetHeader <- paste0('Florence - All Customers\nOverall Avg = ',
 avgreceived <- rbind(avgreceived.defense, avgreceived.fl, avgreceived.saltlake, avgreceived.slbmx)
 datebreaks.received <- sort(unique(as.character(avgreceived$DateGroup)))[seq(1,length(unique(as.character(avgreceived$DateGroup))), 3)]
 p.AllServiceCenters <- ggplot(avgreceived, aes(x=DateGroup, y=avgDays, fill='1')) + geom_bar(stat='identity') + facet_wrap(~facetHeader) + scale_fill_manual(name ='', values=c('forestgreen'), guide=FALSE) + theme(axis.text.x = element_text(angle=90, vjust=0.5)) + scale_x_discrete(breaks=datebreaks.received) + labs(title = 'Average Days for Customer RMA to be Received by Service Center', x = 'Date\n(Year-Month)', y = 'Average Days') + geom_text(aes(label=format(avgDays, digits = 1)), size = 4, fontface = 'bold', vjust = -0.5)
+
+# Avg Time to service center receipt for loaner RMAs
+loanerReceipt.df$DateGroup <- with(loanerReceipt.df, ifelse(Month < 10, paste0(Year,'-0', Month), paste0(Year,'-',Month)))
+avgreceived.loaner <- c()
+temp <- subset(loanerReceipt.df, DateGroup >= '2015-01')
+for(i in 1:l) {
+  temp2 <- subset(temp, DateGroup == dategroups[i])
+  if(nrow(temp2) > 0) {
+    avgreceived.loaner <- rbind(avgreceived.loaner, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - US Customers', avgDays = mean(temp2$DaysUntilReceipt, na.rm=TRUE)))
+  } else {
+    avgreceived.loaner <- rbind(avgreceived.loaner, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - US Customers', avgDays = NA))
+  }
+}
+avgreceived.loaner$OverallAvg <- with(avgreceived.loaner, mean(avgDays, na.rm=TRUE))
+avgreceived.loaner <- cbind(avgreceived.loaner[4:l,], sapply(4:l, function(x) mean(avgreceived.loaner[(x-3):x,'avgDays'], na.rm=TRUE)))
+colnames(avgreceived.loaner)[5] <- 'RollingAvg'
+p.LoanerReceipt <- ggplot(avgreceived.loaner, aes(x=DateGroup, y=avgDays, fill='1')) + geom_bar(stat='identity') + scale_fill_manual(name='', values=c('forestgreen'), guide=FALSE) + theme(axis.text.x = element_text(angle=90, vjust=0.5)) + labs(title = 'Average Days for Loaner RMA to be Received by Salt Lake Service Center', subtitle = paste0('Overall Average = ', format(subset(avgreceived.loaner, DateGroup == currentMonth)[,'OverallAvg'], digits=3), ', Current Rolling Avg = ', format(subset(avgreceived.loaner, DateGroup == currentMonth)[,'RollingAvg'], digits = 3)), x = 'Date\n(Year-Month)', y = 'Average Days') + geom_text(aes(label=format(avgDays, digits = 1)), size = 4, fontface = 'bold', vjust = -0.5) + scale_x_discrete(breaks=datebreaks.received)
+
+# Avg time to service center receipt for trade up RMAs
+tradeupReceipt.df$DateGroup <- with(tradeupReceipt.df, ifelse(Month < 10, paste0(Year,'-0', Month), paste0(Year,'-',Month)))
+dategroups <- sort(unique(as.character(subset(calendar.month, DateGroup >= '2015-03')[,'DateGroup'])))
+l <- length(dategroups)
+#SL - US
+avgreceived.trade.US <- c()
+temp <- subset(tradeupReceipt.df, DateGroup >= '2015-03' & ServiceCenter == 'Salt Lake' & CustomerType == 'US Other')
+for(i in 1:l) {
+  temp2 <- subset(temp, DateGroup == dategroups[i])
+  if(nrow(temp2) > 0) {
+    avgreceived.trade.US <- rbind(avgreceived.trade.US, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - US Customers', avgDays = mean(temp2$DaysUntilReceipt, na.rm=TRUE)))
+  } else {
+    avgreceived.trade.US <- rbind(avgreceived.trade.US, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - US Customers', avgDays = NA))
+  }
+}
+avgreceived.trade.US$OverallAvg <- with(avgreceived.trade.US, mean(avgDays, na.rm=TRUE))
+avgreceived.trade.US <- cbind(avgreceived.trade.US[4:l,], sapply(4:l, function(x) mean(avgreceived.trade.US[(x-3):x,'avgDays'], na.rm=TRUE)))
+colnames(avgreceived.trade.US)[5] <- 'RollingAvg'
+avgreceived.trade.US$facetHeader <- paste0('Salt Lake - US Customers\nOverall Avg = ', format(subset(avgreceived.trade.US, DateGroup == currentMonth)[,'OverallAvg'], digits=3), ', Current Rolling Avg = ', format(subset(avgreceived.trade.US, DateGroup == currentMonth)[,'RollingAvg'], digits = 3))
+#SL -BMX
+avgreceived.trade.BMX <- c()
+temp <- subset(tradeupReceipt.df, DateGroup >= '2015-03' & ServiceCenter == 'Salt Lake' & CustomerType == 'BMX')
+for(i in 1:l) {
+  temp2 <- subset(temp, DateGroup == dategroups[i])
+  if(nrow(temp2) > 0) {
+    avgreceived.trade.BMX <- rbind(avgreceived.trade.BMX, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - BMX Customers', avgDays = mean(temp2$DaysUntilReceipt, na.rm=TRUE)))
+  } else {
+    avgreceived.trade.BMX <- rbind(avgreceived.trade.BMX, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - BMX Customers', avgDays = NA))
+  }
+}
+avgreceived.trade.BMX$OverallAvg <- with(avgreceived.trade.BMX, mean(avgDays, na.rm=TRUE))
+avgreceived.trade.BMX <- cbind(avgreceived.trade.BMX[4:l,], sapply(4:l, function(x) mean(avgreceived.trade.BMX[(x-3):x,'avgDays'], na.rm=TRUE)))
+colnames(avgreceived.trade.BMX)[5] <- 'RollingAvg'
+avgreceived.trade.BMX$facetHeader <- paste0('Salt Lake - BMX Customers\nOverall Avg = ', format(subset(avgreceived.trade.BMX, DateGroup == currentMonth)[,'OverallAvg'], digits=3), ', Current Rolling Avg = ', format(subset(avgreceived.trade.BMX, DateGroup == currentMonth)[,'RollingAvg'], digits = 3))
+avgreceived.trade <- rbind(avgreceived.trade.BMX, avgreceived.trade.US)
+p.TradeUpRMAReceipt <- ggplot(avgreceived.trade, aes(x=DateGroup, y=avgDays, fill='1')) + geom_bar(stat='identity') + facet_wrap(~facetHeader) + scale_fill_manual(name ='', values=c('forestgreen'), guide=FALSE) + theme(axis.text.x = element_text(angle=90, vjust=0.5)) + labs(title = 'Average Days for 2.0 Trade Up RMA to be Received by Service Center', x = 'Date\n(Year-Month)', y = 'Average Days') + geom_text(aes(label=format(avgDays, digits = 1)), size = 4, fontface = 'bold', vjust = -0.5) #+ scale_x_discrete(breaks=datebreaks.received)
 
 # All RMAs opened by type (part) 
 openedRMA <- subset(rmas.df, select = c('YearOpen', 'MonthOpen', 'Part', 'Type', 'Record'))
@@ -1050,7 +1109,12 @@ loaner.yes <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(loan
 allcustRMA <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', loaners.df, 'Key', startString.month3yr, 'Record', 'sum', 0)
 loaner.rate <- mergeCalSparseFrames(loaner.yes, allcustRMA, c('DateGroup', 'Key'), c('DateGroup', 'Key'), 'Record', 'Record', 0, 4)
 overallAcceptance <- sum(loaner.yes$Record) / sum(allcustRMA$Record)
-p.LoanerAcceptance <- ggplot(subset(loaner.rate, DateGroup >= '2015-01'), aes(x=DateGroup, y=Rate, group=1)) + geom_line() + geom_point() + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Acceptance Rate of Loaners in US Customer Instrument RMAs', subtitle = paste0('Overall Acceptance Rate = ', format(overallAcceptance*100, digits = 3), '%'), x = 'Date\n(Year-Month)', y ='Loaners Accepted / Customer RMAs\n(4 Month Rolling Average)') 
+p.LoanerAcceptance <- ggplot(subset(loaner.rate, DateGroup >= '2015-01'), aes(x=DateGroup, y=Rate, group=1)) + geom_line() + geom_point() + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Acceptance Rate of Loaners in US Customer Instrument RMAs', subtitle = paste0('Overall Acceptance Rate = ', format(overallAcceptance*100, digits = 3), '%'), x = 'Date\n(Year-Month)', y ='Loaner Acceptance Rate\n(4 Month Rolling Average)') 
+# cumulative average
+loaner.yes$cumsum <- cumsum(loaner.yes$Record) 
+allcustRMA$cumtotal <- cumsum(allcustRMA$Record)
+loaner.rateCum <- mergeCalSparseFrames(loaner.yes, allcustRMA, c('DateGroup', 'Key'), c('DateGroup', 'Key'), 'cumsum', 'cumtotal', 0, 0)
+p.LoanerAcceptance.Cumulative <- ggplot(subset(loaner.rateCum, DateGroup >= '2015-01'), aes(x=DateGroup, y=Rate, group=1)) + geom_line() + geom_point() + theme(axis.text.x=element_text(angle = 90)) + labs(title = 'Acceptance Rate of Loaners in US Customer Instrument RMAs', subtitle = paste0('Overall Acceptance Rate = ', format(overallAcceptance*100, digits = 3), '%'), x = 'Date\n(Year-Month)', y ='Loaner Acceptance Rate\n(Cumulative Rate)') 
 
 # Complaints Closed and Average Days Open to Close - Print this separately
 CloseDate <- subset(complaints.df, select = c('YearClosed', 'MonthClosed', 'Record'), Status == 'Closed')
@@ -1100,6 +1164,81 @@ yaxis <- g4$grobs[[index]]
 g3 <- gtable_add_cols(g3, g4$widths[g4$layout[index, ]$l], pp$r)
 g3 <- gtable_add_grob(g3, yaxis, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "axis-r")
 
+# Top 10 customers that have submitted complaints per pouches shipped to them
+customers.rate <- merge(custComplaints.df, custPouches.df, by='CustID')
+customers.rate$Rate <- with(customers.rate, Record.x / Record.y)
+top10US <- subset(customers.rate, Region == 'US')[order(subset(customers.rate, Region == 'US')[,'Rate'], decreasing=TRUE), ]
+top10US <- top10US[1:10, ]
+top10US$Customer <- factor(top10US$Customer, levels=rev(as.character(top10US[,'Customer'])))
+p.Top10USCustomerComplaint <- ggplot(top10US, aes(x=Customer, y=Rate, fill='1')) + geom_bar(stat='identity') + coord_flip() + theme(axis.text.y = element_text(size=14)) + scale_y_continuous(labels=percent)+ scale_fill_manual(name='', values='darkred', guide=FALSE) + labs(title='Top 10 US Customers with Complaints', x='Customer', y='Complaints per Pouches Shipped\nOver Last 365 Days')
+top10Int <- subset(customers.rate, Region == 'International')[order(subset(customers.rate, Region == 'International')[,'Rate'], decreasing=TRUE), ]
+top10Int <- top10Int[1:10, ]
+top10Int$Customer <- factor(top10Int$Customer, levels=rev(as.character(top10Int[,'Customer'])))
+p.Top10IntlCustomerComplaint <- ggplot(top10Int, aes(x=Customer, y=Rate, fill='1')) + geom_bar(stat='identity') + coord_flip() + theme(axis.text.y = element_text(size=14)) + scale_y_continuous(labels=percent)+ scale_fill_manual(name='', values='darkred', guide=FALSE) + labs(title='Top 10 International Customers with Complaints', x='Customer', y='Complaints per Pouches Shipped\nOver Last 365 Days')
+
+#Avg days to close complaints, % <= 30 day goal
+complaints.days <- subset(complaints.df, !is.na(DateClosed), select = c('YearOpen', 'MonthOpen', 'DaysOpen', 'Record'))
+complaints.days$DateGroup <- with(complaints.days, ifelse(MonthOpen < 10, paste0(YearOpen, '-0',MonthOpen), paste0(YearOpen, '-', MonthOpen)))
+dategroups <- sort(as.character(unique(complaints.days$DateGroup)))[sort(as.character(unique(complaints.days$DateGroup))) >= substr(as.character(Sys.Date()-365), 1, 7)] 
+l <- length(dategroups)
+complaints.avgdays <- c()
+for(i in 1:l){
+  temp <- subset(complaints.days, DateGroup == dategroups[i])
+  avgDays <- mean(temp$DaysOpen, na.rm=TRUE)
+  percentUnder30 <- sum(temp$Record[temp$DaysOpen <= 30]) / sum(temp$Record)
+  temp <- subset(complaints.days, DateGroup <= dategroups[i] & DateGroup >= substr(as.character(Sys.Date()-365), 1, 7))
+  cumAvgDays <- mean(temp$DaysOpen, na.rm=TRUE)
+  complaints.avgdays <- rbind(complaints.avgdays, data.frame(DateGroup = dategroups[i], avgDays = avgDays, cumAvgDays = cumAvgDays, percentUnder30 = percentUnder30))
+}
+p1.Complaints.avgDays <- ggplot(complaints.avgdays, aes(x=DateGroup, y=avgDays, fill='Avg Days to Close')) + geom_bar(stat='identity') + geom_line(inherit.aes=FALSE, aes(x=DateGroup, y=cumAvgDays, group=1, color='Cumulative Avg Days to Close')) + geom_point(inherit.aes=FALSE, aes(x=DateGroup,y=cumAvgDays, group=1, color='Cumulative Avg Days to Close')) + scale_fill_manual(values='lightskyblue2', name='') + scale_color_manual(name='', values='blue') + theme(legend.position = 'bottom', legend.justification = 'left', axis.text.x=element_text(angle=90, vjust=0.5)) + labs(title='Average Days to Close a Complaint', subtitle='Goal = 30 days', x='Date\n(Year-Month)', y='Average Days') 
+p2.Complaints.Percent <- ggplot(complaints.avgdays, aes(x=DateGroup, y=percentUnder30, group = 1, color='% Closed At or Under 30 Days')) + geom_line() + geom_point() + scale_y_continuous(limits = c(0,1), labels = percent) + theme(panel.background = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.grid.major.x = element_blank(), axis.text.x=element_blank(), axis.title.x=element_blank(), axis.ticks.x = element_blank(), legend.position = 'bottom', legend.justification = 'right') + labs(x='', y ='Percentage of Complaints') + scale_color_manual(name='', values='black')
+# function to invert 2nd y axis
+hinvert_title_grob <- function(grob){
+  # Swap the widths
+  widths <- grob$widths
+  grob$widths[1] <- widths[3]
+  grob$widths[3] <- widths[1]
+  grob$vp[[1]]$layout$widths[1] <- widths[3]
+  grob$vp[[1]]$layout$widths[3] <- widths[1]
+  # Fix the justification
+  grob$children[[1]]$hjust <- 1 - grob$children[[1]]$hjust
+  grob$children[[1]]$vjust <- 1 - grob$children[[1]]$vjust
+  grob$children[[1]]$x <- unit(1, "npc") - grob$children[[1]]$x
+  grob
+}
+# Get the ggplot grobs
+g5 <- ggplotGrob(p1.Complaints.avgDays)
+g6 <- ggplotGrob(p2.Complaints.Percent)
+# Get the location of the plot panel and legend in g1
+pp <- c(subset(g5$layout, name == "panel", se = t:r))
+pp2 <- c(subset(g5$layout, name == "guide-box", se = t:r))
+# Overlap panel for first plot on top of second plot
+g5 <- gtable_add_grob(g5, g6$grobs[[which(g6$layout$name == "panel")]], pp$t, pp$l, pp$b, pp$l, name='c')
+# Add legend from g6
+g5 <- gtable_add_grob(g5, g6$grobs[[which(g6$layout$name == "guide-box")]], pp2$t, pp2$l, pp2$b, pp2$l, name='b')
+# Get the y axis title from g6
+index <- which(g6$layout$name == "ylab-l") # Which grob contains the y axis title?
+ylab <- g6$grobs[[index]]                # Extract that grob
+ylab <- hinvert_title_grob(ylab)         # Swap margins and fix justifications
+# Put the transformed label on the right side of g5
+g5 <- gtable_add_cols(g5, g6$widths[g6$layout[index, ]$l], pp$r)
+g5 <- gtable_add_grob(g5, ylab, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "ylab-r")
+# Get the y axis from g6 (axis line, tick marks, and tick mark labels)
+index <- which(g6$layout$name == "axis-l")  # Which grob
+yaxis <- g6$grobs[[index]]                  # Extract the grob
+yaxis$children[[1]]$x <- unit.c(unit(0, "npc"), unit(0, "npc"))
+ticks <- yaxis$children[[2]]
+ticks$widths <- rev(ticks$widths)
+ticks$grobs <- rev(ticks$grobs)
+ticks$grobs[[1]]$x <- ticks$grobs[[1]]$x - unit(1, "npc") + unit(3, "pt")
+ticks$grobs[[2]] <- hinvert_title_grob(ticks$grobs[[2]])
+yaxis$children[[2]] <- ticks
+# Put the transformed yaxis on the right side of g5
+g5 <- gtable_add_cols(g5, g6$widths[g6$layout[index, ]$l], pp$r)
+g5 <- gtable_add_grob(g5, yaxis, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "axis-r")
+# grid.newpage()
+# grid.draw(g5)
+
 # Export Images for the Web Hub
 setwd(imgDir)
 plots <- ls()[grep('^p\\.', ls())]
@@ -1135,6 +1274,10 @@ png(file='FlorenceRMAProcessTable.png', width=1200, height=800, units='px')
 grid.draw(table3)
 makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
 dev.off()
+png(file='AvgDaysComplaintClosed.png', width=1200, height=800, units='px')
+grid.draw(g5)
+makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
+dev.off()
 
 # Export PDF for the Web Hub
 setwd(pdfDir)
@@ -1154,6 +1297,8 @@ grid.newpage()
 grid.draw(table3)
 grid.newpage()
 grid.draw(table4)
+grid.newpage()
+grid.draw(g5)
 dev.off()
 
 rm(list=ls())
