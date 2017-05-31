@@ -39,6 +39,7 @@ FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] R WITH(NOLOCK) INNER JOIN 
 WHERE [RunStatus] LIKE 'Completed' AND [SampleId] LIKE '%5W4B%' AND [StartTime] >= GETDATE()-500
 
 SELECT	
+	[SampleId],
 	CAST([StartTime] AS DATE) AS [Date],
 	[PouchSerialNumber],
 	[InstrumentSerialNumber],
@@ -56,11 +57,14 @@ SELECT
 		IIF([SampleId] LIKE '%390%', '390',
 		IIF([SampleId] LIKE '%515%', '515', 'Other')))))) AS [Building],
 	IIF([Name] LIKE 'PCR%' OR [Name] LIKE 'yeast%', 'No Contamination',
-		IIF([Result] LIKE 'Positive', 'Contamination', 'No Contamination')) AS [ConStatus]
+		IIF([Result] LIKE 'Positive', 'Contamination', 'No Contamination')) AS [ConStatus],
+	IIF([SampleId] LIKE '%515-%', SUBSTRING([SampleId], PATINDEX('%-%', [SampleId])+1, 1), 
+		IIF([SampleId] LIKE '%515%', SUBSTRING([SampleId], PATINDEX('%515_%', [SampleId])+4, LEN([SampleId])), 'N/A')) AS [Floor515]
 INTO #allRuns
 FROM #fa1
 UNION ALL
 SELECT	
+	[SampleId],
 	CAST([StartTime] AS DATE) AS [Date],
 	[PouchSerialNumber],
 	[InstrumentSerialNumber],
@@ -78,7 +82,9 @@ SELECT
 		IIF([SampleId] LIKE '%390%', '390',
 		IIF([SampleId] LIKE '%515%', '515', 'Other')))))) AS [Building],
 	IIF([Name] LIKE 'PCR%' OR [Name] LIKE 'yeast%', 'No Contamination',
-		IIF([Result] LIKE 'Positive', 'Contamination', 'No Contamination')) AS [ConStatus]
+		IIF([Result] LIKE 'Positive', 'Contamination', 'No Contamination')) AS [ConStatus],
+	IIF([SampleId] LIKE '%515-%', SUBSTRING([SampleId], PATINDEX('%-%', [SampleId])+1, 1), 
+		IIF([SampleId] LIKE '%515%', SUBSTRING([SampleId], PATINDEX('%515_%', [SampleId])+4, LEN([SampleId])), 'N/A')) AS [Floor515]
 FROM #fa2
 ORDER BY [Date] 
 
@@ -93,6 +99,7 @@ SELECT
 	[Result],
 	[Cp],
 	[Building],
+	[Floor515],
 	[ConStatus],
 	'Environmental' AS [Key],
 	1 AS [Record] 
