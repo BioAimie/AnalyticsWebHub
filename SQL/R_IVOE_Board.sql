@@ -99,6 +99,20 @@ FROM (
 	FROM [PMS1].[dbo].[NCRPartsAffected] N
 	INNER JOIN #parts P ON P.[PartNumber] = N.[PartAffected]
 ) Q
--- Board NCRs
+--OUTPUT RESULT: Board NCRs
 
-DROP TABLE #parts, #shipments, #boardInstrumentParts, #boardsShipped, #boardFailure
+SELECT
+	L.[LotNumber],
+	TRY_CAST('20' + SUBSTRING(RIGHT(L.[LotNumber], 9), 5, 2) + '-' + 
+			SUBSTRING(RIGHT(L.[LotNumber], 9), 1, 2) + '-' + 
+			SUBSTRING(RIGHT(L.[LotNumber], 9), 3, 2) AS DATE) AS [BoardReceiptDate],
+	L.[DateOfManufacturing],
+	L.[ActualLotSize],
+	P.[PartNumber],
+	P2.[PartDesc]
+FROM [ProductionWeb].[dbo].[Lots] L
+INNER JOIN [ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
+INNER JOIN #parts P2 ON P2.[PartNumber] = P.[PartNumber]
+ORDER BY [BoardReceiptDate]
+
+--DROP TABLE #parts, #shipments, #boardInstrumentParts, #boardsShipped, #boardFailure
