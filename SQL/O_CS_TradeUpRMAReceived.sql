@@ -1,5 +1,12 @@
 SET NOCOUNT ON
 
+SELECT DISTINCT
+	[TicketId]
+INTO #Tickets
+FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus]
+WHERE [Tracker] LIKE 'RMA' AND [ObjectName] LIKE 'Part Information' AND [PropertyName] LIKE 'Part Number'
+	AND [RecordedValue] LIKE 'FLM1-ASY-0001%'
+
 SELECT 
 	[TicketId],
 	[CreatedDate],
@@ -31,7 +38,8 @@ PIVOT
 		[Customer Id]
 	)
 ) PIV
-WHERE [RMA Type] LIKE 'Customer%' AND [Assigned Service Center] NOT LIKE 'Field Service'
+WHERE [RMA Type] IN ('FP OpLeas Trade','REG Trade ADD ON','REG Trade NONWAR','REG Trade WAR','RRA CAP TradeUP','FOC Trade WAR','RRA OP TradeUP','FP CapLeas Trad','FOC Trade NONWAR')
+	AND [Assigned Service Center] NOT LIKE 'Field Service' AND [TicketId] IN (SELECT * FROM #Tickets)
 
 SELECT 
 	YEAR([CreatedDate]) AS [Year],
@@ -45,5 +53,6 @@ SELECT
 	IIF(DATEDIFF(day, [CreatedDate], [ReceivedDate]) < 0, 0, DATEDIFF(day, [CreatedDate], [ReceivedDate])) AS [DaysUntilReceipt] 
 FROM #Master
 WHERE [CustID] NOT LIKE 'IDATEC'
+ORDER BY [ServiceCenter], [CustomerType]
 
-DROP TABLE #Master
+DROP TABLE #Tickets, #Master
