@@ -9,6 +9,8 @@ library(zoo)
 library(RODBC)
 library(scales)
 library(devtools)
+library(tidyverse)
+library(forcats)
 library(lubridate)
 library(dateManip)
 
@@ -70,9 +72,32 @@ removed.points <- data.frame(DateGroup = c('2016-21','2016-22'), Version = 'Torc
 p.ncr.rate.ver <- ggplot(subset(ncr.rate.ver.trunc, Version %in% c('FA2.0', 'Torch Module', 'Torch Base')), aes(x=DateGroup, y=CRate, group=Version)) + geom_line(color='black') + facet_wrap(~Version, ncol=1, scale='free_y') + geom_point(color='black') + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instrument NCRs per Instruments Built by Version', subtitle ='(x indicates data point above axis limit)', x='Date\n(Year-Week)', y='4-week Rolling Average') + geom_point(data=removed.points, inherit.aes=FALSE, aes(x=DateGroup, y=Point), shape=4) 
 
 
-incomingInspection.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', incomingInspection.df, c('RecordedValue'), plot.startDate.week, 'Record', 'sum', 0)
-incomingInspection.rate <- mergeCalSparseFrames(incomingInspection.all, instNCRs.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0)
-p.ncr.incoming.inspection <- ggplot(incomingInspection.rate, aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill='cornflowerblue') + geom_hline(yintercept=.25, col="green", linetype="dashed", size=1.3) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Percent of NCRs Found in Incoming Inspection \n Goal=25% ' , y='Percent', x='Date \n (Year-Week)') + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent)
+incomingInspection.dateGroups = calendar.df$DateGroup[calendar.df$DateGroup >= dateBreaks[1]];
+incomingInspection.all = incomingInspection.df %>% 
+  inner_join(calendar.df, by="Date") %>%
+  filter(DateGroup %in% incomingInspection.dateGroups) %>%
+  mutate(ProblemArea = fct_infreq(ProblemArea)) %>%
+  group_by(DateGroup, ProblemArea) %>% summarize(IncomingCount=n()) %>% ungroup() %>%
+  complete(DateGroup = incomingInspection.dateGroups, ProblemArea, fill = list(IncomingCount = 0))
+incomingInspection.rate = incomingInspection.all %>%
+  inner_join(instNCRs.all, by="DateGroup") %>%
+  mutate(Rate = IncomingCount/Record)
+incomingInspection.pal = createPaletteOfVariableLength(as.data.frame(incomingInspection.rate), 'ProblemArea');
+p.ncr.incoming.inspection <- incomingInspection.rate %>%
+  ggplot(aes(x=DateGroup, y=Rate, fill=ProblemArea)) + 
+  geom_col() +
+  geom_hline(yintercept=.25, col="green", linetype="dashed", size=1.3) + 
+  theme(text=element_text(size=fontSize, face=fontFace), 
+        axis.text=element_text(size=fontSize, face=fontFace, color='black'), 
+        axis.text.x=element_text(angle=90, hjust=1),
+        legend.position = "bottom") + 
+  labs(title='Percent of NCRs Found in Incoming Inspection \n Goal=25% ', 
+       y='Percent', 
+       x='Date \n (Year-Week)',
+       fill=element_blank()) + 
+  scale_x_discrete(breaks=dateBreaks) + 
+  scale_y_continuous(labels=percent) +
+  scale_fill_manual(values = incomingInspection.pal)
 
 
 final.qc.count <- with(finalQC.df, aggregate(Record~Year+Week+Version+RecordedValue, FUN=sum))
