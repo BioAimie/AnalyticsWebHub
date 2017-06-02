@@ -22,7 +22,8 @@ SELECT
 	[DatePlaced],
 	TRY_CAST('20' + SUBSTRING(RIGHT([LotNumber], 9), 5, 2) + '-' + 
 			SUBSTRING(RIGHT([LotNumber], 9), 1, 2) + '-' + 
-			SUBSTRING(RIGHT([LotNumber], 9), 3, 2) AS DATE) AS [BoardReceiptDate]
+			SUBSTRING(RIGHT([LotNumber], 9), 3, 2) AS DATE) AS [BoardReceiptDate],
+	[HoursRun]
 INTO #boardInstrumentParts
 FROM [PMS1].[dbo].[bInstrumentParts]
 WHERE [PartNumber] IN (SELECT [PartNumber] FROM #parts)
@@ -53,6 +54,8 @@ SELECT
 	UPPER(P.[PartNumber]) AS [PartNumber],
 	CAST(F.[CreatedDate] AS DATE) AS [CreatedDate],
 	F.[TicketString],
+	F.[HoursRun],
+	F.[EarlyFailureType],
 	ROW_NUMBER() OVER(ORDER BY F.[CreatedDate]) AS [FailId]
 INTO #boardFailure
 FROM [PMS1].[dbo].[bInstrumentFailure] F
@@ -66,11 +69,15 @@ SELECT
 	Q.[PartNumber],
 	Q.[LotNumber],
 	Q.[BoardReceiptDate],
+	Q.[HoursRun],
+	Q.[EarlyFailureType],
 	P.[PartDesc]
 FROM (
 	SELECT 
 		F.[CreatedDate],
 		F.[TicketString],
+		IIF(F.[HoursRun] > P.[HoursRun], F.[HoursRun] - P.[HoursRun], F.[HoursRun]) AS [HoursRun],
+		F.[EarlyFailureType],
 		F.[PartNumber],
 		P.[LotNumber],
 		P.[BoardReceiptDate],
@@ -92,12 +99,14 @@ FROM (
 	SELECT
 		N.[CreatedDate],
 		N.[TicketString],
+		N.[Disposition],
 		UPPER(N.[PartAffected]) AS [PartNumber],
 		TRY_CAST(N.[QuantityAffected] AS INT) AS [QuantityAffected],
 		REPLACE(SUBSTRING([LotorSerialNumber], 1, PATINDEX('%[:/]%', [LotorSerialNumber] + ':') - 1), ' ', '') AS [LotNumber],
 		P.[PartDesc]
 	FROM [PMS1].[dbo].[NCRPartsAffected] N
 	INNER JOIN #parts P ON P.[PartNumber] = N.[PartAffected]
+	WHERE N.[Disposition] NOT LIKE '%Use as is%'
 ) Q
 --OUTPUT RESULT: Board NCRs
 
@@ -108,6 +117,7 @@ SELECT
 			SUBSTRING(RIGHT(L.[LotNumber], 9), 3, 2) AS DATE) AS [BoardReceiptDate],
 	L.[DateOfManufacturing],
 	L.[ActualLotSize],
+	L.[DesiredLotSize],
 	P.[PartNumber],
 	P2.[PartDesc]
 FROM [ProductionWeb].[dbo].[Lots] L
@@ -115,4 +125,4 @@ INNER JOIN [ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId
 INNER JOIN #parts P2 ON P2.[PartNumber] = P.[PartNumber]
 ORDER BY [BoardReceiptDate]
 
---DROP TABLE #parts, #shipments, #boardInstrumentParts, #boardsShipped, #boardFailure
+DROP TABLE #parts, #shipments, #boardInstrumentParts, #boardsShipped, #boardFailure

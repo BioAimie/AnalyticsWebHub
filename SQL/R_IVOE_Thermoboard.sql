@@ -32,7 +32,8 @@ WHERE TP.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103')
 
 SELECT DISTINCT
 	L.[LotNumber],
-	L.[ActualLotSize]
+	L.[ActualLotSize],
+	L.[DesiredLotSize]
 INTO #pcbaLots
 FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
 	ON P.[PartNumberId] = L.[PartNumberId]
@@ -133,7 +134,8 @@ PIVOT
 
 SELECT 
 	[LotNumber],
-	SUM(CAST([ncrQty] AS INT)) AS [ncrQty]
+	CAST([ncrQty] AS INT) AS [ncrQty],
+	[Disposition]
 INTO #pcbaNCRs
 FROM
 (
@@ -158,7 +160,7 @@ FROM
 	) PIV
 	WHERE [Part Affected] LIKE 'PCBA-SUB-0836'
 ) T
-GROUP BY [LotNumber]
+--GROUP BY [LotNumber]
 
 SELECT 
 	P.[TicketId],
@@ -191,6 +193,7 @@ SELECT
 INTO #failedInst
 FROM #flaggedForFailures
 
+
 SELECT 
 	F.[TicketId],
 	P.[TicketString],
@@ -221,9 +224,15 @@ FROM #failedInst F INNER JOIN
 ) P
 	ON F.[TicketId] = P.[TicketId]
 
+
+SELECT * FROM #pcbaRMAs
+WHERE [TicketString] IN ('RMA-8039', 'RMA-8855', 'RMA-9237', 'RMA-9321', 'RMA-10917', 'RMA-12665', 'RMA-6918', 'RMA-10063', 'RMA-10504', 'RMA-10920', 'RMA-13151')
+
+
 SELECT
 	L.[LotNumber],
 	SUM(L.[ActualLotSize]) AS [ActualLotSize],
+	SUM(L.[DesiredLotSize]) AS [DesiredLotSize],
 	ISNULL(N.[LotSizeUsed],0) + ISNULL(R.[LotSizeUsed],0) AS [LotSizeUsed]
 INTO #lotSizes
 FROM #pcbaLots L LEFT JOIN
@@ -269,9 +278,11 @@ SELECT
 	CAST(CONCAT(CONCAT('20', SUBSTRING(RIGHT(L.[LotNumber], 9), 5, 2)), '-', SUBSTRING(RIGHT(L.[LotNumber], 9), 1, 2), '-', SUBSTRING(RIGHT(L.[LotNumber], 9), 3, 2)) AS DATE) AS [Date],
 	L.[ActualLotSize],
 	L.[LotSizeUsed],
+	L.[DesiredLotSize],
 	N.[ncrQty],
-	R.[rmaQty]
-INTO #master
+	R.[rmaQty],
+	N.[Disposition]
+--INTO #master
 FROM #lotSizes L LEFT JOIN #pcbaNCRs N
 	ON L.[LotNumber] = N.[LotNumber] LEFT JOIN
 	(
@@ -283,7 +294,9 @@ FROM #lotSizes L LEFT JOIN #pcbaNCRs N
 		GROUP BY [LotNumber]
 	) R
 		ON L.[LotNumber] = R.[LotNumber]
-WHERE L.[ActualLotSize] > 0
+--WHERE L.[ActualLotSize] > 0
+--ORDER BY [LotNumber]
+ORDER BY [Date]
 
 SELECT
 	[LotNumber],
@@ -294,8 +307,8 @@ SELECT
 	ISNULL([rmaQty], 0) AS [QtyFailedInField],
 	ISNULL([ncrQty],0) AS [QtyFailedInHouse]
 FROM #master
-WHERE [ActualLotSize] > 5
+--WHERE [ActualLotSize] > 5
 ORDER BY [Date]
 
-DROP TABLE  #failedInst, #flaggedForFailures, #freePropPiv, #freePropPivrops, #lotSizes, #master, #partInfo, #partInfoPiv, 
-	#partsUsed, #pcbaLots, #pcbaLotsInProd, #pcbaNCRs, #pcbaRMAs, #rawNCR, #RMAfailingLot, #RMApreviousLot
+--DROP TABLE  #failedInst, #flaggedForFailures, #freePropPiv, #freePropPivrops, #lotSizes, #master, #partInfo, #partInfoPiv, 
+--	#partsUsed, #pcbaLots, #pcbaLotsInProd, #pcbaNCRs, #pcbaRMAs, #rawNCR, #RMAfailingLot, #RMApreviousLot
