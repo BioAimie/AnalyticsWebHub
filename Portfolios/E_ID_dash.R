@@ -100,8 +100,8 @@ instBuilt.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', instBuilt.
 instNCRs.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', instNCRs.df, c('Key'), start.weekRoll, 'Record', 'sum', 0)
 ncr.rate.all <- mergeCalSparseFrames(instNCRs.all, instBuilt.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 ncr.lims.all <- addStatsToSparseHandledData(ncr.rate.all, c('Key'), lagPeriods, TRUE, 2, 'upper', keepPeriods=53)
-x_positions <- c('2016-23','2016-39', '2016-51')
-rate.all.annotations <- c('Bead Beater Rework-CAPA 13262,\nTorch Build Ramp','Process Change\n1 NCR/Lot', 'Manifold-DX-DCN-33636,DX-CO-35011\nPCB-CAPA 13210')
+x_positions <- c('2016-39', '2016-51')
+rate.all.annotations <- c('Process Change\n1 NCR/Lot', 'Manifold-DX-DCN-33636,DX-CO-35011\nPCB-CAPA 13210')
 y_positions <- ncr.lims.all[(ncr.lims.all[,'DateGroup']) %in% x_positions, 'Rate'] + 0.4
 p.NCR.Rate.All <- ggplot(ncr.lims.all, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point() + geom_line(aes(y=UL), color='blue', lty=2) + scale_x_discrete(breaks=dateBreaks.wk) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Rate of Instrument NCRs per Instruments Built (not released)', subtitle ='FYI Limit = +2 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average') + annotate("text",x=x_positions,y=y_positions,label=rate.all.annotations, size=6)
 
@@ -265,7 +265,6 @@ begTorch = '2016-04'
 p.TorchModHours100.long <- ggplot(subset(fail.hours.rate, DateGroup >= begTorch & Version == 'Torch Module'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', fill=pal.wpfs[1]) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='Long-term Torch Module Rate of Failures at <100 Hours Run', subtitle= 'Per 4-Month Moving Average of Instruments Shipped',y='Rate of Failures at <100 Hours Run', x='Date\n(Year-Month)') + #geom_hline(yintercept=0.025, color='forestgreen', size=1) + 
   geom_line(data=subset(ytdrates.hours, Version == 'Torch Module' & DateGroup >= begTorch), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Version), size=1) + geom_point(data=subset(ytdrates.hours, Version == 'Torch Module' & DateGroup >= begTorch), inherit.aes = FALSE, aes(x=DateGroup, y=Rate)) + geom_errorbar(aes(ymin=RateLower, ymax=RateUpper)) + geom_text(aes(label=paste(Failure,'\n',sprintf("%.1f",RollingAvg),sep='')),  position = position_stack(vjust = 0.5), size=8) #+ guides(color=guide_legend(nrow=1, by.row=TRUE))
 
-
 # FA 2.0 DOA/ELF Failures Modes (new chart)
 failmodes.yr <- fail.modes.df
 failmodes.yr$DateGroup <- with(failmodes.yr, ifelse(Month < 10, paste0(Year, '-0', Month), paste0(Year,'-', Month)))
@@ -286,9 +285,6 @@ modesBase <- subset(failmodes.yr, Department == 'Production' & Version == 'Torch
 modesBase.agg <- with(modesBase, aggregate(Record~ProblemArea+Fail, FUN=sum))
 modesBase.agg$ProblemArea <- factor(modesBase.agg$ProblemArea, levels = as.character(with(modesBase.agg, aggregate(Record~ProblemArea, FUN=sum))[with(with(modesBase.agg, aggregate(Record~ProblemArea, FUN=sum)),order(-Record)),'ProblemArea']))
 p.TorchBaseFailureModes <- ggplot(modesBase.agg, aes(x=ProblemArea, y=Record, fill=Fail)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(modesBase.agg, 'Fail'), name='') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(size=fontSize, face=fontFace, color='black'), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Torch Base DOA/ELF Problem Areas', subtitle='Last 12 Months', y='Count', x='Problem Area')
-
-
-
 
 # Instrument NCR Problem Area per Instruments Built (NCR chart)
 wpfs.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', wpfsNCR.df, c('RecordedValue'), start.weekRoll, 'Record', 'sum', 0)

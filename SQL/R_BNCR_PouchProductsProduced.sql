@@ -5,7 +5,7 @@ SELECT
 	SUM([Record]) AS [Record]
 FROM 
 (
-	SELECT 
+	SELECT
 		L.[LotNumber],
 		IIF([DateOfManufacturing] > GETDATE(), MAX([DateCompleted]), [DateOfManufacturing]) AS [Date],
 		'Array' AS [Key],
@@ -14,16 +14,7 @@ FROM
 		ON L.[PartNumberId] = P.[PartNumberId] INNER JOIN [ProductionWeb].[dbo].[LotApprovals] LA WITH(NOLOCK)
 			ON LA.[LotNumber] = L.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[Approvals] A WITH(NOLOCK)
 				ON A.[LotApprovalId] = LA.[LotApprovalId]
-	WHERE [PartNumber] IN 
-	(
-		'RFIT-SUB-0076',
-		'RFIT-SUB-0111',
-		'RFIT-SUB-0114',
-		'RFIT-SUB-0212',
-		'RFIT-SUB-0213',
-		'RFIT-SUB-0348',
-		'RFIT-SUB-0384'
-	)
+	WHERE [BatchRecordId] = 'FA-200C' 
 	GROUP BY L.[LotNumber], [DateOfManufacturing], [DesiredLotSize]
 
 	UNION ALL
@@ -70,7 +61,7 @@ FROM
 
 	UNION ALL
 
-	SELECT 
+	SELECT
 		L.[LotNumber],
 		IIF([DateOfManufacturing] > GETDATE(), MAX([DateCompleted]), [DateOfManufacturing]) AS [Date],
 		'FAIV' AS [Key],
@@ -79,11 +70,7 @@ FROM
 		ON L.[PartNumberId] = P.[PartNumberId] INNER JOIN [ProductionWeb].[dbo].[LotApprovals] LA WITH(NOLOCK)
 			ON LA.[LotNumber] = L.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[Approvals] A WITH(NOLOCK)
 				ON A.[LotApprovalId] = LA.[LotApprovalId]
-	WHERE [PartNumber] IN 
-	(
-		'FAIV-SUB-0001',
-		'FAIV-SUB-0002'
-	)
+	WHERE [PartNumber] LIKE 'FAIV-SUB-%'
 	GROUP BY L.[LotNumber], [DateOfManufacturing], [DesiredLotSize]
 ) D
 WHERE [Date] > GETDATE() - 400
