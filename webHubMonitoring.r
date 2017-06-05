@@ -42,7 +42,7 @@ if(length(itemsNotUpdated) != 0) {
   }
   
   from <- "amber.kiser@biofiredx.com"
-  to <- c("amber.kiser@biofiredx.com", "Aimie.Faucett@biofiredx.com")
+  to <- c("amber.kiser@biofiredx.com", "Aimie.Faucett@biofiredx.com", "brent.kerby@biofiredx.com")
   subject <- "WebHub Charts Did Not Update"
   body <- paste("Hello, The following WebHub charts did not update on schedule: ", emailList)                     
   mailControl=list(smtpServer="webmail.biofiredx.com")
