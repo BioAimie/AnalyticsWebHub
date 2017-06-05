@@ -46,7 +46,7 @@ analyzeOrderIMR <- function(dataFrame, variableToPlot, dateToAnalyze, entriesToC
   # for IMR, both the individual result and the range must be calculated, BUT the team wants things grouped by Equipment, so add this as an option
   if(byEquipment) {
     
-    I <- keepEntries[,c('LotNumber','TestNumber','Equipment','DateOpened','Observation','Result')]
+    I <- keepEntries[,c('LotNumber','TestNumber','Equipment',dateToAnalyze,'Observation','Result')]
     I$Key <- 'Individual Value'
     equips <- unique(as.character(I[,'Equipment']))
     l <- length(equips)
@@ -61,7 +61,7 @@ analyzeOrderIMR <- function(dataFrame, variableToPlot, dateToAnalyze, entriesToC
       temp[,'Observation'] <- seq(1, length(temp[,'Observation']), 1)
       
       # if there are fewer than 12 measurements, then skip that piece of equipment because there is not enough data 
-      if(length(temp[,1]) < 12) {
+      if(length(temp[,1]) < 4) {
         next()
       }
       # bind the data for each equipment into one data frame
@@ -72,12 +72,12 @@ analyzeOrderIMR <- function(dataFrame, variableToPlot, dateToAnalyze, entriesToC
       # create a data set for the Range values
       temp <- I.equip[I.equip[,'Equipment'] == equips[i], ]
       
-      if(length(temp[,1]) < 12) {
+      if(length(temp[,1]) < 4) {
         next()
       }
       Result <- sapply(2:length(temp[,'Observation']), function(x) abs(temp[x,'Result'] - temp[x-1,'Result']))
       Result <- c(NA, Result)
-      temp <- cbind(temp[,c('LotNumber','TestNumber','Equipment','DateOpened','Observation')], Result)
+      temp <- cbind(temp[,c('LotNumber','TestNumber','Equipment',dateToAnalyze,'Observation')], Result)
       temp$Key <- 'Moving Range'
       # bind the data for each equipment into one data frame
       MR.equip <- rbind(MR.equip, temp)
@@ -116,13 +116,13 @@ analyzeOrderIMR <- function(dataFrame, variableToPlot, dateToAnalyze, entriesToC
   } else {  
   
     # Create a data set for the Individual Values
-    I <- keepEntries[,c('LotNumber','TestNumber','Equipment','DateOpened','Observation','Result')]
+    I <- keepEntries[,c('LotNumber','TestNumber','Equipment',dateToAnalyze,'Observation','Result')]
     I$Key <- 'Individual Value'
     
     # Create a data set for the Range values
     Result <- sapply(2:entriesToChart, function(x) abs(keepEntries[x,'Result'] - keepEntries[x-1,'Result']))
     Result <- c(NA, Result)
-    MR <- cbind(I[,c('LotNumber','TestNumber','Equipment','DateOpened','Observation')], Result)
+    MR <- cbind(I[,c('LotNumber','TestNumber','Equipment',dateToAnalyze,'Observation')], Result)
     MR$Key <- 'Moving Range'
     
     # The upper and lower control limits should now be added, BUT these limits should be over all time not just the IncludeInIMR data points
