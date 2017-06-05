@@ -1,7 +1,7 @@
 # Set the environment
 workDir <- '~/WebHub/AnalyticsWebHub/'
 imgDir <- '../images/Dashboard_InstrumentVOE/'
-pdfDir <- 'pdfs/'
+pdfDir <- '../pdfs/'
 setwd(workDir)
 
 # Load needed libraries
@@ -30,10 +30,6 @@ loadSQL(PMScxn, "SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql", "rmaShipped.df"
 loadSQL(PMScxn, "SQL/R_CC_CustPouchesShippedDetailed.sql", "pouches.df")
 loadSQL(PMScxn, "SQL/R_IVOE_Board.sql", 
         c("boardsInField.df", "boardFailureRMA.df", "boardNCR.df", "boardLots.df"))
-loadSQL(PMScxn, "SQL/R_IVOE_Thermoboard.sql", "board.thermo.df")
-loadSQL(PMScxn, "SQL/R_IVOE_ValveBoard.sql", "board.valve.df")
-loadSQL(PMScxn, "SQL/R_IVOE_ImageMasterBoard.sql", "board.image.df")
-loadSQL(PMScxn, "SQL/R_IVOE_CameraBoard.sql", "board.camera.df")
 loadSQL(PMScxn, "SQL/R_IVOE_LEDExcitationError.sql", "excitation.df")
 loadSQL(PMScxn, "SQL/R_IVOE_SealBarAlignmentNCR.sql", "sealBarNCR.df")
 loadSQL(PMScxn, "SQL/R_IVOE_SealBarAlignmentRMA.sql", "sealBarRMA.df")
@@ -52,6 +48,7 @@ lagPeriods <- 4
 wireharness.numCharts = 5
 wireharness.nrow = 5
 wireharness.ncol = 5
+minimumDenom = 5
 
 # use '2014-51' as the start date so that the 4-week rolling trend starts in week 1 of 2015
 startYear <- 2014
@@ -109,177 +106,186 @@ bladder.all.voe <- rbind(bladder.all.rate, bladder.all.count)
 bladder.all.voe$HoursBetweenBin <- factor(bladder.all.voe$HoursBetweenBin, levels = c('0-100','100-500','500-1000','1000+','Unknown'))
 p.bladder.all.voe <- ggplot(subset(bladder.all.voe, RecordedValue != 'NoFailure')[with(subset(bladder.all.voe, RecordedValue != 'NoFailure'), order(HoursBetweenBin)), ], aes(x=DateGroup, y=Rate, fill=HoursBetweenBin)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(bladder.all.voe, 'HoursBetweenBin'), name='') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Effect of Enhanced Window Bladder QC:\nAll Failures/Lot Size in Field', y='Failures/Lot, Failure Count', x='Date of Lot Manufacture\n(Year-Week)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = annot.bladder, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Record), angle=90, hjust=0, size=6, fontface='bold')
 
-# Aggregate boards in field (used in several charts)
-makePalette = function(n){
-  hex(HLS(rev(seq(0, length.out = n, by = 360/n)), 
-          .6 - .3 * ((1:n %/% 2) %%2 ),
-          .8 - .4 * (((0:(n - 1) %/% 2) %% 2))));
-} 
+# Aggregate boards in field and failure RMAs (used in several charts)
 boardsInField.parts = unique(boardsInField.df$PartDesc);
 boardsInField.count = boardsInField.df %>%
   inner_join(calendar.df, by = c("BoardReceiptDate" = "Date")) %>%
   group_by(DateGroup, PartDesc) %>% summarize(FieldCount = sum(QuantityInField)) %>% ungroup() %>%
   complete(DateGroup = calendar.df$DateGroup, PartDesc = boardsInField.parts, fill = list(FieldCount = 0));
-board.pal = makePalette(length(boardsInField.parts));
-
-# Board failure RMAs
 boardFailureRMA.count = boardFailureRMA.df %>% 
   inner_join(calendar.df, by = c("BoardReceiptDate" = "Date")) %>%
-  group_by(DateGroup, PartDesc) %>% summarize(FailureRMACount = n()) %>% ungroup() %>%
-  complete(DateGroup = calendar.df$DateGroup, PartDesc = boardsInField.parts, fill = list(FailureRMACount = 0));
+  group_by(DateGroup, PartDesc) %>% 
+  summarize(FailureRMACount = n(), 
+            EarlyFailureRMACount = sum(HoursRun<100 | EarlyFailureType != 'N/A', na.rm = TRUE)) %>% 
+  ungroup() %>%
+  complete(DateGroup = calendar.df$DateGroup, PartDesc = boardsInField.parts, 
+           fill = list(FailureRMACount = 0, EarlyFailureRMACount = 0));
 boardFailureRMA.rate = boardsInField.count %>%
-  left_join(boardFailureRMA.count, by = c("DateGroup", "PartDesc")) %>%
-  mutate(FailureRMARate = ifelse(FieldCount > 5, FailureRMACount / FieldCount, NA))
-boardFailureRMA.gather = boardFailureRMA.rate %>% 
+  inner_join(boardFailureRMA.count, by = c("DateGroup", "PartDesc")) %>%
+  mutate(FailureRMARate = FailureRMACount / FieldCount,
+         EarlyFailureRMARate = EarlyFailureRMACount / FieldCount
+#         FailureRMARate0 = ifelse(FieldCount > minimumDenom, FailureRMACount / FieldCount, NA),
+#         EarlyFailureRMARate0 = ifelse(FieldCount > minimumDenom, EarlyFailureRMACount / FieldCount, NA)
+  ) %>%
   filter(DateGroup >= '2015-01') %>%
-  mutate(PartDesc = fct_reorder(PartDesc, FailureRMACount, sum, na.rm=TRUE)) %>%
-  gather(Key, Value, c(FailureRMACount, FailureRMARate), factor_key=TRUE) %>% 
-  mutate(Key = fct_recode(Key, 'Failure RMA count'='FailureRMACount', 'Failure RMA count/Quantity in field'='FailureRMARate')) %>%
-  arrange(Key, DateGroup, PartDesc);
-p.boardFailureRMA = 
-  boardFailureRMA.gather %>% 
-  filter(!is.na(Value)) %>%
+  mutate(PartDesc = fct_reorder(PartDesc, FailureRMACount, sum, na.rm=TRUE));
+boardFailureRMA.total = boardFailureRMA.rate %>% 
+  group_by(DateGroup) %>% 
+  summarize(FailureRMACount = sum(FailureRMACount),
+            EarlyFailureRMACount = sum(EarlyFailureRMACount))
+makePalette = function(n){
+  hex(HLS(rev(seq(0, length.out = n, by = 360/n)), 
+          .6 - .3 * ((1:n %/% 2) %%2 ),
+          .8 - .4 * (((0:(n - 1) %/% 2) %% 2))));
+} 
+board.pal = makePalette(length(boardsInField.parts));
+
+# Chart: Board failure RMAs
+boardFailureRMA.gather = 
+  boardFailureRMA.rate %>%
+  gather(Key, Value, c(FailureRMARate, FailureRMACount), factor_key=TRUE) %>%
+  mutate(Key = fct_recode(Key, 'Failure RMA Count'='FailureRMACount', 
+                          'Failure RMA Count/Quantity Shipped'='FailureRMARate')) %>%
+  arrange(PartDesc)
+nudge1 = max(boardFailureRMA.total$FailureRMACount)*.035;
+K1 = boardFailureRMA.gather$Key[boardFailureRMA.gather$Key == 'Failure RMA Count'][1];
+p.boardFailureRMA = boardFailureRMA.gather %>%
   ggplot(aes(x=DateGroup, y=Value, fill=PartDesc)) + 
   facet_wrap(~Key, ncol=1, scale='free_y') +
   geom_col(color='black') +
+  geom_text(data = boardFailureRMA.total %>% mutate(Key = K1),
+            aes(x = DateGroup, y = FailureRMACount + nudge1, label = FailureRMACount),
+            inherit.aes = FALSE) +
   theme(axis.text.x=element_text(angle=90, hjust=1),
         legend.position='bottom') +
   guides(fill = guide_legend(ncol = 3, title = '')) +
   scale_x_discrete(breaks=dateBreaks) +
-  scale_fill_manual(values = board.pal) +
-  labs(x='Board receipt date (Year-Quarter)',
+  scale_fill_manual(values = board.pal, drop = FALSE) +
+  labs(x='Board receipt date (Year-Week)',
        y=element_blank(),
        fill=element_blank(),
-       title='Board failure RMAs')
+       title='Board Failure RMAs')
 
-# Board RMA+NCR failures
+# Chart: Board failure RMAs <100 hours
+boardEarlyFailureRMA.gather = boardFailureRMA.rate %>% 
+  gather(Key, Value, c(EarlyFailureRMARate, EarlyFailureRMACount), factor_key=TRUE) %>% 
+  mutate(Key = fct_recode(Key, 'Failure RMAs <100 Hours'='EarlyFailureRMACount', 'Failure RMAs <100 Hours/Quantity Shipped'='EarlyFailureRMARate')) %>%
+  arrange(PartDesc)
+nudge2 = max(boardFailureRMA.total$EarlyFailureRMACount)*.035;
+K2 = boardEarlyFailureRMA.gather$Key[boardEarlyFailureRMA.gather$Key == 'Failure RMAs <100 Hours'][1];
+p.boardEarlyFailureRMA = boardEarlyFailureRMA.gather %>%
+  ggplot(aes(x=DateGroup, y=Value, fill=PartDesc)) + 
+  facet_wrap(~Key, ncol=1, scale='free_y') +
+  geom_col(color='black') +
+  geom_text(data = boardFailureRMA.total %>% mutate(Key = K2),
+            aes(x = DateGroup, y = EarlyFailureRMACount + nudge2, label = EarlyFailureRMACount),
+            inherit.aes = FALSE) +
+  theme(axis.text.x=element_text(angle=90, hjust=1),
+        legend.position='bottom') +
+  guides(fill = guide_legend(ncol = 3, title = '')) +
+  scale_x_discrete(breaks=dateBreaks) +
+  scale_fill_manual(values = board.pal, drop = FALSE) +
+  labs(x='Board Receipt Date (Year-Week)',
+       y=element_blank(),
+       fill=element_blank(),
+       title='Board Failure RMAs <100 Hours Run')
+
+# Function to create board part-specific charts: 
+#   [Thermoboard/Valve board/Camera board/Image master board] NCRs and RMA failures <100 hours run
 makeBoardCharts = function(partDesc, partTitle, outputPrefix){
-  boardEarlyFailureRMA.count = boardFailureRMA.df %>% 
-    filter(ifelse(is.na(HoursRun), EarlyFailureType != 'N/A', HoursRun<100)) %>%
-    inner_join(calendar.df, by = c("BoardReceiptDate" = "Date")) %>%
-    group_by(DateGroup, PartDesc) %>% summarize(FailureRMACount = n()) %>% ungroup() %>%
-    complete(DateGroup = calendar.df$DateGroup, PartDesc = boardsInField.parts, fill = list(FailureRMACount = 0));
-  boardNCR.quantity = boardNCR.df %>%
+  out.field.gather = boardFailureRMA.rate %>% 
+    filter(PartDesc == partDesc) %>%
+    gather(Key, Value, c(EarlyFailureRMARate, EarlyFailureRMACount), factor_key = TRUE) %>% 
+    mutate(Key = fct_recode(Key, 'Failure RMAs <100 Hours'='EarlyFailureRMACount', 'Failure RMAs <100 Hours per Quantity Shipped'='EarlyFailureRMARate')) %>%
+    arrange(Key, PartDesc)
+  nudge1 = max(out.field.gather$FailureRMACount)*.025;
+  K1 = out.field.gather$Key[out.field.gather$Key == 'Failure RMAs <100 Hours'];
+  dummy1 = tibble(Key = K1, DateGroup=out.field.gather$DateGroup[1], Value = -nudge1*2);
+  out.field = out.field.gather %>%
+    ggplot(aes(x=DateGroup, y=Value)) +
+    geom_col(color='black') +
+    facet_wrap(~Key, ncol=1, scale='free_y') +
+    geom_text(data = out.field.gather %>% filter(Key == 'Failure RMAs <100 Hours'),
+              aes(x = DateGroup, y = Value + nudge1, label = Value)) +
+    geom_text(data = out.field.gather %>% filter(Key == 'Failure RMAs <100 Hours'),
+              aes(x = DateGroup, y = -0.5*nudge1, label = FieldCount), angle = 90, hjust=1) +
+    geom_blank(data = dummy1) + # dummy data used to enlarge plot area to avoid clipping annotations
+    theme(axis.text.x=element_text(angle=90, hjust=1)) +
+    scale_x_discrete(breaks = dateBreaks) +
+    labs(x='Board Receipt Date (Year-Week)',
+         y='Failure RMAs <100 Hours/Quantity Shipped',
+         fill=element_blank(),
+         title=paste0(partTitle,' Failure RMAs <100 Hours'))
+  assign(paste0('p.board.',outputPrefix,'.field'), out.field, globalenv());
+  
+  boardNCR.quantity = 
+    boardNCR.df %>%
     inner_join(calendar.df, by = c("BoardReceiptDate" = "Date")) %>%
     group_by(DateGroup, PartDesc) %>% summarize(NCRQuantity = sum(QuantityAffected)) %>% ungroup() %>%
     complete(DateGroup = calendar.df$DateGroup, PartDesc = boardsInField.parts, fill = list(NCRQuantity = 0));
-  boardLots.size = boardLots.df %>%
+  boardLots.size = 
+    boardLots.df %>%
     inner_join(calendar.df, by = c("BoardReceiptDate" = "Date")) %>%
     group_by(DateGroup, PartDesc) %>% summarize(DesiredLotSize = sum(DesiredLotSize)) %>% ungroup() %>%
     complete(DateGroup = calendar.df$DateGroup, PartDesc = boardsInField.parts, fill = list(DesiredLotSize = 0));
-  boardEarlyFailure.rate = boardsInField.count %>%
-    left_join(boardEarlyFailureRMA.count, by = c("DateGroup", "PartDesc")) %>%
+  boardEarlyFailure.rate = 
+    boardsInField.count %>%
+    left_join(boardFailureRMA.count, by = c("DateGroup", "PartDesc")) %>%
     left_join(boardNCR.quantity, by = c("DateGroup", "PartDesc")) %>%
     left_join(boardLots.size, by = c("DateGroup", "PartDesc")) %>%
-    mutate(NCRRate = ifelse(DesiredLotSize>5, NCRQuantity / DesiredLotSize, NA),
-           FailureRMARate = ifelse(DesiredLotSize>5, FailureRMACount / DesiredLotSize, NA))
-  boardEarlyFailure.filter = boardEarlyFailure.rate %>%
+    mutate(NCRRate = ifelse(DesiredLotSize>minimumDenom, NCRQuantity / DesiredLotSize, NA),
+           EarlyFailureRMARate = ifelse(DesiredLotSize>minimumDenom, EarlyFailureRMACount / DesiredLotSize, NA))
+  boardEarlyFailure.filter = 
+    boardEarlyFailure.rate %>%
     filter(DateGroup >= '2015-01', PartDesc == partDesc) 
-  out.field = boardEarlyFailure.filter %>%
-    filter(!is.na(FailureRMARate)) %>%
-    ggplot(aes(x=DateGroup, y=FailureRMARate)) + 
-    geom_col(color='black') +
-    theme(axis.text.x=element_text(angle=90, hjust=1)) +
-    scale_x_discrete(breaks = dateBreaks) +
-    labs(x='Board receipt date (Year-Week)',
-         y='RMA Failures <100 hours/Sum of Desired Lot Size',
-         fill=element_blank(),
-         title=paste0(partTitle,' Early Field Failures per Lot Size'))
-  assign(paste0('p.board.',outputPrefix,'.field'), out.field, globalenv());
-  
   boardEarlyFailure.gather = 
     rbind(
       boardEarlyFailure.filter %>% 
         select(DateGroup, Rate = NCRRate, Quantity = NCRQuantity) %>%
         mutate(Tracker = 'NCR'),
       boardEarlyFailure.filter %>% 
-        select(DateGroup, Rate = FailureRMARate, Quantity = FailureRMACount) %>%
+        select(DateGroup, Rate = EarlyFailureRMARate, Quantity = EarlyFailureRMACount) %>%
         mutate(Tracker = 'RMA')
     ) %>% 
     gather(Key, Value, c(Rate, Quantity), factor_key=TRUE) %>%
-    mutate(Key = fct_recode(Key, '(NCR Qty + RMA Failures <100 hours)/Sum of Desired Lot Size'='Rate', 
-                            'NCR Qty + RMA Failures <100 hours'='Quantity')) %>%
+    mutate(Key = fct_recode(Key, 
+        setNames('Quantity', 'NCR Qty Affected + RMA Failures <100 Hours'),
+        setNames('Rate', paste0('(NCR Qty Affected + RMA Failures <100 Hours)/Sum of Desired Lot Size\n',
+                                '(Minimum Denominator of ', minimumDenom, ')')))) %>%
     arrange(Key, DateGroup);
   boardEarlyFailure.pal = createPaletteOfVariableLength(as.data.frame(boardEarlyFailure.gather),'Tracker')
+  nudge2 = with(boardEarlyFailure.filter, max(NCRQuantity + EarlyFailureRMACount)*.03);
+  K2 = boardEarlyFailure.gather$Key[boardEarlyFailure.gather$Key == 'NCR Qty Affected + RMA Failures <100 Hours'][1];
+  dummy2 = tibble(Key = K2, DateGroup=boardEarlyFailure.gather$DateGroup[1], Value = -nudge2*2);
   out.total = boardEarlyFailure.gather %>% 
-    filter(!is.na(Value)) %>%
     ggplot(aes(x=DateGroup, y=Value, fill=Tracker)) + 
     facet_wrap(~Key, ncol=1, scale='free_y') +
     geom_col(color='black') +
+    geom_text(data = boardEarlyFailure.filter %>% mutate(Key = K2),
+              aes(x = DateGroup, 
+                  y = NCRQuantity + EarlyFailureRMACount + nudge2, 
+                  label = NCRQuantity + EarlyFailureRMACount),
+              inherit.aes = FALSE) + 
+    geom_text(data = boardEarlyFailure.filter %>% mutate(Key = K2),
+              aes(x = DateGroup, y = -0.5*nudge2, label = DesiredLotSize), 
+              angle = 90, hjust=1, 
+              inherit.aes = FALSE) +
+    geom_blank(data = dummy2, aes(x=DateGroup, y=Value), inherit.aes = FALSE) + 
     theme(axis.text.x=element_text(angle=90, hjust=1)) +
     scale_x_discrete(breaks = dateBreaks) +
     scale_fill_manual(values = boardEarlyFailure.pal) +
     labs(x='Board receipt date (Year-Week)',
          y=element_blank(),
          fill=element_blank(),
-         title=paste0(partTitle,' Early Failures'))
+         title=paste0(partTitle,' NCRs and Failure RMAs <100 Hours'))
   assign(paste0('p.board.',outputPrefix,'.total'), out.total, globalenv());
 }
 
-# BOARD VoEs:
-# thermoboard
+# BOARD VoEs: apply the function defined above to each of four cases
 makeBoardCharts('PCB, FA Thermocycler 4CH', 'Thermoboard', 'thermo');
-partDesc='PCB, FA Thermocycler 4CH'
-partTitle='Thermoboard'
-outputPrefix='thermo'
-
-
-board.thermo.start <- '2015-01'
-board.thermo.field.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.thermo.df, Key='FieldFailures'), c('Key'), board.thermo.start, 'QtyFailedInField', 'sum', 0)
-board.thermo.house.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.thermo.df, Key='InHouseFailures'), c('Key'), board.thermo.start, 'QtyFailedInHouse', 'sum', 0)
-board.thermo.field.size <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.thermo.df, Key='thermoboard'), c('Key'), board.thermo.start, 'LotSizeUsed', 'sum', 0)
-board.thermo.total.size <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.thermo.df, Key='thermoboard'), c('Key'), board.thermo.start, 'ActualLotSize', 'sum', 0)
-board.thermo.field.rate <- mergeCalSparseFrames(board.thermo.field.fail, board.thermo.field.size, c('DateGroup'), c('DateGroup'), 'QtyFailedInField', 'LotSizeUsed', 0, 0)
-board.thermo.total.fail <- rbind(data.frame(board.thermo.house.fail[,c('DateGroup','Key')], Record = board.thermo.house.fail$QtyFailedInHouse), data.frame(board.thermo.field.fail[,c('DateGroup','Key')], Record = board.thermo.field.fail$QtyFailedInField))
-board.thermo.total.rate <- mergeCalSparseFrames(board.thermo.total.fail, board.thermo.total.size, c('DateGroup'), c('DateGroup'), 'Record', 'ActualLotSize', 0, 0)
-board.thermo.total <- rbind(data.frame(DateGroup = board.thermo.total.rate$DateGroup, Type='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web', Key = board.thermo.total.rate$Key, Rate = board.thermo.total.rate$Rate),
-                           data.frame(DateGroup = board.thermo.total.fail$DateGroup, Type='NCR Qty + RMA Failures', Key = board.thermo.total.fail$Key, Rate = board.thermo.total.fail$Record))
-p.board.thermo.field <- ggplot(board.thermo.field.rate, aes(x=DateGroup, y=Rate, fill='filler')) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(data.frame(Key='filler'),'Key'), guide=FALSE) + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Thermoboard Field Failures Per Lot Size', y='Failures/Lot', x='Date of Board Lot Manufacturing\n(Year-Week)')
-board.thermo.total = as.data.frame(board.thermo.total %>% group_by(Type, DateGroup) %>% mutate(LabelY = sum(Rate)+5));
-board.thermo.total$LabelY[board.thermo.total$Key=='FieldFailures'] = -5;
-board.thermo.total$LabelY[board.thermo.total$Type=='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web']=0;
-board.thermo.total$Annot = board.thermo.total$Rate;
-board.thermo.total$Annot[board.thermo.total$Type=='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web'] = '';
-p.board.thermo.total <- ggplot(board.thermo.total, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Type, ncol=1, scale='free_y') + scale_fill_manual(values=createPaletteOfVariableLength(board.thermo.total,'Key'), name='', labels=c('NCR','RMA')) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Thermoboard Failures', x='Date of Manufacturing\n(Year-Week)', y='Failure Count, Failure Rate') + geom_text(aes(x=DateGroup, label=Annot, y=LabelY))
-# image master board
-board.image.start <- '2015-01'
-board.image.field.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.image.df, Key='FeildFailures'), c('Key'), board.image.start, 'QtyFailedInField', 'sum', 0)
-board.image.house.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.image.df, Key='InHouseFailures'), c('Key'), board.image.start, 'QtyFailedInHouse', 'sum', 0)
-board.image.field.size <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.image.df, Key='imageboard'), c('Key'), board.image.start, 'LotSizeUsed', 'sum', 0)
-board.image.total.size <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.image.df, Key='imageboard'), c('Key'), board.image.start, 'ActualLotSize', 'sum', 0)
-board.image.field.rate <- mergeCalSparseFrames(board.image.field.fail, board.image.field.size, c('DateGroup'), c('DateGroup'), 'QtyFailedInField', 'LotSizeUsed', 0, 0)
-board.image.total.fail <- rbind(data.frame(board.image.house.fail[,c('DateGroup','Key')], Record = board.image.house.fail$QtyFailedInHouse), data.frame(board.image.field.fail[,c('DateGroup','Key')], Record = board.image.field.fail$QtyFailedInField))
-board.image.total.rate <- mergeCalSparseFrames(board.image.total.fail, board.image.total.size, c('DateGroup'), c('DateGroup'), 'Record', 'ActualLotSize', 0, 0)
-board.image.total <- rbind(data.frame(DateGroup = board.image.total.rate$DateGroup, Type='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web', Key = board.image.total.rate$Key, Rate = board.image.total.rate$Rate),
-                           data.frame(DateGroup = board.image.total.fail$DateGroup, Type='NCR Qty + RMA Failures', Key = board.image.total.fail$Key, Rate = board.image.total.fail$Record))
-p.board.image.field <- ggplot(board.image.field.rate, aes(x=DateGroup, y=Rate, fill='filler')) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(data.frame(Key='filler'),'Key'), guide=FALSE) + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Image Board Field Failures Per Lot Size', y='Failures/Lot', x='Date of Board Lot Manufacturing\n(Year-Week)')
-p.board.image.total <- ggplot(board.image.total, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Type, ncol=1, scale='free_y') + scale_fill_manual(values=createPaletteOfVariableLength(board.image.total,'Key'), name='', labels=c('NCR','RMA')) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Image Board Failures', x='Date of Manufacturing\n(Year-Week)', y='Failure Count, Failure Rate')
-# camera board
-board.camera.start <- '2015-01'
-board.camera.field.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.camera.df, Key='FeildFailures'), c('Key'), board.camera.start, 'QtyFailedInField', 'sum', 0)
-board.camera.house.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.camera.df, Key='InHouseFailures'), c('Key'), board.camera.start, 'QtyFailedInHouse', 'sum', 0)
-board.camera.field.size <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.camera.df, Key='cameraboard'), c('Key'), board.camera.start, 'LotSizeUsed', 'sum', 0)
-board.camera.total.size <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.camera.df, Key='cameraboard'), c('Key'), board.camera.start, 'ActualLotSize', 'sum', 0)
-board.camera.field.rate <- mergeCalSparseFrames(board.camera.field.fail, board.camera.field.size, c('DateGroup'), c('DateGroup'), 'QtyFailedInField', 'LotSizeUsed', 0, 0)
-board.camera.total.fail <- rbind(data.frame(board.camera.house.fail[,c('DateGroup','Key')], Record = board.camera.house.fail$QtyFailedInHouse), data.frame(board.camera.field.fail[,c('DateGroup','Key')], Record = board.camera.field.fail$QtyFailedInField))
-board.camera.total.rate <- mergeCalSparseFrames(board.camera.total.fail, board.camera.total.size, c('DateGroup'), c('DateGroup'), 'Record', 'ActualLotSize', 0, 0)
-board.camera.total <- rbind(data.frame(DateGroup = board.camera.total.rate$DateGroup, Type='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web', Key = board.camera.total.rate$Key, Rate = board.camera.total.rate$Rate),
-                           data.frame(DateGroup = board.camera.total.fail$DateGroup, Type='NCR Qty + RMA Failures', Key = board.camera.total.fail$Key, Rate = board.camera.total.fail$Record))
-p.board.camera.field <- ggplot(board.camera.field.rate, aes(x=DateGroup, y=Rate, fill='filler')) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(data.frame(Key='filler'),'Key'), guide=FALSE) + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Camera Board Field Failures Per Lot Size', y='Failures/Lot', x='Date of Board Lot Manufacturing\n(Year-Week)')
-p.board.camera.total <- ggplot(board.camera.total, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Type, ncol=1, scale='free_y') + scale_fill_manual(values=createPaletteOfVariableLength(board.camera.total,'Key'), name='', labels=c('NCR','RMA')) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Camera Board Failures', x='Date of Manufacturing\n(Year-Week)', y='Failure Count, Failure Rate')
-# valve board
-board.valve.start <- '2015-01'
-board.valve.field.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.valve.df, Key='FeildFailures'), c('Key'), board.valve.start, 'QtyFailedInField', 'sum', 0)
-board.valve.house.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.valve.df, Key='InHouseFailures'), c('Key'), board.valve.start, 'QtyFailedInHouse', 'sum', 0)
-board.valve.field.size <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.valve.df, Key='valveboard'), c('Key'), board.valve.start, 'LotSizeUsed', 'sum', 0)
-board.valve.total.size <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(board.valve.df, Key='valveboard'), c('Key'), board.valve.start, 'ActualLotSize', 'sum', 0)
-board.valve.field.rate <- mergeCalSparseFrames(board.valve.field.fail, board.valve.field.size, c('DateGroup'), c('DateGroup'), 'QtyFailedInField', 'LotSizeUsed', 0, 0)
-board.valve.total.fail <- rbind(data.frame(board.valve.house.fail[,c('DateGroup','Key')], Record = board.valve.house.fail$QtyFailedInHouse), data.frame(board.valve.field.fail[,c('DateGroup','Key')], Record = board.valve.field.fail$QtyFailedInField))
-board.valve.total.rate <- mergeCalSparseFrames(board.valve.total.fail, board.valve.total.size, c('DateGroup'), c('DateGroup'), 'Record', 'ActualLotSize', 0, 0)
-board.valve.total <- rbind(data.frame(DateGroup = board.valve.total.rate$DateGroup, Type='(NCR Qty + RMA Failures)/Actual Lot Size in Production Web', Key = board.valve.total.rate$Key, Rate = board.valve.total.rate$Rate),
-                            data.frame(DateGroup = board.valve.total.fail$DateGroup, Type='NCR Qty + RMA Failures', Key = board.valve.total.fail$Key, Rate = board.valve.total.fail$Record))
-p.board.valve.field <- ggplot(board.valve.field.rate, aes(x=DateGroup, y=Rate, fill='filler')) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(data.frame(Key='filler'),'Key'), guide=FALSE) + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels=percent) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Valve Board Field Failures Per Lot Size', y='Failures/Lot', x='Date of Board Lot Manufacturing\n(Year-Week)')
-p.board.valve.total <- ggplot(board.valve.total, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + facet_wrap(~Type, ncol=1, scale='free_y') + scale_fill_manual(values=createPaletteOfVariableLength(board.valve.total,'Key'), name='', labels=c('NCR','RMA')) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(hjust=1, angle=90)) + labs(title='Valve Board Failures', x='Date of Manufacturing\n(Year-Week)', y='Failure Count, Failure Rate')
+makeBoardCharts('FA Valve Controller Enhanced Valve Drive', 'Valve Board', 'valve');
+makeBoardCharts('FA CAMERA VERTICAL FOV ASSY FILES', 'Camera Board', 'camera');
+makeBoardCharts('FA IMAGE MASTER', 'Image Master Board', 'image');
 
 # Lid latch failures per RMAs shipped
 rmas.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', rmaShipped.df, c('Key'), "2015-10", 'Record', 'sum', 0)
@@ -492,31 +498,6 @@ edgeLoad.annot = rbind(
 );
 p.edgeLoad.voe <- ggplot(subset(edgeLoad.all, DateGroup>='2016-06'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', color='black') + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Torch - Failure to Eject Pouch Complaints', y='Complaints/Torch Module Manufactured, Complaint Count', x='Date of Torch Module Manufacture\n(Year-Month)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = edgeLoad.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=5) 
 
-
-# #Thermoboard date settings
-# bigGroup <- 'Year'
-# smallGroup <- 'Month'
-# periods <- 3
-# weeks <- 53
-# months <- 13
-# lagPeriods <- 0
-# validateDate <- '2015-30'
-# startYear <- 2015
-# calendar.df <- createCalendarLikeMicrosoft(startYear, smallGroup)
-# startDate <- findStartDate(calendar.df, 'Month', 13, 0)
-# #Thermoboard functions
-# thermoBoard.bad <- aggregateAndFillDateGroupGaps(calendar.df, 'Month', subset(thermoBoard.df,Key!='StockSize'), c('Key','RecordedValue'), startDate, 'Record','sum',0)
-# thermoBoard.bad <- thermoBoard.bad[thermoBoard.bad[,'RecordedValue'] != 'NoFailure', ]
-# thermoBoard.size <- aggregateAndFillDateGroupGaps(calendar.df,'Month', subset(thermoBoard.df,Key=='StockSize'), c('Key'), startDate,'Record','sum',1)
-# thermoBoard.rate <- mergeCalSparseFrames(thermoBoard.bad,thermoBoard.size,'DateGroup','DateGroup','Record','Record',0,0)
-# #Thermoboard charts
-# myPal.tb <- createPaletteOfVariableLength(thermoBoard.rate, 'Key')
-# dateBreaks.tb <- as.character(unique(thermoBoard.rate[,'DateGroup']))[order(as.character(unique(thermoBoard.rate[,'DateGroup'])))][seq(1,length(as.character(unique(thermoBoard.rate[,'DateGroup']))), seqBreak)]
-# x_position.tb<- c('2016-02')
-# indices.tb <- which(unique(as.character(thermoBoard.rate[,'DateGroup']))==x_position.tb)
-# annotations.tb <- c('Thermoboard\nSCAR')
-# p.thermoBoard.voe <- ggplot(thermoBoard.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=myPal.tb, name='Type') + scale_x_discrete(breaks=dateBreaks.tb) + theme(plot.title=element_text(hjust=0.5),text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1))+ labs(title='Effect of Thermoboard Rework:\nThermoards Serviced/Instruments Released', y='Failures/Instruments Released', x='Date of Transaction\n(Year-Month)') + facet_wrap(~RecordedValue, ncol=1, scale='free_y') + geom_text(aes(label=annotations.tb, x=x_position.tb, y=0), angle=90, hjust=-0.5, size=4) + geom_vline(xintercept=indices.tb, color = "black")
-
 # export images for web hub
 plots <- ls()[grep('^p\\.', ls())]
 for(i in 1:length(plots)) {
@@ -528,7 +509,7 @@ for(i in 1:length(plots)) {
 }
 
 # Make pdf report for the web hub
-pdf(paste0(pdfDir,'/',"InstrumentVOE.pdf"), width = 11, height = 8)
+pdf(paste0(pdfDir,'InstrumentVOE.pdf'), width = 11, height = 8)
 for(i in 1:length(plots)) {
   print(eval(parse(text = plots[i])))
 }

@@ -108,6 +108,7 @@ FROM (
 	INNER JOIN #parts P ON P.[PartNumber] = N.[PartAffected]
 	WHERE N.[Disposition] NOT LIKE '%Use as is%'
 ) Q
+ORDER BY [BoardReceiptDate]
 --OUTPUT RESULT: Board NCRs
 
 SELECT
@@ -124,5 +125,6 @@ FROM [ProductionWeb].[dbo].[Lots] L
 INNER JOIN [ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
 INNER JOIN #parts P2 ON P2.[PartNumber] = P.[PartNumber]
 ORDER BY [BoardReceiptDate]
+-- Board lot size
 
 DROP TABLE #parts, #shipments, #boardInstrumentParts, #boardsShipped, #boardFailure
