@@ -22,24 +22,26 @@ source('Rfunctions/loadSQL.R')
 
 # load the data from SQL that's needed
 #*note: to set DB paths go to Control Panel/Systems & Security/Administrative Tools/Data Sources (ODBC)
-PMScxn = odbcConnect("PMS_PROD")
-loadSQL(PMScxn, "SQL/R_IVOE_PlungerGasketCreepByPart.sql", "gasketCreep.df")
-loadSQL(PMScxn, "SQL/R_IVOE_WindowBladderFailureByLot.sql", "bladderLots.df")
-loadSQL(PMScxn, "SQL/R_IVOE_LidFailuresByPart.sql", "lids.df")
-loadSQL(PMScxn, "SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql", "rmaShipped.df")
-loadSQL(PMScxn, "SQL/R_CC_CustPouchesShippedDetailed.sql", "pouches.df")
-loadSQL(PMScxn, "SQL/R_IVOE_Board.sql", 
-        c("boardsInField.df", "boardFailureRMA.df", "boardNCR.df", "boardLots.df"))
-loadSQL(PMScxn, "SQL/R_IVOE_LEDExcitationError.sql", "excitation.df")
-loadSQL(PMScxn, "SQL/R_IVOE_SealBarAlignmentNCR.sql", "sealBarNCR.df")
-loadSQL(PMScxn, "SQL/R_IVOE_SealBarAlignmentRMA.sql", "sealBarRMA.df")
-loadSQL(PMScxn, "SQL/R_IVOE_WireHarnessNCR.sql", "wireharnessNCR.df")
-loadSQL(PMScxn, "SQL/R_IVOE_WireHarnessRMA.sql", "wireharnessRMA.df")
-loadSQL(PMScxn, "SQL/R_IRMA_NewCompShip.sql", "compShip.df")
-loadSQL(PMScxn, "SQL/R_IRMA_ComputerEarlyFailure.sql", "computerEF.df")
-loadSQL(PMScxn, "SQL/R_INCR_InstrumentsProduced_denom.sql", "newInst.df")
-loadSQL(PMScxn, "SQL/R_IVOE_LooseScrewRMA.sql", "looseScrew.df")
-loadSQL(PMScxn, "SQL/R_IVOE_EdgeLoadComplaints.sql", "edgeLoad.df")
+PMScxn = odbcConnect('PMS_PROD')
+loadSQL(PMScxn, 'SQL/R_IVOE_PlungerGasketCreepByPart.sql', 'gasketCreep.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_WindowBladderFailureByLot.sql', 'bladderLots.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_LidFailuresByPart.sql', 'lids.df')
+loadSQL(PMScxn, 'SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql', 'rmaShipped.df')
+loadSQL(PMScxn, 'SQL/R_CC_CustPouchesShippedDetailed.sql', 'pouches.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_Board.sql', 
+        c('boardsInField.df', 'boardFailureRMA.df', 'boardNCR.df', 'boardLots.df'))
+loadSQL(PMScxn, 'SQL/R_IVOE_LEDExcitationError.sql', 'excitation.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_SealBarAlignmentNCR.sql', 'sealBarNCR.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_SealBarAlignmentRMA.sql', 'sealBarRMA.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_WireHarnessNCR.sql', 'wireharnessNCR.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_WireHarnessRMA.sql', 'wireharnessRMA.df')
+loadSQL(PMScxn, 'SQL/R_IRMA_NewCompShip.sql', 'compShip.df')
+loadSQL(PMScxn, 'SQL/R_IRMA_ComputerEarlyFailure.sql', 'computerEF.df')
+loadSQL(PMScxn, 'SQL/R_INCR_InstrumentsProduced_denom.sql', 'newInst.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_LooseScrewRMA.sql', 'looseScrew.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_EdgeLoadComplaints.sql', 'edgeLoad.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_SealBarThermistor.sql', 'sealBarTherm.df')
+loadSQL(PMScxn, 'SQL/R_IVOE_InstShippedByManfDate.sql', 'shippedManf.df')
 close(PMScxn)
 
 # establish some properties used throughout the code- these are kept up top to facilitate changes
@@ -497,6 +499,46 @@ edgeLoad.annot = rbind(
  data.frame(Label="Clear sheet tightening", DateGroup='2017-04', Key=edgeLoad.count$Key[1], Rate=edgeLoad.count$Rate[edgeLoad.count$DateGroup=='2017-04']+1)
 );
 p.edgeLoad.voe <- ggplot(subset(edgeLoad.all, DateGroup>='2016-06'), aes(x=DateGroup, y=Rate)) + geom_bar(stat='identity', color='black') + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Torch - Failure to Eject Pouch Complaints', y='Complaints/Torch Module Manufactured, Complaint Count', x='Date of Torch Module Manufacture\n(Year-Month)') + facet_wrap(~Key, ncol=1, scale='free_y') + geom_text(data = edgeLoad.annot, inherit.aes = FALSE, aes(label=Label, x=DateGroup, y=Rate), angle=90, hjust=0, size=5) 
+
+# Seal Bar Thermistor Failures (Service Code 254)
+shippedManf.fill = shippedManf.df %>%
+  inner_join(calendar.df, by = c(DateOfManufacturing = 'Date')) %>%
+  group_by(DateGroup, Version) %>% summarize(Shipped = n()) %>% ungroup() %>%
+  filter(Version %in% c('FA2.0', 'Torch')) %>%
+  complete(DateGroup = unique(calendar.df$DateGroup), Version, fill = list(Shipped = 0))
+sealBarTherm.rate = sealBarTherm.df %>%
+  inner_join(calendar.df, by = c(DateOfManufacturing = 'Date')) %>%
+  mutate(HoursRunBin = cut(HoursRun, c(-Inf, 100, 500, 1000, Inf), labels = FALSE)) %>%
+  mutate(HoursRunBin = factor(HoursRunBin, levels=c(1:4,NA), exclude = NULL,
+                              labels = c('0-100', '100-500', '500-1000', '1000+', 'Unknown'))) %>%
+  group_by(DateGroup, Version, HoursRunBin) %>% summarize(Failures = n()) %>% ungroup() %>%
+  filter(Version %in% c('FA2.0', 'Torch')) %>%
+  complete(DateGroup = unique(calendar.df$DateGroup), Version, HoursRunBin, fill = list(Failures = 0)) %>%
+  inner_join(shippedManf.fill, by = c('DateGroup', 'Version')) %>%
+  mutate(Rate = Failures/Shipped) %>%
+  filter(DateGroup >= dateBreaks[1])
+sealBarTherm.count =sealBarTherm.rate %>% 
+  group_by(DateGroup, Version) %>% 
+  summarize(Failures = sum(Failures), 
+            Rate = sum(Rate), 
+            Shipped = mean(Shipped))
+p.sealBarThermistor = sealBarTherm.rate %>%
+  ggplot(aes(x = DateGroup, y = Rate, fill = HoursRunBin)) +
+  facet_wrap(~Version, ncol=1) +
+  geom_col(color = 'black') +
+  geom_text(data = sealBarTherm.count, aes(x = DateGroup, y = ifelse(is.na(Rate), 0, Rate), label = Failures), 
+            inherit.aes = FALSE, nudge_y = .01) +
+  geom_text(data = sealBarTherm.count, aes(x = DateGroup, y = 0, label = Shipped), 
+            inherit.aes = FALSE, nudge_y = -.01, angle = 90) +
+  annotate('text', x = '2017-19', y = .1, label = 'DX-CO-036177', angle = 90) +
+  labs(title = 'Seal Bar Thermistor Failures (Service Code 254)',
+       x = 'Instrument Date of Manufacturing (Year-Week)',
+       y = 'Failures/New Instrument Shipped',
+       fill = '') + 
+  scale_x_discrete(breaks = dateBreaks) +
+  scale_fill_manual(values = createPaletteOfVariableLength(as.data.frame(sealBarTherm.rate), 'HoursRunBin')) +
+  theme(axis.text.x = element_text(angle=90, hjust=1),
+        legend.position = 'bottom') 
 
 # export images for web hub
 plots <- ls()[grep('^p\\.', ls())]
