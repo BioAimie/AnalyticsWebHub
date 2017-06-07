@@ -356,7 +356,8 @@ instShip <- subset(newShipments, Product != 'Torch Base', select = c('Year', 'Mo
 instShip[,'Key'] <- 'Production'
 colnames(instShip)[colnames(instShip) == 'Product'] <- 'Version'
 rmasShip.df[,'Key'] <- 'Service'
-ships.df <- rbind(instShip, rmasShip.df)
+ships.df <- rbind(instShip, 
+                  rmasShip.df %>% select(Year, Month, Week, Version, Record, Key))
 ships.fill <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', ships.df, c('Key'), start.weekRoll, 'Record', 'sum', 1)
 failures.fill <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', failures, c('Department','Fail'), start.weekRoll, 'DistinctRecord', 'sum', 0)
 failures.rate <- mergeCalSparseFrames(failures.fill, ships.fill, c('DateGroup','Department'),c('DateGroup','Key'), 'DistinctRecord', 'Record', 0, 4)
