@@ -26,7 +26,7 @@ for (i in folders) {
           itemsNotUpdated = c(itemsNotUpdated, paste(i,'/',j, sep=''))
         }
         #all other dashboards
-      } else if (timeUpdated < (Sys.time()-3600)){
+      } else if (timeUpdated < (Sys.time()-3900)){
         #add to list of items not updated  
         itemsNotUpdated = c(itemsNotUpdated, paste(i,'/',j, sep=''))
       }

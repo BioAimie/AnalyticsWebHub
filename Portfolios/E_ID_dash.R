@@ -192,7 +192,7 @@ newShipments.cust = shipments.inst %>%
   inner_join(calendar.month, by = c(ShipDate = 'Date')) %>%
   group_by(DateGroup, Product) %>% summarize(Shipped = n()) %>% ungroup() %>%
   complete(DateGroup = calendar.month$DateGroup, Product, fill = list(Shipped = 0)) %>%
-  group_by(Product) %>% mutate(RollingAvg = rollmean(Shipped, 4, align = "right", fill = NA)) %>% ungroup()
+  group_by(Product) %>% mutate(RollingAvg = rollmeanr(Shipped, 4, fill = NA)) %>% ungroup()
 fail.hours <- fail.hours.df %>%
   filter(CustomerId != 'IDATEC') %>%
   inner_join(calendar.month, by = c(CreatedDate = 'Date')) %>%
