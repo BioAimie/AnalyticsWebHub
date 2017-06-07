@@ -114,29 +114,34 @@ points.ltd.faivWater <- nrow(faivLineWater.df[faivLineWater.df$Date %in% ltd.fai
 faivLineWater.imr.ltd <- analyzeOrderIMR(faivLineWater.df, 'Result', 'DateOpened', points.ltd.faivWater, 3, 'GroupName', byEquipment = FALSE)
 
 burst.ltd.seq <- floor(length(burst.imr.ltd[burst.imr.ltd$Key=='Individual Value', 'DateOpened'])/20)
-burst.ltd.labels <- burst.imr.ltd[burst.imr.ltd$Key=='Individual Value', 'DateOpened'][seq(1, length(burst.imr.ltd[burst.imr.ltd$Key=='Individual Value', 'DateOpened']), burst.ltd.seq)]
-burst.ltd.breaks <- burst.imr.ltd[burst.imr.ltd$Key=='Individual Value', 'Observation'][seq(1, length(burst.imr.ltd[burst.imr.ltd$Key=='Individual Value', 'Observation']), burst.ltd.seq)]
-p.burst.ltd <- ggplot(burst.imr.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + scale_x_continuous(labels = burst.ltd.labels, breaks = burst.ltd.breaks) + labs(title='Burst Testing\n (Last 30 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
+burst.ltd.labels <- burst.imr.ltd[burst.imr.ltd$Key=='Individual Value', 'DateOpened'][seq(1, nrow(burst.imr.ltd)/2, burst.ltd.seq)]
+#burst.ltd.breaks <- burst.imr.ltd[burst.imr.ltd$Key=='Individual Value', 'Observation'][seq(1, length(burst.imr.ltd[burst.imr.ltd$Key=='Individual Value', 'Observation']), burst.ltd.seq)]
+burst.ltd.breaks <- seq(1, nrow(burst.imr.ltd)/2, burst.ltd.seq)
+p.burst.ltd <- ggplot(burst.imr.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + scale_x_continuous(labels = burst.ltd.labels, breaks = burst.ltd.breaks) + labs(title='Burst Testing\n (Last 30 Days of Manufacturing)', y='Result (FYI limits include all historical data)', x='Observation Time')
 
 hydra.ltd.wsw.seq <- floor(length(hydra.imr.wsw.ltd[hydra.imr.wsw.ltd$Key=='Individual Value', 'DateOpened'])/20)
-hydra.ltd.wsw.labels <- hydra.imr.wsw.ltd[hydra.imr.wsw.ltd$Key=='Individual Value', 'DateOpened'][seq(1, length(hydra.imr.wsw.ltd[hydra.imr.wsw.ltd$Key=='Individual Value', 'DateOpened']), hydra.ltd.wsw.seq )]
-hydra.ltd.wsw.breaks <- hydra.imr.wsw.ltd[hydra.imr.wsw.ltd$Key=='Individual Value', 'Observation'][seq(1, length(hydra.imr.wsw.ltd[hydra.imr.wsw.ltd$Key=='Individual Value', 'Observation']), hydra.ltd.wsw.seq)]
+hydra.ltd.wsw.labels <- hydra.imr.wsw.ltd[hydra.imr.wsw.ltd$Key=='Individual Value', 'DateOpened'][seq(1, nrow(hydra.imr.wsw.ltd)/2, hydra.ltd.wsw.seq )]
+hydra.ltd.wsw.breaks <- seq(1, nrow(hydra.imr.wsw.ltd)/2, hydra.ltd.wsw.seq )
+#hydra.ltd.wsw.breaks <- hydra.imr.wsw.ltd[hydra.imr.wsw.ltd$Key=='Individual Value', 'Observation'][seq(1, length(hydra.imr.wsw.ltd[hydra.imr.wsw.ltd$Key=='Individual Value', 'Observation']), hydra.ltd.wsw.seq)]
 p.hydra.wsw.ltd <- ggplot(hydra.imr.wsw.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + scale_x_continuous(labels = hydra.ltd.wsw.labels, breaks = hydra.ltd.wsw.breaks) + labs(title='Pouch Hydration Water Side Weight Testing\n (Last 30 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
 
 hydra.ltd.ssw.seq <- floor(length(hydra.imr.ssw.ltd[hydra.imr.ssw.ltd$Key=='Individual Value', 'DateOpened'])/20)
-hydra.ltd.ssw.labels <- hydra.imr.ssw.ltd[hydra.imr.ssw.ltd$Key=='Individual Value', 'DateOpened'][seq(1, length(hydra.imr.ssw.ltd[hydra.imr.ssw.ltd$Key=='Individual Value', 'DateOpened']), hydra.ltd.ssw.seq )]
-hydra.ltd.ssw.breaks <- hydra.imr.ssw.ltd[hydra.imr.ssw.ltd$Key=='Individual Value', 'Observation'][seq(1, length(hydra.imr.ssw.ltd[hydra.imr.ssw.ltd$Key=='Individual Value', 'Observation']), hydra.ltd.ssw.seq)]
+hydra.ltd.ssw.labels <- hydra.imr.ssw.ltd[hydra.imr.ssw.ltd$Key=='Individual Value', 'DateOpened'][seq(1, nrow(hydra.imr.ssw.ltd)/2, hydra.ltd.ssw.seq )]
+hydra.ltd.ssw.breaks <- seq(1, nrow(hydra.imr.ssw.ltd)/2, hydra.ltd.ssw.seq )
+#hydra.ltd.ssw.breaks <- hydra.imr.ssw.ltd[hydra.imr.ssw.ltd$Key=='Individual Value', 'Observation'][seq(1, length(hydra.imr.ssw.ltd[hydra.imr.ssw.ltd$Key=='Individual Value', 'Observation']), hydra.ltd.ssw.seq)]
 p.hydra.ssw.ltd <- ggplot(hydra.imr.ssw.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + scale_x_continuous(labels = hydra.ltd.ssw.labels, breaks = hydra.ltd.ssw.breaks) + labs(title='Pouch Hydration Sample Side Weight Testing\n (Last 30 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
 
 faivLine.ltd.seq <- floor(length(faivLine.imr.ltd[faivLine.imr.ltd$Key=='Individual Value', 'DateOpened'])/20)
-faivLine.ltd.labels <- faivLine.imr.ltd[faivLine.imr.ltd$Key=='Individual Value', 'DateOpened'][seq(1, length(faivLine.imr.ltd[faivLine.imr.ltd$Key=='Individual Value', 'DateOpened']), faivLine.ltd.seq)]
-faivLine.ltd.breaks <- faivLine.imr.ltd[faivLine.imr.ltd$Key=='Individual Value', 'Observation'][seq(1, length(faivLine.imr.ltd[faivLine.imr.ltd$Key=='Individual Value', 'Observation']), faivLine.ltd.seq)]
-p.faivLine.ltd <- ggplot(faivLine.imr.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + scale_x_continuous(labels = faivLine.ltd.labels, breaks = faivLine.ltd.breaks) + labs(title='FAIV Line Cannula Pull Strength Testing\n (Last 30 Days of Manufacturing)', y='Result')
+faivLine.ltd.labels <- faivLine.imr.ltd[faivLine.imr.ltd$Key=='Individual Value', 'DateOpened'][seq(1, nrow(faivLine.imr.ltd)/2, faivLine.ltd.seq)]
+faivLine.ltd.breaks <- seq(1, nrow(faivLine.imr.ltd)/2, faivLine.ltd.seq)
+#faivLine.ltd.breaks <- faivLine.imr.ltd[faivLine.imr.ltd$Key=='Individual Value', 'Observation'][seq(1, length(faivLine.imr.ltd[faivLine.imr.ltd$Key=='Individual Value', 'Observation']), faivLine.ltd.seq)]
+p.faivLine.ltd <- ggplot(faivLine.imr.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1) + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + scale_x_continuous(labels = faivLine.ltd.labels, breaks = faivLine.ltd.breaks) + labs(title='FAIV Line Cannula Pull Strength Testing\n (Last 30 Days of Manufacturing)', y='Result', x='Observation Time')
 
 faivLineWater.ltd.seq <- floor(length(faivLineWater.imr.ltd[faivLineWater.imr.ltd$Key=='Individual Value', 'DateOpened'])/20)
-faivLineWater.ltd.labels <- faivLineWater.imr.ltd[faivLineWater.imr.ltd$Key=='Individual Value', 'DateOpened'][seq(1, length(faivLineWater.imr.ltd[faivLineWater.imr.ltd$Key=='Individual Value', 'DateOpened']), faivLineWater.ltd.seq)]
-faivLineWater.ltd.breaks <- faivLineWater.imr.ltd[faivLineWater.imr.ltd$Key=='Individual Value', 'Observation'][seq(1, length(faivLineWater.imr.ltd[faivLineWater.imr.ltd$Key=='Individual Value', 'Observation']), faivLineWater.ltd.seq)]
-p.faivLineWater.ltd <- ggplot(faivLineWater.imr.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1, scales='free_y') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + scale_x_continuous(labels = faivLineWater.ltd.labels, breaks = faivLineWater.ltd.breaks) + labs(title='FAIV Line Water Weight Testing\n (Last 30 Days of Manufacturing)', y='Result')
+faivLineWater.ltd.labels <- faivLineWater.imr.ltd[faivLineWater.imr.ltd$Key=='Individual Value', 'DateOpened'][seq(1, nrow(faivLineWater.imr.ltd)/2, faivLineWater.ltd.seq)]
+faivLineWater.ltd.breaks  <- seq(1, nrow(faivLineWater.imr.ltd)/2, faivLineWater.ltd.seq)
+#faivLineWater.ltd.breaks <- faivLineWater.imr.ltd[faivLineWater.imr.ltd$Key=='Individual Value', 'Observation'][seq(1, length(faivLineWater.imr.ltd[faivLineWater.imr.ltd$Key=='Individual Value', 'Observation']), faivLineWater.ltd.seq)]
+p.faivLineWater.ltd <- ggplot(faivLineWater.imr.ltd, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_wrap(~Key, ncol=1, scales='free_y') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + scale_x_continuous(labels = faivLineWater.ltd.labels, breaks = faivLineWater.ltd.breaks) + labs(title='FAIV Line Water Weight Testing\n (Last 30 Days of Manufacturing)', y='Result', x='Observation Time')
 
 # ------- LAST 7 DAYS (is differentiated by line) ADD FAIV LINE
 lsd.burst <- unique(burst.df[,'Date'])[order(unique(burst.df[,'Date']), decreasing = TRUE)][1:7]
@@ -178,27 +183,29 @@ burst.facet.breaks[burst.facet.breaks$Observation>1, 'Observation'] <- min(burst
 burst.facet.breaks$Breaks <- burst.facet.breaks$Observation
 burst.lines <- as.character(unique(burst.imr.lsd$Equipment))[order(as.character(unique(burst.imr.lsd$Equipment)))]
 burst.lines <- data.frame(Seq = seq(1, length(burst.lines), 1), Line = burst.lines)
-burst.panels <- ceiling(length(burst.lines$Seq)/4)
+#burst.panels <- ceiling(length(burst.lines$Seq)/4)
 plot.names <- c()
-for(i in 1:burst.panels) {
+
+for(line.name in burst.lines$Line) {
   
-  if(i==1) {
-    burst.panel <- burst.lines[i:(1*burst.panels), 'Line']
-  } else if (i > 1 & i < burst.panels) {
-    burst.panel <- burst.lines[((i-1)*burst.panels+1):(i*burst.panels), 'Line']
-  } else {
-    burst.panel <- burst.lines[((i-1)*burst.panels+1):length(burst.lines$Line), 'Line']
-  }
-  burst.panel <- as.character(burst.panel)
-  
-  plot.name <- paste('p.burst.lsd', i, sep='.')
+  plot.name <- paste('p.burst.lsd', gsub(' ', '' ,gsub('-', '', line.name)), sep='.')
   plot.names <- c(plot.names, plot.name)
   
-  plot.data <- burst.imr.lsd[as.character(burst.imr.lsd[,'Equipment']) %in% burst.panel,]
-  plot.data <- merge(plot.data, burst.facet.breaks, by=c('Equipment','Observation'), all.x=TRUE)
-  
-  # p <- ggplot(burst.imr.lsd[as.character(burst.imr.lsd[,'Equipment']) %in% burst.panel,], aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Burst Testing by Line\n (Last 7 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
-  p <- ggplot(plot.data, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, size=14, hjust=1)) + scale_x_continuous(labels = plot.data$Label, breaks = plot.data$Breaks) + labs(title='Burst Testing by Line\n (Last 7 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
+  plot.data <- subset(burst.imr.lsd, Equipment == line.name)
+  # make the lables 
+  increment.value <- floor((nrow(plot.data)/2)/5)
+  labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
+  breaks <- seq(1, nrow(plot.data)/2, increment.value)
+  p <- ggplot(plot.data, aes(x=Observation, y=Result, group='1')) + 
+  	geom_line() + 
+  	geom_point() + 
+  	facet_wrap(~Key, ncol=1, scales='free_y') + 
+  	geom_hline(aes(yintercept=LCL), color='darkgreen') + 
+  	geom_hline(aes(yintercept=UCL), color='darkgreen') + 
+  	geom_hline(aes(yintercept=Average), color='blue') + 
+  	theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, size=14, hjust=1)) + 
+  	scale_x_continuous(labels = labels, breaks = breaks) + 
+  	labs(title=paste('Burst Testing on ', line.name, '\n (Last 7 Days of Manufacturing)', sep=''), y='Result (FYI limits include all historical data)', x='Observation Time')
   
   imgName <- paste(substring(plot.name,3),'.png',sep='')
   png(file=paste(imgDir, imgName, sep=''), width=1200, height=800, units='px')
@@ -210,22 +217,26 @@ for(i in 1:burst.panels) {
 # HYDRATION TESTING - WSW
 wsw.lines <- as.character(unique(hydration.imr.lsd.wsw$Equipment))[order(as.character(unique(hydration.imr.lsd.wsw$Equipment)))]
 wsw.lines <- data.frame(Seq = seq(1, length(wsw.lines), 1), Line = wsw.lines)
-wsw.panels <- ceiling(length(wsw.lines$Seq)/4)
-for(i in 1:wsw.panels) {
-  
-  if(i==1) {
-    wsw.panel <- wsw.lines[i:(1*wsw.panels), 'Line']
-  } else if (i > 1 & i < wsw.panels) {
-    wsw.panel <- wsw.lines[((i-1)*wsw.panels+1):(i*wsw.panels), 'Line']
-  } else {
-    wsw.panel <- wsw.lines[((i-1)*wsw.panels+1):length(wsw.lines$Line), 'Line']
-  }
-  wsw.panel <- as.character(wsw.panel)
-  
-  plot.name <- paste('p.hydra.wsw.lsd', i, sep='.')
+#wsw.panels <- ceiling(length(wsw.lines$Seq)/4)
+for( line.name in wsw.lines$Line) {
+
+	plot.data <- subset(hydration.imr.lsd.wsw, Equipment == line.name)
+  plot.name <- paste('p.hydra.wsw.lsd', gsub(' ', '' ,gsub('-', '', line.name)), sep='.')
   plot.names <- c(plot.names, plot.name)
-  
-  p <- ggplot(hydration.imr.lsd.wsw[as.character(hydration.imr.lsd.wsw[,'Equipment']) %in% wsw.panel,], aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Pouch Hydration Testing by Line - Water Side Weight\n (Last 7 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
+  # make the lables 
+  increment.value <- floor((nrow(plot.data)/2)/5)
+  labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
+  breaks <- seq(1, nrow(plot.data)/2, increment.value)
+  p <- ggplot(plot.data, aes(x=Observation, y=Result, group='1')) +
+  	geom_line() + 
+  	geom_point() +
+  	facet_wrap(~Key, ncol=1, scales='free_y') + 
+  	geom_hline(aes(yintercept=LCL), color='darkgreen') + 
+  	geom_hline(aes(yintercept=UCL), color='darkgreen') + 
+  	geom_hline(aes(yintercept=Average), color='blue') + 
+  	theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, size=14, hjust=1)) + 
+  	scale_x_continuous(labels = labels, breaks=breaks) + 
+  	labs(title=paste('Pouch Hydration Testing on ', line.name, ' - Water Side Weight\n (Last 7 Days of Manufacturing)', sep=''), y='Result (FYI limits include all historical data)', x='Observation Time')
   
   imgName <- paste(substring(plot.name,3),'.png',sep='')
   png(file=paste(imgDir, imgName, sep=''), width=1200, height=800, units='px')
@@ -237,22 +248,27 @@ for(i in 1:wsw.panels) {
 # HYDRATION TESTING - SSW
 ssw.lines <- as.character(unique(hydration.imr.lsd.ssw$Equipment))[order(as.character(unique(hydration.imr.lsd.ssw$Equipment)))]
 ssw.lines <- data.frame(Seq = seq(1, length(ssw.lines), 1), Line = ssw.lines)
-ssw.panels <- ceiling(length(ssw.lines$Seq)/4)
-for(i in 1:ssw.panels) {
+#ssw.panels <- ceiling(length(ssw.lines$Seq)/4)
+for(line.name in ssw.lines$Line) {
   
-  if(i==1) {
-    ssw.panel <- ssw.lines[i:(1*ssw.panels), 'Line']
-  } else if (i > 1 & i < ssw.panels) {
-    ssw.panel <- ssw.lines[((i-1)*ssw.panels+1):(i*ssw.panels), 'Line']
-  } else {
-    ssw.panel <- ssw.lines[((i-1)*ssw.panels+1):length(ssw.lines$Line), 'Line']
-  }
-  ssw.panel <- as.character(ssw.panel)
-  
-  plot.name <- paste('p.hydra.ssw.lsd', i, sep='.')
+  plot.data <- subset(hydration.imr.lsd.ssw, Equipment == line.name)
+  plot.name <- paste('p.hydra.ssw.lsd', gsub(' ', '' ,gsub('-', '', line.name)), sep='.')
   plot.names <- c(plot.names, plot.name)
-  
-  p <- ggplot(hydration.imr.lsd.ssw[as.character(hydration.imr.lsd.ssw[,'Equipment']) %in% ssw.panel,], aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Pouch Hydration Testing by Line - Water Side Weight\n (Last 7 Days of Manufacturing)', y='Result (FYI limits include all historical data)')
+   # make the lables 
+  increment.value <- floor((nrow(plot.data)/2)/5)
+  labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
+  breaks <- seq(1, nrow(plot.data)/2, increment.value)
+
+  p <- ggplot(plot.data, aes(x=Observation, y=Result, group='1')) + 
+  	geom_line() + 
+  	geom_point() + 
+  	facet_wrap(~Key, ncol=1, scales='free_y') + 
+  	geom_hline(aes(yintercept=LCL), color='darkgreen') + 
+  	geom_hline(aes(yintercept=UCL), color='darkgreen') + 
+  	geom_hline(aes(yintercept=Average), color='blue') + 
+  	theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, size=14, hjust=1)) + 
+  	scale_x_continuous(labels =labels, breaks=breaks) + 
+  	labs(title=paste('Pouch Hydration Testing on', line.name, ' - Sample Side Weight\n (Last 7 Days of Manufacturing)', sep=''), y='Result (FYI limits include all historical data)', x='Observation Time')
   
   imgName <- paste(substring(plot.name,3),'.png',sep='')
   png(file=paste(imgDir, imgName, sep=''), width=1200, height=800, units='px')
@@ -261,15 +277,59 @@ for(i in 1:ssw.panels) {
   dev.off()
 }
 
-p.faivLine.lsd <- ggplot(faivLine.imr.lsd,aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='FAIV Cannula Pull Strength Testing by Line\n (Last 7 Days of Manufacturing)', y='Result')
-p.faivLineWater.lsd <- ggplot(faivLineWater.imr.lsd,aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='FAIV Water Weight Testing by Line\n (Last 7 Days of Manufacturing)', y='Result')
+## split up the graphs by pouch line 
+for( pouchLine in unique(faivLine.imr.lsd$Equipment)){
+	pouchline.subset <- subset(faivLine.imr.lsd, Equipment == pouchLine)
+	increment.value <- floor((nrow(pouchline.subset)/2)/5) 
+	#print(seq(1, length(pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'])))
+	labels <-  pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'][seq(1, nrow(pouchline.subset)/2, increment.value)]
+	breaks <- seq(1, nrow(pouchline.subset)/2, increment.value)
+	plot <- ggplot(pouchline.subset,aes(x=Observation, y=Result, group='1')) + geom_line() + 
+		geom_point() + 
+		facet_wrap(~Key, ncol=1, scales="free_y") + 
+		geom_hline(aes(yintercept=LCL), color='darkgreen') + 
+		geom_hline(aes(yintercept=UCL), color='darkgreen') +
+		geom_hline(aes(yintercept=Average), color='blue') + 
+		theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + 
+		scale_x_continuous(labels = labels, breaks=breaks) + 
+		labs(title=paste('FAIV Cannula Pull Strength Testing on ', gsub(' ', '', pouchLine), '\n' ,'(Last 7 Days of Manufacturing)', sep=''), y='Result', x='Observation Time')
+	assign(paste('p.faivline.lsd.', gsub('-', '', gsub(' ', '', pouchLine)), sep=''), plot)
+		
+}
+
+## split up the graphs by pouch line 
+for( pouchLine in unique(faivLineWater.imr.lsd$Equipment)){
+	pouchline.subset <- subset(faivLineWater.imr.lsd, Equipment == pouchLine)
+	increment.value <- floor((nrow(pouchline.subset)/2)/5) 
+	labels <-  pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'][seq(1, nrow(pouchline.subset)/2, increment.value)]
+	#breaks <- pouchline.subset[pouchline.subset$Key=='Individual Value', 'Observation'][seq(1, length(pouchline.subset[pouchline.subset$Key=='Individual Value', 'Observation']), increment.value)]
+	breaks <- seq(1, nrow(pouchline.subset)/2, increment.value)
+	plot <- ggplot(pouchline.subset,aes(x=Observation, y=Result, group='1')) + geom_line() + 
+		geom_point() + 
+		facet_wrap(~Key, ncol=1, scales="free_y") + 
+		geom_hline(aes(yintercept=LCL), color='darkgreen') + 
+		geom_hline(aes(yintercept=UCL), color='darkgreen') +
+		geom_hline(aes(yintercept=Average), color='blue') + 
+		theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, size=14)) + 
+		scale_x_continuous(labels = labels, breaks=breaks) + 
+		labs(title=paste('FAIV Water Weight Testing on ', pouchLine,  '\n', '(Last 7 Days of Manufacturing)', sep=''), y='Result', x='Observation Time')
+	assign(paste('p.faivlineWater.lsd.', gsub('-', '', gsub(' ', '', pouchLine)), sep=''), plot)
+		
+}
+
+
+#p.faivLine.lsd <- ggplot(faivLine.imr.lsd,aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='FAIV Cannula Pull Strength Testing by Line\n (Last 7 Days of Manufacturing)', y='Result')
+#p.faivLineWater.lsd <- ggplot(faivLineWater.imr.lsd,aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='FAIV Water Weight Testing by Line\n (Last 7 Days of Manufacturing)', y='Result')
 
 # ------- RATE OF POLARIZED LIGHT TEST FAILURES IN BURST TESTING FOR THE LAST 7 DAYS
 polarized.df[,'Date'] <- as.Date(polarized.df[,'DateOpened'], tz='MST')
 polarized.lsd <- subset(polarized.df, Date %in% lsd.burst)
 polarized.lsd[,'Record'] <- 1
 polarized.lsd.agg <- with(polarized.lsd, aggregate(cbind(Record, PassedPolarized)~Date+GroupName, FUN=sum))
-p.polarized.fail <- ggplot(polarized.lsd.agg, aes(x=Date, y=(Record-PassedPolarized))) + geom_bar(stat='identity') + facet_wrap(~GroupName) + labs(title='Count of Failures in Polarized Light Test by Pouch Line\nLast 7 Days of Manufacturing', y='Count of Failures', x='Day')+ theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1))
+p.polarized.fail <- ggplot(polarized.lsd.agg, aes(x=Date, y=(Record-PassedPolarized), fill=GroupName)) + 
+	geom_bar(stat='identity') + 
+	labs(title='Count of Failures in Polarized Light Test by Pouch Line\nLast 7 Days of Manufacturing', y='Count of Failures', x='Day')+ 
+	theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1))
 
 # ------- COUNT OF FAILURES IN LAST 30 DAYS (BURST, WATER SIDE WEIGHT, AND SAMPLE SIDE WEIGHT)
 burst.ltd <- subset(burst.imr.ltd, Key == 'Individual Value')
@@ -290,11 +350,23 @@ hydra.ssw.ltd[,'FailCount'] <- with(hydra.ssw.ltd, ifelse(Result < 0.2, 1, 0))
 faivLine.ltd[,'FailCount'] <- with(faivLine.ltd, ifelse(Result < 9, 1, 0))
 faivLineWater.ltd[,'FailCount'] <- with(faivLineWater.ltd, ifelse(Result < 1.4, 1, 0))
 
-p.burst.fail.ltd <- ggplot(with(burst.ltd, aggregate(FailCount~Date, FUN=sum)), aes(x=as.factor(Date), y=FailCount)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(burst.ltd[,'Date'])[order(unique(burst.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Burst Tests in Last 30 Days\n(Result < 50.0PSI)', x='Date', y='Count of Failed Tests')
-p.hydra.wsw.fail.ltd <- ggplot(with(hydra.wsw.ltd, aggregate(FailCount~Date, FUN=sum)), aes(x=as.factor(Date), y=FailCount)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.wsw.ltd[,'Date'])[order(unique(hydra.wsw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Water Side Weight < 0.8g)', x='Date', y='Count of Failed Tests')
-p.hydra.ssw.fail.ltd <- ggplot(with(hydra.ssw.ltd, aggregate(FailCount~Date, FUN=sum)), aes(x=as.factor(Date), y=FailCount)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.ssw.ltd[,'Date'])[order(unique(hydra.ssw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Sample Side Weight < 0.2g)', x='Date', y='Count of Failed Tests')
-p.faivLine.fail.ltd <- ggplot(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum)), aes(x=as.factor(Date), y=FailCount)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
-p.faivLineWater.fail.ltd <- ggplot(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum)), aes(x=as.factor(Date), y=FailCount)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(faivLineWater.ltd[,'Date'])[order(unique(faivLineWater.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing FAIV Water Weight Tests in Last 30 Days\n(Result < 1.4)', x='Date', y='Count of Failed Tests') + ylim(c(0, ifelse(max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
+burst.agg <- aggregate(FailCount~Date+Equipment, burst.ltd, FUN=sum) 
+p.burst.fail.ltd <- ggplot(burst.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
+	geom_bar( stat='identity') + 
+	scale_x_discrete(breaks = as.factor(unique(burst.ltd[,'Date'])[order(unique(burst.ltd[,'Date']))]), drop=FALSE) + 
+	theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+	labs(title='Failing Burst Tests in Last 30 Days\n(Result < 50.0PSI)', x='Date', y='Count of Failed Tests')
+
+hydra.wsw.ltd.agg <- aggregate(FailCount~Date+Equipment, hydra.wsw.ltd, FUN=sum)
+hydra.ssw.ltd.agg <- aggregate(FailCount~Date+Equipment, hydra.ssw.ltd, FUN=sum)
+faivLine.ltd.agg <- aggregate(FailCount~Date+Equipment, faivLine.ltd, FUN=sum)
+faivLineWater.ltd.agg <- aggregate(FailCount~Date+Equipment, faivLineWater.ltd, FUN=sum)
+faivLineWater.ltd.agg$LineType <- rep('Auto', nrow(faivLineWater.ltd.agg))
+faivLineWater.ltd.agg$LineType[which(!grepl('Auto', faivLineWater.ltd.agg$Equipment))] <- 'Manual'
+p.hydra.wsw.fail.ltd <- ggplot(hydra.wsw.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.wsw.ltd[,'Date'])[order(unique(hydra.wsw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Water Side Weight < 0.8g)', x='Date', y='Count of Failed Tests')
+p.hydra.ssw.fail.ltd <- ggplot(hydra.ssw.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.ssw.ltd[,'Date'])[order(unique(hydra.ssw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Sample Side Weight < 0.2g)', x='Date', y='Count of Failed Tests')
+p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
+p.faivLineWater.fail.ltd <- ggplot(faivLineWater.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + facet_wrap(~LineType) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(faivLineWater.ltd[,'Date'])[order(unique(faivLineWater.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing FAIV Water Weight Tests in Last 30 Days\n(Result < 1.4)', x='Date', y='Count of Failed Tests') + ylim(c(0, ifelse(max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
 
 # TREND CHARTS -- not a moving average... the team perfers a box and whisker plot by week ---------------------------------------------------------------------------
 burst.df[,'DateGroup'] <- with(burst.df, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))
@@ -308,28 +380,28 @@ startDate <- findStartDate(calendar.df, 'Week', 53, keepPeriods=53)
 burst.trend <- analyzeOrderIMR(burst.df, 'Result', 'DateOpened', points.burst, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
 hydra.wsw.trend <- analyzeOrderIMR(hydration.df, 'WaterSideWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
 hydra.ssw.trend <- analyzeOrderIMR(hydration.df, 'SampleSideWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
-# hydra.tw.trend <- analyzeOrderIMR(hydration.df, 'TotalWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
-# hydra.tht.trend <- analyzeOrderIMR(hydration.df, 'TotalHydrationTime', 'DateOpened', points.hydra, 2, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
+#hydra.tw.trend <- analyzeOrderIMR(hydration.df, 'TotalWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
+#hydra.tht.trend <- analyzeOrderIMR(hydration.df, 'TotalHydrationTime', 'DateOpened', points.hydra, 2, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
 faivLine.trend <- analyzeOrderIMR(faivLine.df, 'Result', 'DateOpened', points.faivLine, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
 faivLineWater.trend <- analyzeOrderIMR(faivLineWater.df, 'Result', 'DateOpened', points.faivLineWater, 3, 'GroupName', byEquipment = FALSE, returnClean = TRUE)
 
 burst.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], burst.trend, by='Date')
 hydra.wsw.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], hydra.wsw.trend, by='Date')
 hydra.ssw.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], hydra.ssw.trend, by='Date')
-hydra.tw.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], hydra.tw.trend, by='Date')
-hydra.tht.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], hydra.tht.trend, by='Date')
+#hydra.tw.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], hydra.tw.trend, by='Date')
+#hydra.tht.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], hydra.tht.trend, by='Date')
 faivLine.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], faivLine.trend, by='Date')
 faivLineWater.trend <- merge(calendar.df[calendar.df$DateGroup >= startDate, ], faivLineWater.trend, by='Date')
 
 # make the charts
 dateBreaks <- unique(calendar.df[calendar.df$DateGroup >= startDate, 'DateGroup'])[seq(1, length(calendar.df[calendar.df$DateGroup >= startDate, ]), seqBreak)]
-p.burst.trend <- ggplot(burst.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Burst Testing Result Distribution by Week', x='Test Date\n(Year-Week', y='Result')
-p.hydra.wsw.trend <- ggplot(hydra.wsw.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Hydration Testing Water Side Weight Distribution by Week', x='Test Date\n(Year-Week', y='Result') + ylim(c(0,1.25))
-p.hydra.ssw.trend <- ggplot(hydra.ssw.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Hydration Testing Sample Side Weight Distribution by Week', x='Test Date\n(Year-Week', y='Result') + ylim(c(0,0.6))
+p.burst.trend <- ggplot(burst.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Burst Testing Result Distribution by Week', x='Test Date\n(Year-Week)', y='Result')
+p.hydra.wsw.trend <- ggplot(hydra.wsw.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Hydration Testing Water Side Weight Distribution by Week', x='Test Date\n(Year-Week)', y='Result') + ylim(c(0,1.25))
+p.hydra.ssw.trend <- ggplot(hydra.ssw.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Hydration Testing Sample Side Weight Distribution by Week', x='Test Date\n(Year-Week)', y='Result') + ylim(c(0,0.6))
 # p.hydra.tw.trend <- ggplot(hydra.tw.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Hydration Testing Total Weight Distribution by Week', x='Test Date\n(Year-Week', y='Result')
 # p.hydra.tht.trend <- ggplot(hydra.tht.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Hydration Testing Total Time Distribution by Week', x='Test Date\n(Year-Week', y='Result')
-p.faivLine.trend <- ggplot(faivLine.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='FAIV Cannula Pull Strength Testing Result Distribution by Week', x='Test Date\n(Year-Week', y='Result')
-p.faivLineWater.trend <- ggplot(faivLineWater.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='FAIV Water Weight Testing Result Distribution by Week', x='Test Date\n(Year-Week', y='Result')
+p.faivLine.trend <- ggplot(faivLine.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='FAIV Cannula Pull Strength Testing Result Distribution by Week', x='Test Date\n(Year-Week)', y='Result')
+p.faivLineWater.trend <- ggplot(faivLineWater.trend, aes(x=DateGroup, y=Result)) + geom_boxplot(outlier.colour = 'orange', color='dodgerblue') + scale_x_discrete(breaks = dateBreaks) + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='FAIV Water Weight Testing Result Distribution by Week', x='Test Date\n(Year-Week)', y='Result')
 
 # # For cannula pull strength, create x-bar-R charts (using groups of 6... ordering within the lot): Last 30 days??
 # cannula.ltd.xbarR <- xbarRangeCalculator(faivLine.ltd)
