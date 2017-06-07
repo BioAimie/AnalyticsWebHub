@@ -6,7 +6,7 @@ pdfDir <- '~/WebHub/pdfs/'
 setwd(workDir)
 
 # Load needed libraries
-library(ggplot2)
+library(tidyverse)
 library(zoo)
 library(scales)
 library(lubridate)
@@ -306,9 +306,10 @@ failures.rate.version = failures.fill.version %>%
   inner_join(ships.fill.version, by = c('DateGroup', 'Department', 'Version')) %>%
   filter(!(Department == 'Production' & Version == 'FA1.5')) %>%
   group_by(Key, Version) %>% arrange(DateGroup) %>%
-  mutate(Num = rollapplyr(Failures, periods, sum, fill = NA),
-         Denom = rollapplyr(Shipments, periods, sum, fill = NA),
-         Rate = Num / Denom)
+  mutate(RollingNum = rollapplyr(Failures, periods, sum, fill = NA),
+         RollingDenom = rollapplyr(Shipments, periods, sum, fill = NA),
+         RollingRate = RollingNum / RollingDenom,
+         Rate = Failures / Shipments)
 failures.ytd.version = failures.rate.version %>%
   filter(DateGroup >= '2017-01', !(Department == 'Production' & Version == 'FA1.5')) %>%
   group_by(DateGroup, Department, Version) %>% 
@@ -317,28 +318,9 @@ failures.ytd.version = failures.rate.version %>%
   mutate(YTDNum = cumsum(Failures), 
          YTDDenom = cumsum(Shipments),
          YTDRate = YTDNum / YTDDenom) 
-
-# failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), plot.startDate.week, 'Record', 'sum', 0)
-# ships.fill.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ships.df, c('Version','Key'), plot.startDate.week, 'Record', 'sum', 1)
-# failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
-# # add a ytd line
-# failures.agg$ytd <- rep(NA, nrow(failures.agg))
-# ships.fill.version$ytd <- rep(NA, nrow(ships.fill.version))
-# for(department in unique(failures.agg.rate$Department)){  # loop through the departments and versions so the ytd is calculated in the correct groups 
-# 	for(version in c('FA2.0', 'Torch')){
-#   	for(dategroup in unique(failures.agg$DateGroup)) {
-#     	if(dategroup >= '2017-01') {
-#       	numerator <- sum(subset(failures.agg, DateGroup >= '2017-01' & DateGroup <= dategroup & Department == department & Version == version)$Record, na.rm=TRUE)
-#         denominator <- sum(subset(ships.fill.version, DateGroup >= '2017-01' & DateGroup <= dategroup & Key == department & Version == version)$Record, na.rm=TRUE)
-#         ytd <- numerator/denominator
-#         failures.agg.rate[which(failures.agg.rate$Department == department & failures.agg.rate$Version == version & failures.agg.rate$DateGroup == dategroup), 'ytd'] <- ytd
-#       }
-#   	}
-# 	}
-# }
 p.earlyfailures <- failures.rate.version %>%
   filter(DateGroup >= dateBreaks[1]) %>%
-  ggplot(aes(x=DateGroup, y=Rate, fill=Key)) + 
+  ggplot(aes(x=DateGroup, y=RollingRate, fill=Key)) + 
   geom_col() + 
   geom_line(data = failures.ytd.version, aes(x=DateGroup, y=YTDRate, group=1), 
             inherit.aes = FALSE, size=1.25, linetype=2, colour="black") +
@@ -351,8 +333,6 @@ p.earlyfailures <- failures.rate.version %>%
   theme(axis.text.x=element_text(angle=90, hjust=1)) + 
   scale_x_discrete(breaks = dateBreaks) + 
   geom_hline(aes(yintercept=0.035), color='darkgreen', lty=2)
-
-#start.noroll <- findStartDate(calendar.df, 'Week', 53, 0, keepPeriods=0)
 p.earlyfailures.count <- failures.rate.version %>%
   filter(DateGroup >= dateBreaks[1]) %>%
   ggplot(aes(x=DateGroup, y=Failures, fill=Key)) + 
@@ -364,27 +344,73 @@ p.earlyfailures.count <- failures.rate.version %>%
   scale_x_discrete(breaks = dateBreaks)
 
 # create the charts for early failures per instruments shipped in a month (non-rolling) for each instrument version
-rmasShip.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', rmasShip.df, c('Version'), startMonth.plot, 'Record', 'sum', 0)
-newShip.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', instShip.df, c('Version'), startMonth.plot, 'Record', 'sum', 0)
-failures.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', failures.df, c('Version','Key','Department'), startMonth.plot, 'Record', 'sum', 0)
-prod.fail.month <- mergeCalSparseFrames(subset(failures.month, Department=='Production' & Version != 'FA1.5'), newShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
-prod.fail.month <- prod.fail.month[!(prod.fail.month$Version == 'Torch' & prod.fail.month$DateGroup < '2016-07'), ]
-serv.fail.month <- mergeCalSparseFrames(subset(failures.month, Department=='Service'), rmasShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
-failures.month[,'ComboCat'] <- do.call(paste, c(failures.month[,c('Version','Key','Department')], sep=','))
-failures.month.cum <- do.call(rbind, lapply(1:length(unique(failures.month$ComboCat)), function(x) data.frame(DateGroup =  failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'DateGroup'], ComboCat = unique(failures.month$ComboCat)[x], CumFail = sapply(1:length(failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'DateGroup']), function(y) sum(failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'Record'][1:y], na.rm = TRUE)))))
-failures.month.cum <- data.frame(DateGroup = failures.month.cum$DateGroup, Version = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,1], Key = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,2], Department = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,3], Record = failures.month.cum$CumFail)
-rmasShip.month.cum <- do.call(rbind, lapply(1:length(unique(rmasShip.month$Version)), function(x) data.frame(DateGroup = rmasShip.month[rmasShip.month$Version == unique(rmasShip.month$Version)[x], 'DateGroup'], Version = unique(rmasShip.month$Version)[x], Record = sapply(1:length(rmasShip.month[rmasShip.month$Version == unique(rmasShip.month$Version)[x], 'DateGroup']), function(y) sum(rmasShip.month[rmasShip.month$Version == unique(rmasShip.month$Version)[x],'Record'][1:y])))))
-rmasShip.month.cum <- rmasShip.month.cum[!(rmasShip.month.cum$Version == 'Torch' & as.character(rmasShip.month.cum$DateGroup) < '2016-07'), ] 
-newShip.month.cum <- do.call(rbind, lapply(1:length(unique(newShip.month$Version)), function(x) data.frame(DateGroup = newShip.month[newShip.month$Version == unique(newShip.month$Version)[x], 'DateGroup'], Version = unique(newShip.month$Version)[x], Record = sapply(1:length(newShip.month[newShip.month$Version == unique(newShip.month$Version)[x], 'DateGroup']), function(y) sum(newShip.month[newShip.month$Version == unique(newShip.month$Version)[x],'Record'][1:y])))))
-newShip.month.cum <- newShip.month.cum[!(newShip.month.cum$Version == 'Torch' & as.character(newShip.month.cum$DateGroup) < '2016-07'), ] 
-prod.fail.month.cum <- merge(subset(failures.month.cum, Department=='Production'), newShip.month.cum, by=c('DateGroup','Version'))
-prod.fail.month.cum$CumulativeRate <- with(prod.fail.month.cum, Record.x/Record.y)
-serv.fail.month.cum <- merge(subset(failures.month.cum, Department=='Service'), rmasShip.month.cum, by=c('DateGroup','Version'))
-serv.fail.month.cum$CumulativeRate <- with(serv.fail.month.cum, Record.x/Record.y)
-prod.fail.month <- merge(prod.fail.month, prod.fail.month.cum[,c('DateGroup','Version','Key','Department','CumulativeRate')], by=c('DateGroup','Version','Key','Department'))
-serv.fail.month <- merge(serv.fail.month, serv.fail.month.cum[,c('DateGroup','Version','Key','Department','CumulativeRate')], by=c('DateGroup','Version','Key','Department'))
-p.prod.fail.month <- ggplot(prod.fail.month, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(prod.fail.month, 'Key'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + geom_line(data = prod.fail.month, aes(x=DateGroup, y=CumulativeRate, group=Key, color=Key), lwd=1.5, lty='dashed') + scale_color_manual(values=c('darkblue', 'chocolate4'), guide=FALSE) + scale_y_continuous(label=percent) + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Early Failure Rates by Month\n(12 Month Cumulative Rate Overlay)', x='Date\n(Year-Month)', y='Failures/New Instruments Shipped')
-p.serv.fail.month <- ggplot(serv.fail.month, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(serv.fail.month, 'Key'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + geom_line(data = serv.fail.month, aes(x=DateGroup, y=CumulativeRate, group=Key, color=Key), lwd=1.5, lty='dashed') + scale_color_manual(values=c('darkblue', 'chocolate4'), guide=FALSE) + scale_y_continuous(label=percent) + theme(axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Early Failure Rates by Month\n(12 Month Cumulative Rate Overlay)', x='Date\n(Year-Month)', y='Failures/RMA Instruments Shipped')
+# rmasShip.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', rmasShip.df, c('Version'), startMonth.plot, 'Record', 'sum', 0)
+# newShip.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', instShip.df, c('Version'), startMonth.plot, 'Record', 'sum', 0)
+# failures.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', failures.df, c('Version','Key','Department'), startMonth.plot, 'Record', 'sum', 0)
+# prod.fail.month <- mergeCalSparseFrames(subset(failures.month, Department=='Production' & Version != 'FA1.5'), newShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
+# prod.fail.month <- prod.fail.month[!(prod.fail.month$Version == 'Torch' & prod.fail.month$DateGroup < '2016-07'), ]
+# serv.fail.month <- mergeCalSparseFrames(subset(failures.month, Department=='Service'), rmasShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
+# failures.month[,'ComboCat'] <- do.call(paste, c(failures.month[,c('Version','Key','Department')], sep=','))
+# failures.month.cum <- do.call(rbind, lapply(1:length(unique(failures.month$ComboCat)), function(x) data.frame(DateGroup =  failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'DateGroup'], ComboCat = unique(failures.month$ComboCat)[x], CumFail = sapply(1:length(failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'DateGroup']), function(y) sum(failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'Record'][1:y], na.rm = TRUE)))))
+# failures.month.cum <- data.frame(DateGroup = failures.month.cum$DateGroup, Version = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,1], Key = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,2], Department = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,3], Record = failures.month.cum$CumFail)
+# rmasShip.month.cum <- do.call(rbind, lapply(1:length(unique(rmasShip.month$Version)), function(x) data.frame(DateGroup = rmasShip.month[rmasShip.month$Version == unique(rmasShip.month$Version)[x], 'DateGroup'], Version = unique(rmasShip.month$Version)[x], Record = sapply(1:length(rmasShip.month[rmasShip.month$Version == unique(rmasShip.month$Version)[x], 'DateGroup']), function(y) sum(rmasShip.month[rmasShip.month$Version == unique(rmasShip.month$Version)[x],'Record'][1:y])))))
+# rmasShip.month.cum <- rmasShip.month.cum[!(rmasShip.month.cum$Version == 'Torch' & as.character(rmasShip.month.cum$DateGroup) < '2016-07'), ] 
+# newShip.month.cum <- do.call(rbind, lapply(1:length(unique(newShip.month$Version)), function(x) data.frame(DateGroup = newShip.month[newShip.month$Version == unique(newShip.month$Version)[x], 'DateGroup'], Version = unique(newShip.month$Version)[x], Record = sapply(1:length(newShip.month[newShip.month$Version == unique(newShip.month$Version)[x], 'DateGroup']), function(y) sum(newShip.month[newShip.month$Version == unique(newShip.month$Version)[x],'Record'][1:y])))))
+# newShip.month.cum <- newShip.month.cum[!(newShip.month.cum$Version == 'Torch' & as.character(newShip.month.cum$DateGroup) < '2016-07'), ] 
+# prod.fail.month.cum <- merge(subset(failures.month.cum, Department=='Production'), newShip.month.cum, by=c('DateGroup','Version'))
+# prod.fail.month.cum$CumulativeRate <- with(prod.fail.month.cum, Record.x/Record.y)
+# serv.fail.month.cum <- merge(subset(failures.month.cum, Department=='Service'), rmasShip.month.cum, by=c('DateGroup','Version'))
+# serv.fail.month.cum$CumulativeRate <- with(serv.fail.month.cum, Record.x/Record.y)
+# prod.fail.month <- merge(prod.fail.month, prod.fail.month.cum[,c('DateGroup','Version','Key','Department','CumulativeRate')], by=c('DateGroup','Version','Key','Department'))
+# serv.fail.month <- merge(serv.fail.month, serv.fail.month.cum[,c('DateGroup','Version','Key','Department','CumulativeRate')], by=c('DateGroup','Version','Key','Department'))
+startDateGroup = (tibble(Date = today() - months(11)) %>% left_join(calendar.df.month))$DateGroup
+ships.fill.month =
+  rbind(instShip.df %>% mutate(Department = 'Production'), 
+        rmasShip.df %>% mutate(Department = 'Service')) %>%
+  inner_join(calendar.df.month, by = 'Date') %>%
+  group_by(DateGroup, Department, Version) %>% summarize(Shipments = sum(Record)) %>% ungroup() %>%
+  complete(DateGroup = unique(calendar.df.month$DateGroup), Department, Version, fill = list(Shipments = 0))
+failures.fill.month = failures.df %>%
+  inner_join(calendar.df.month, by = 'Date') %>%
+  group_by(DateGroup, Key, Version) %>% summarize(Failures = sum(Record)) %>% ungroup() %>%
+  complete(DateGroup = unique(calendar.df.month$DateGroup), Key, Version, fill = list(Failures = 0))
+failures.rate.month = failures.fill.month %>%
+  mutate(Department = ifelse(Key %in% c('DOA', 'ELF'), 'Production', 'Service')) %>%
+  inner_join(ships.fill.month, by = c('DateGroup', 'Department', 'Version')) %>%
+  filter(!(Department == 'Production' & Version == 'FA1.5'), DateGroup >= startDateGroup) %>%
+  group_by(Key, Version) %>% arrange(DateGroup) %>%
+  mutate(Rate = Failures / Shipments,
+         CumulativeRate = cumsum(Failures) / cumsum(Shipments))
+pal.prod = createPaletteOfVariableLength(as.data.frame(filter(failures.rate.month, 
+                                                              Department == 'Production')), 'Key')
+p.prod.fail.month <- failures.rate.month %>%
+  filter(Department == 'Production') %>%
+  ggplot(aes(x=DateGroup, y=Rate, fill=Key)) + 
+  geom_col() + 
+  scale_fill_manual(values=pal.prod, name='') + 
+  facet_wrap(~Version, ncol=1, scale='free_y') + 
+  geom_line(aes(x=DateGroup, y=CumulativeRate, group=Key, color=Key), lwd=1.5, lty='dashed') + 
+  scale_color_manual(values=c('darkblue', 'chocolate4'), guide=FALSE) + 
+  scale_y_continuous(label=percent) + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
+  labs(title='Early Failure Rates by Month: New Instruments\n(12 Month Cumulative Rate Overlay)', 
+       x='Date\n(Year-Month)', 
+       y='Failures/New Instruments Shipped')
+pal.serv = createPaletteOfVariableLength(as.data.frame(filter(failures.rate.month, 
+                                                              Department == 'Service')), 'Key')
+p.serv.fail.month <- failures.rate.month %>%
+  filter(Department == 'Service') %>%
+  ggplot(aes(x=DateGroup, y=Rate, fill=Key)) + 
+  geom_col() + 
+  scale_fill_manual(values=pal.serv, name='') + 
+  facet_wrap(~Version, ncol=1, scale='free_y') + 
+  geom_line(aes(x=DateGroup, y=CumulativeRate, group=Key, color=Key), lwd=1.5, lty='dashed') + 
+  scale_color_manual(values=c('darkblue', 'chocolate4'), guide=FALSE) +
+  scale_y_continuous(label=percent) + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
+  labs(title='Early Failure Rates by Month: Serviced Instruments\n(12 Month Cumulative Rate Overlay)', 
+       x='Date\n(Year-Month)', 
+       y='Failures/RMA Instruments Shipped')
 
 # create the charts for early failures of computers per instruments shipped in a month (non-rolling) for each instrument version
 computerEF.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', computerEF.df, c('Version','Key'), startMonth.2, 'Record', 'sum', 0)
@@ -644,9 +670,8 @@ g4 <- gtable_add_grob(g4, yaxis, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", n
 setwd(imgDir)
 plots <- ls()[grep('^p\\.', ls())]
 for(i in 1:length(plots)) {
-  
   imgName <- paste(substring(plots[i],3),'.png',sep='')
-
+  cat(paste0("Saving ", imgName, "\n"));
   png(file=imgName, width=1200, height=800, units='px')
   print(eval(parse(text = plots[i])))
   makeTimeStamp(timeStamp = Sys.time(), author='Data Science')
@@ -671,4 +696,4 @@ for(i in 1:length(plots)) {
 grid.draw(g4)
 dev.off()
 
-rm(list=ls())
+#rm(list=ls())
