@@ -1,4 +1,4 @@
-# Updates [PMS1].[dbo].[bInstrumentParts]
+# Updates on PMS1: bInstrumentParts, bInstrumentProduced
 library(RODBC)
 PMScxn <- odbcConnect("PMS_PROD")
 cmd <- "EXECUTE [PMS1].[dbo].[bUpdateProductionTables]";
