@@ -1,41 +1,17 @@
 SET NOCOUNT ON
-
 SELECT 
-	[TicketId],
-	[TicketString],
-	[CreatedDate],
-	[ObjectId],
-	[PropertyName],
-	[RecordedValue]
-INTO #partInfo
-FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE  [Tracker] = 'RMA' AND [ObjectName] = 'Part Information'
-
-SELECT 
+	CAST([CreatedDate] AS DATE) AS [Date],
 	YEAR([CreatedDate]) AS [Year],
 	MONTH([CreatedDate]) AS [Month],
 	DATEPART(ww,[CreatedDate]) AS [Week],
-	IIF(LEFT([Part Number], 4) LIKE 'FLM1', 'FA1.5',
-		IIF(LEFT([Part Number],4) LIKE 'FLM2', 'FA2.0', 'Torch')) AS [Version],
-	[Early Failure Type] AS [Key],
-	COUNT(DISTINCT [TicketId]) AS [Record]
-FROM
-(
-	SELECT *
-	FROM #partInfo
-) P
-PIVOT
-(
-	MAX([RecordedValue]) 
-	FOR [PropertyName]
-	IN
-	(
-		[Part Number],
-		[Lot/Serial Number],
-		[Early Failure Type]
-	)
-) PIV
-WHERE [Early Failure Type] IS NOT NULL AND [Early Failure Type] NOT LIKE 'N/A' AND [Early Failure Type] NOT LIKE '' AND ([Part Number] LIKE 'FLM%-ASY-0001%' OR [Part Number] LIKE 'HTFA-ASY-0003%' OR [Part Number] LIKE 'HTFA-SUB-0103%')
-GROUP BY YEAR([CreatedDate]), MONTH([CreatedDate]), DATEPART(ww, [CreatedDate]), [Part Number], [Early Failure Type]
-
-DROP TABLE #partInfo
+	CASE
+		WHEN LEFT([PartNumber], 4) = 'FLM1' THEN 'FA1.5'
+		WHEN LEFT([PartNumber], 4) = 'FLM2' THEN 'FA2.0'
+		WHEN LEFT([PartNumber], 4) = 'HTFA' THEN 'Torch'
+		ELSE 'Other'
+	END AS [Version],
+	[EarlyFailureType] AS [Key],
+	1 AS [Record]
+FROM [PMS1].[dbo].[RMAPartInformation]
+WHERE [EarlyFailureType] IS NOT NULL AND [EarlyFailureType] NOT IN ('', 'N/A')
+	AND ([PartNumber] LIKE 'FLM%-ASY-0001%' OR [PartNumber] LIKE 'HTFA-ASY-0003%' OR [PartNumber] LIKE 'HTFA-SUB-0103%')

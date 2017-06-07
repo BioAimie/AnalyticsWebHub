@@ -50,7 +50,7 @@ SELECT
 	YEAR([TranDate]) AS [Year],
 	MONTH([TranDate]) AS [Month],
 	DATEPART(ww, [TranDate]) AS [Week],
-	[TranDate] AS [ShipDate],
+	CAST([TranDate] AS DATE) AS [ShipDate],
 	[ItemID],
 	CASE
 		WHEN [ItemID] LIKE 'FLM1-ASY-0001' THEN 'FA1.5'
