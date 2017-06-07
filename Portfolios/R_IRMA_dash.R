@@ -255,7 +255,7 @@ failures.fill = failures.df %>%
   inner_join(calendar.df, by = 'Date') %>%
   group_by(DateGroup, Key) %>% summarize(Failures = sum(Record)) %>% ungroup() %>%
   complete(DateGroup = unique(calendar.df$DateGroup), Key, fill = list(Failures = 0))
-failure.rate = failures.fill %>%
+failures.rate = failures.fill %>%
   mutate(Department = ifelse(Key %in% c('DOA', 'ELF'), 'Production', 'Service')) %>%
   inner_join(ships.fill, by = c('DateGroup', 'Department')) %>%
   group_by(Key) %>% arrange(DateGroup) %>%
@@ -291,27 +291,77 @@ p.failures.all <- failures.lim %>%
   geom_text(aes(y = 0, label = Denom), nudge_y = -.005, size = 3)#+ annotate("text",x=x_positions,y=y_positions,label=fail.annotations, size=4)
 
 # early failures by version and department and type
-failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), plot.startDate.week, 'Record', 'sum', 0)
-ships.fill.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ships.df, c('Version','Key'), plot.startDate.week, 'Record', 'sum', 1)
-failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
-# add a ytd line
-failures.agg$ytd <- rep(NA, nrow(failures.agg))
-ships.fill.version$ytd <- rep(NA, nrow(ships.fill.version))
-for(department in unique(failures.agg.rate$Department)){  # loop through the departments and versions so the ytd is calculated in the correct groups 
-	for(version in c('FA2.0', 'Torch')){
-  	for(dategroup in unique(failures.agg$DateGroup)) {
-    	if(dategroup >= '2017-01') {
-      	numerator <- sum(subset(failures.agg, DateGroup >= '2017-01' & DateGroup <= dategroup & Department == department & Version == version)$Record, na.rm=TRUE)
-        denominator <- sum(subset(ships.fill.version, DateGroup >= '2017-01' & DateGroup <= dategroup & Key == department & Version == version)$Record, na.rm=TRUE)
-        ytd <- numerator/denominator
-        failures.agg.rate[which(failures.agg.rate$Department == department & failures.agg.rate$Version == version & failures.agg.rate$DateGroup == dategroup), 'ytd'] <- ytd
-      }
-  	}
-	}
-}
-p.earlyfailures <- ggplot(failures.agg.rate, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_line(data=failures.agg.rate, aes(x=DateGroup, y=ytd, group=1), size=1.25, linetype=2, colour="black") + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg.rate, 'Key'), name='') + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + geom_hline(aes(yintercept=0.035), color='darkgreen', lty=2)
-start.noroll <- findStartDate(calendar.df, 'Week', 53, 0, keepPeriods=0)
-p.earlyfailures.count <- ggplot(subset(failures.agg, DateGroup >=start.noroll), aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + facet_grid(Department~Version) + scale_fill_manual(values=createPaletteOfVariableLength(failures.agg, 'Key'), name='') + labs(title='Count of Early Failures',x='Reported Date\n(Year-Week)', y='Count') + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks)
+ships.fill.version =
+  rbind(instShip.df %>% mutate(Department = 'Production'), 
+        rmasShip.df %>% mutate(Department = 'Service')) %>%
+  inner_join(calendar.df, by = 'Date') %>%
+  group_by(DateGroup, Department, Version) %>% summarize(Shipments = sum(Record)) %>% ungroup() %>%
+  complete(DateGroup = unique(calendar.df$DateGroup), Department, Version, fill = list(Shipments = 0))
+failures.fill.version = failures.df %>%
+  inner_join(calendar.df, by = 'Date') %>%
+  group_by(DateGroup, Key, Version) %>% summarize(Failures = sum(Record)) %>% ungroup() %>%
+  complete(DateGroup = unique(calendar.df$DateGroup), Key, Version, fill = list(Failures = 0))
+failures.rate.version = failures.fill.version %>%
+  mutate(Department = ifelse(Key %in% c('DOA', 'ELF'), 'Production', 'Service')) %>%
+  inner_join(ships.fill.version, by = c('DateGroup', 'Department', 'Version')) %>%
+  filter(!(Department == 'Production' & Version == 'FA1.5')) %>%
+  group_by(Key, Version) %>% arrange(DateGroup) %>%
+  mutate(Num = rollapplyr(Failures, periods, sum, fill = NA),
+         Denom = rollapplyr(Shipments, periods, sum, fill = NA),
+         Rate = Num / Denom)
+failures.ytd.version = failures.rate.version %>%
+  filter(DateGroup >= '2017-01', !(Department == 'Production' & Version == 'FA1.5')) %>%
+  group_by(DateGroup, Department, Version) %>% 
+  summarize(Failures = sum(Failures), Shipments = mean(Shipments)) %>% ungroup() %>%
+  group_by(Department, Version) %>% arrange(DateGroup) %>%
+  mutate(YTDNum = cumsum(Failures), 
+         YTDDenom = cumsum(Shipments),
+         YTDRate = YTDNum / YTDDenom) 
+
+# failures.agg <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df[!(failures.df$Department == 'Production' & failures.df$Version == 'FA1.5'), ], c('Department', 'Key', 'Version'), plot.startDate.week, 'Record', 'sum', 0)
+# ships.fill.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ships.df, c('Version','Key'), plot.startDate.week, 'Record', 'sum', 1)
+# failures.agg.rate <- mergeCalSparseFrames(failures.agg, ships.fill.version, c('DateGroup', 'Department', 'Version'), c('DateGroup', 'Key', 'Version'), 'Record', 'Record', 0, periods)
+# # add a ytd line
+# failures.agg$ytd <- rep(NA, nrow(failures.agg))
+# ships.fill.version$ytd <- rep(NA, nrow(ships.fill.version))
+# for(department in unique(failures.agg.rate$Department)){  # loop through the departments and versions so the ytd is calculated in the correct groups 
+# 	for(version in c('FA2.0', 'Torch')){
+#   	for(dategroup in unique(failures.agg$DateGroup)) {
+#     	if(dategroup >= '2017-01') {
+#       	numerator <- sum(subset(failures.agg, DateGroup >= '2017-01' & DateGroup <= dategroup & Department == department & Version == version)$Record, na.rm=TRUE)
+#         denominator <- sum(subset(ships.fill.version, DateGroup >= '2017-01' & DateGroup <= dategroup & Key == department & Version == version)$Record, na.rm=TRUE)
+#         ytd <- numerator/denominator
+#         failures.agg.rate[which(failures.agg.rate$Department == department & failures.agg.rate$Version == version & failures.agg.rate$DateGroup == dategroup), 'ytd'] <- ytd
+#       }
+#   	}
+# 	}
+# }
+p.earlyfailures <- failures.rate.version %>%
+  filter(DateGroup >= dateBreaks[1]) %>%
+  ggplot(aes(x=DateGroup, y=Rate, fill=Key)) + 
+  geom_col() + 
+  geom_line(data = failures.ytd.version, aes(x=DateGroup, y=YTDRate, group=1), 
+            inherit.aes = FALSE, size=1.25, linetype=2, colour="black") +
+  facet_grid(Department~Version) + 
+  scale_fill_manual(values=createPaletteOfVariableLength(as.data.frame(failures.rate.version), 'Key'), name='') + 
+  scale_y_continuous(labels=percent) + 
+  labs(title='Early Failures per Instruments Shipped:\nGoal = 3.5% of Instruments Shipped',
+       x='Date\n(Year-Week)', 
+       y='4-week Rolling Average Rate') + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
+  scale_x_discrete(breaks = dateBreaks) + 
+  geom_hline(aes(yintercept=0.035), color='darkgreen', lty=2)
+
+#start.noroll <- findStartDate(calendar.df, 'Week', 53, 0, keepPeriods=0)
+p.earlyfailures.count <- failures.rate.version %>%
+  filter(DateGroup >= dateBreaks[1]) %>%
+  ggplot(aes(x=DateGroup, y=Failures, fill=Key)) + 
+  geom_bar(stat='identity') + 
+  facet_grid(Department~Version) + 
+  scale_fill_manual(values=createPaletteOfVariableLength(as.data.frame(failures.rate.version), 'Key'), name='') + 
+  labs(title='Count of Early Failures',x='Reported Date\n(Year-Week)', y='Count') + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
+  scale_x_discrete(breaks = dateBreaks)
 
 # create the charts for early failures per instruments shipped in a month (non-rolling) for each instrument version
 rmasShip.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', rmasShip.df, c('Version'), startMonth.plot, 'Record', 'sum', 0)

@@ -29,24 +29,9 @@ WHERE U.[PartUsed] NOT LIKE 'N%A' AND ISNUMERIC(U.[Quantity]) = 1
 		WHERE S.[TicketId] = I.[TicketId]
 	)
 	AND U.[PartUsed] IN (
-		'FLM1-MOL-0023',
-		'FLM1-SUB-0044',
-		'FLM1-MOD-0014',
-		'WIRE-HAR-0554',
-		'FLM1-GAS-0009',
-		'FLM1-MAC-0285',
-		'FLM1-SUB-0029',
-		'FLM1-SUB-0053',
-		'PCBA-SUB-0836',
-		'FLM1-SUB-0006',
-		'FLM1-SUB-0002',
-		'PCBA-SUB-0847',
-		'PCBA-SUB-0856',
-		'FLM1-GAS-0018',
-		'PCBA-SUB-0839',
-		'PCBA-SUB-0838',
-		'FLM1-SUB-0074',
-		'FLM1-SUB-0078'
+		'FLM1-MOL-0023', 'FLM1-SUB-0044', 'FLM1-MOD-0014', 'WIRE-HAR-0554',	'FLM1-GAS-0009', 'FLM1-MAC-0285',
+		'FLM1-SUB-0029', 'FLM1-SUB-0053', 'PCBA-SUB-0836', 'FLM1-SUB-0006',	'FLM1-SUB-0002', 'PCBA-SUB-0847',
+		'PCBA-SUB-0856', 'FLM1-GAS-0018', 'PCBA-SUB-0839', 'PCBA-SUB-0838',	'FLM1-SUB-0074', 'FLM1-SUB-0078'
 	)
 	AND ISNUMERIC(U.[Quantity]) = 1
 
@@ -86,7 +71,3 @@ FROM #partsReplaced
 ORDER BY [SerialNo], [VisitNo]
 
 DROP TABLE #codeParts, #partsReplaced
-
-
---DROP TABLE #date, #parts, #codes, #codeParts, #pivParts, #remove, #partInfo, #partInfoPiv, #partsReplaced, #hours,
---	#visitOrdered, #tickets
