@@ -1,4 +1,4 @@
---TimeUntilPre based on bugs
+--Time until PRE
 SET NOCOUNT ON
 
 SELECT 
@@ -13,11 +13,12 @@ GROUP BY A.[bug_id], B.[creation_ts]
 
 SELECT
 	[bug_id] AS [Bug],
+	YEAR([DateOpened]) AS [Year],
+	MONTH([DateOpened]) AS [Month], 
 	[DateOpened], 
 	DATEDIFF(day, [DateOpened], [PREDate]) AS [DaysToPRE],
 	1 AS [Record] 
 FROM #bugs 
-WHERE [DateOpened] >= GETDATE() - 120
 ORDER BY [bug_id] 
 
 DROP TABLE #bugs

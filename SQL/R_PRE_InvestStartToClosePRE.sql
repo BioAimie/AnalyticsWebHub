@@ -35,6 +35,13 @@ SELECT
 	'InvestStartToPRE' AS [Key], 
 	IIF(DATEDIFF(day, [InvestigationStart], [PREDate]) < 0, 0, DATEDIFF(day, [InvestigationStart], [PREDate])) AS [Record]
 FROM #StartPRE
+UNION ALL
+SELECT 
+	[bug_id] AS [Bug], 
+	[DateOpened],
+	'CICreationToInvestStart' AS [Key], 
+	IIF(DATEDIFF(day, [DateOpened], [InvestigationStart]) < 0, 0, DATEDIFF(day, [DateOpened], [InvestigationStart])) AS [Record]
+FROM #StartPRE
 
 SELECT
 	YEAR([DateOpened]) AS [Year],
