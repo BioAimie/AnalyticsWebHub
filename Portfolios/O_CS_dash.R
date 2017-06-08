@@ -193,7 +193,7 @@ p.CurrentOpenComplaints <- ggplot(OpenComplaints, aes(x=Key, y=Record)) + geom_b
 #previous month freeze
 lastMonthDate <- tail(subset(calendar.month, DateGroup == lastMonth), 1)[,'Date']
 complaints.freeze <- subset(complaints.df, DateOpened <= lastMonthDate & (is.na(DateClosed) | DateClosed > lastMonthDate), select = c('DateOpened', 'DateClosed','Record'))
-complaints.freeze$DaysOpen <- with(complaints.freeze, difftime(lastMonthDate, DateOpened, 'days'))
+complaints.freeze$DaysOpen <- with(complaints.freeze, difftime(as.Date(lastMonthDate), as.Date(DateOpened), units='days'))
 for(i in 1:length(complaints.freeze$DateOpened)) {
   if(as.numeric(complaints.freeze$DaysOpen[i]) > 120)
     complaints.freeze$Key[i] <- '121+'
