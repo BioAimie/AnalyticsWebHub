@@ -16,6 +16,6 @@ SELECT
 	1 AS [Record]
 FROM [CI]...[bugs] B WITH(NOLOCK) LEFT JOIN #CITeam C
 	ON B.[assigned_to] = C.[userid] 
-WHERE [resolution] NOT IN ('Voided', 'DUPLICATE')
+WHERE [resolution] NOT IN ('Voided', 'DUPLICATE') AND [bug_status] NOT LIKE 'CLOSED'
 
 DROP TABLE #CITeam
