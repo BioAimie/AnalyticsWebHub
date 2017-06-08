@@ -22,6 +22,10 @@ query.charVec = readLines("SQL/R_CI_countComplaints.sql")
 query = paste(query.charVec,collapse="\n")
 countComplaint.df = sqlQuery(PMScxn,query)
 
+query.charVec = readLines("SQL/R_CC_CustPouchesShippedDetailed.sql")
+query = paste(query.charVec,collapse="\n")
+pouches.3yr.df = sqlQuery(PMScxn,query)
+
 # close remote connection
 close(PMScxn)
 
