@@ -15,6 +15,9 @@ loadSQL = function(cxn, filename, outputs){
     tic();
     df = sqlQuery(cxn, querySplit[i], stringsAsFactors=FALSE);
     toc();
+    if(class(df) != 'data.frame'){
+      stop(df[1]); # Output error message
+    }
     assign(outputs[i], df, envir=globalenv());
   }
 }
