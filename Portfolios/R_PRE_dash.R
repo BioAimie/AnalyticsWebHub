@@ -48,18 +48,21 @@ dategroups <- sort(as.character(unique(daystoclose.year$DateGroup)))
 daystoclose.cum<- c()
 for(i in 1:length(dategroups)) {
   temp <- subset(daystoclose.year, DateGroup <= dategroups[i])
-  daystoclose.cum <- rbind(daystoclose.cum, data.frame(DateGroup = dategroups[i], CumAvg = with(temp, mean(DaysToClose)), Avg = with(subset(temp, DateGroup == dategroups[i]), mean(DaysToClose))))
+  daystoclose.cum <- rbind(daystoclose.cum, data.frame(DateGroup = dategroups[i], Key = 'Average Days to Close', CumAvg = with(temp, mean(DaysToClose)), Avg = with(subset(temp, DateGroup == dategroups[i]), mean(DaysToClose))))
 }
-p.AvgDaysToClose <- ggplot(daystoclose.cum, aes(x=DateGroup, y=CumAvg, group = 1)) + geom_line() + geom_point() + theme(axis.text.x = element_text(angle = 90)) + labs(title = 'Average Days to Close', subtitle = '13 Month Cumulative Average', x = 'Date\n(Year-Month)', y = 'Average Days') + geom_text(aes(label=format(CumAvg, digits=3)), fontface = 'bold', vjust = -1)
-
-# CI PRE Review, Last 120 Days
-preBugs.df$Color <- with(preBugs.df, ifelse(DaysToPRE > 30, 'fail', ifelse(DaysToPRE <= 30 & DaysToPRE > 15, 'review', 'pass')))
-preBugs.df$Color <- factor(preBugs.df$Color, levels = c('pass', 'review', 'fail'))
-p.DaysToPREreview <- ggplot(preBugs.df, aes(x=Bug, y=DaysToPRE, group=Color, color=Color)) + geom_point() + geom_hline(aes(yintercept = limit), color = 'forestgreen', linetype = 'dashed') + geom_hline(aes(yintercept = 30), color = 'blue', linetype = 'dashed') + scale_color_manual(name='', values=c('forestgreen','blue','darkorange')) + theme(legend.position = 'none') + labs(title = 'Days Until PRE Review', subtitle = 'Last 120 Days', x = 'Bug Id', y = 'Days Until PRE Review') + geom_text_repel(data= subset(preBugs.df, DateOpened >= Sys.Date()-30 & Color == 'review'),aes(label=Bug), size=5) + scale_x_continuous(breaks = pretty_breaks()) + geom_text_repel(data = subset(preBugs.df, DaysToPRE > 30), aes(label=Bug), size=4, show.legend = FALSE) 
+preBugs.df$DateGroup <- with(preBugs.df, ifelse(Month < 10, paste0(Year, '-0', Month), paste0(Year,'-', Month)))
+preBugs.year <- subset(preBugs.df, DateGroup >= startDate)
+daystoPRE.cum<- c()
+for(i in 1:length(dategroups)) {
+  temp <- subset(preBugs.year, DateGroup <= dategroups[i])
+  daystoPRE.cum <- rbind(daystoPRE.cum, data.frame(DateGroup = dategroups[i], Key = 'Average Days to PRE', CumAvg = with(temp, mean(DaysToPRE)), Avg = with(subset(temp, DateGroup == dategroups[i]), mean(DaysToPRE))))
+}
+cumAvgDays.PREclose <- rbind(daystoPRE.cum, daystoclose.cum)
+p.AvgDaysToClosePRE <- ggplot(cumAvgDays.PREclose, aes(x=DateGroup, y=CumAvg, group = Key, color=Key)) + geom_line() + geom_point() + scale_color_manual(name='', values=createPaletteOfVariableLength(cumAvgDays.PREclose, 'Key')) + theme(axis.text.x = element_text(angle = 90), legend.position='bottom') + labs(title = 'Average Days to PRE and Close', subtitle = '13 Month Cumulative Average', x = 'Date\n(Year-Month)', y = 'Average Days') + geom_text(inherit.aes=FALSE, aes(x=DateGroup, y=CumAvg, label=format(CumAvg, digits=3)), fontface = 'bold', vjust = -1)
 
 # CI that needs PRE review
 needsPre.df$DateGroup <- with(needsPre.df, ifelse(Month < 10, paste0(Year,'-0', Month), paste0(Year,'-', Month)))
-p.NeedsPREreview <- ggplot(needsPre.df, aes(x=Bug, y=DaysSinceOpen, color=AssignedTo)) + geom_point() + geom_hline(aes(yintercept = limit), color = 'blue', linetype = 'dashed') + scale_color_manual(name = 'Assigned', values = createPaletteOfVariableLength(needsPre.df, 'AssignedTo')) + labs(title = 'Open Complaint Investigations that Need PRE Review', x = 'Bug Id', y = 'Days Since Opened') + geom_text_repel(data= subset(needsPre.df, DaysSinceOpen > limit),aes(label=Bug), size=4, show.legend = FALSE) + scale_x_continuous(breaks = pretty_breaks())
+p.NeedsPREreview <- ggplot(needsPre.df, aes(x=Bug, y=DaysSinceOpen, color=AssignedTo)) + geom_point() + geom_hline(aes(yintercept = limit), color = 'blue', linetype = 'dashed') + geom_hline(aes(yintercept = 30), color = 'deeppink', linetype = 'dashed') + scale_color_manual(name = 'Assigned', values = createPaletteOfVariableLength(needsPre.df, 'AssignedTo')) + labs(title = 'Open Complaint Investigations that Need PRE Review', x = 'Bug Id', y = 'Days Since Opened') + geom_text_repel(data= subset(needsPre.df, DaysSinceOpen > limit),aes(label=Bug), size=4, show.legend = FALSE) + scale_x_continuous(breaks = pretty_breaks())
 
 # Opened vs Closed CIs per week
 openedvclosed <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', closedVopened.df, 'Key', startDate.week, 'Record', 'sum', 0)
@@ -68,21 +71,22 @@ openedvclosed[openedvclosed$Key == 'Closed', 'Record'] <- with(subset(openedvclo
 openedvclosed$Key <- factor(openedvclosed$Key, levels = c('Opened', 'Closed'))
 p.OpenedVClosed <- ggplot(openedvclosed, aes(x=DateGroup, y=Record, fill=Key)) + geom_bar(stat='identity') + scale_y_continuous(labels = abs) + scale_fill_manual(name = '', values = createPaletteOfVariableLength(openedvclosed, 'Key')) + theme(axis.text.x = element_text(angle=90)) + labs(title = 'Opened vs Closed Complaint Investigations', x = 'Date\n(Year-Week)', y='Count of CIs') + scale_x_discrete(breaks=dateBreaks) + geom_text(aes(label=abs(Record)), size = 4, position = position_stack(vjust = 0.5), fontface = fontFace, color="lightgoldenrod1")
 
-# All Opened CIs and who they are assigned to
-opened <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', allopened.df, 'AssignedTo', startDate.week, 'Record', 'sum', 0) 
+# All Currently Open CIs and who they are assigned to
+allopened.df$DateGroup <- with(allopened.df, ifelse(Week < 10, paste0(Year, '-0', Week), paste0(Year, '-', Week)))
+opened <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', allopened.df, 'AssignedTo', sort(unique(allopened.df$DateGroup))[1], 'Record', 'sum', 0) 
 opened$AssignedTo <- factor(opened$AssignedTo, levels = c('CI Team','Other'))
-p.AllOpenedCIs <- ggplot(opened, aes(x=DateGroup, y=Record, fill=AssignedTo)) + geom_bar(stat='identity') + scale_fill_manual(name = 'Assigned', values = createPaletteOfVariableLength(opened, 'AssignedTo')) + theme(axis.text.x = element_text(angle=90)) + labs(title = 'All Opened Complaint Investigations', x = 'Date\n(Year-Week)', y='Count of CIs') + scale_x_discrete(breaks=dateBreaks) + geom_text(aes(label=Record), size = 4, position = position_stack(vjust = 0.5), fontface = fontFace, color="lightgoldenrod1")
+p.AllOpenCIs <- ggplot(opened, aes(x=DateGroup, y=Record, fill=AssignedTo)) + geom_bar(stat='identity') + scale_fill_manual(name = 'Assigned', values = createPaletteOfVariableLength(opened, 'AssignedTo')) + theme(axis.text.x = element_text(angle=90, vjust=0.5)) + labs(title = 'All Currently Open Complaint Investigations', x = 'Date\n(Year-Week)', y='Count of CIs') + geom_text(data=subset(opened, Record != 0), aes(label=Record), size = 4, position = position_stack(vjust = 0.5), fontface = fontFace, color="lightgoldenrod1")
 
-# Invest Start to Close vs Invest Start to PRE
+# Invest Start to Close vs Invest Start to PRE vs Start to Invest Start
 investStarttoPRE.df$DateGroup <- with(investStarttoPRE.df, ifelse(Month < 10, paste0(Year, '-0', Month), paste0(Year, '-', Month)))
 investStarttoPRE.year <- subset(investStarttoPRE.df, DateGroup >= findStartDate(calendar.df, 'Month', 12, 0, keepPeriods=0))
 dategroups <- sort(unique(investStarttoPRE.year$DateGroup))
 avgDays.investtopre <- c()
 for(i in 1:length(dategroups)) {
   temp <- subset(investStarttoPRE.year, DateGroup == dategroups[i])
-  avgDays.investtopre <- rbind(avgDays.investtopre, data.frame(DateGroup = dategroups[i], Key = 'Days Between Investigation Start and Close Date', AvgDays = mean(subset(temp, Key == 'InvestStartToClose')[,'Record'], na.rm=TRUE)), data.frame(DateGroup = dategroups[i], Key = 'Days Between Investigation Start and PRE Date', AvgDays = mean(subset(temp, Key == 'InvestStartToPRE')[,'Record'], na.rm=TRUE)))
+  avgDays.investtopre <- rbind(avgDays.investtopre, data.frame(DateGroup = dategroups[i], Key = 'Days Between Investigation Start and Close Date', AvgDays = mean(subset(temp, Key == 'InvestStartToClose')[,'Record'], na.rm=TRUE)), data.frame(DateGroup = dategroups[i], Key = 'Days Between Investigation Start and PRE Date', AvgDays = mean(subset(temp, Key == 'InvestStartToPRE')[,'Record'], na.rm=TRUE)), data.frame(DateGroup = dategroups[i], Key = 'Days Between CI Creation and Investigation Start', AvgDays = mean(subset(temp, Key == 'CICreationToInvestStart')[,'Record'], na.rm=TRUE)))
 }
-p.InvestStartVsClose.PRE <- ggplot(avgDays.investtopre, aes(x=DateGroup, y=AvgDays, color=Key, group=Key)) + geom_line() + geom_point() + scale_color_manual(name='', values=createPaletteOfVariableLength(avgDays.investtopre, 'Key')) + theme(legend.position = 'bottom', axis.text.x = element_text(angle = 90, vjust=0.5)) + labs(title = 'Days Between Investigation Start Date to Close Date vs\nDays Between Investigation Start Date to PRE Review', x='Date\n(Year-Month)', y='Average Days') + geom_text_repel(aes(label=format(AvgDays, digits=3)), fontface='bold') 
+p.InvestStartVsClose.PRE <- ggplot(avgDays.investtopre, aes(x=DateGroup, y=AvgDays, color=Key, group=Key)) + geom_line() + geom_point() + scale_color_manual(name='', values=createPaletteOfVariableLength(avgDays.investtopre, 'Key'), guide = guide_legend(nrow=3, byrow=FALSE)) + theme(legend.position = 'bottom', axis.text.x = element_text(angle = 90, vjust=0.5)) + labs(title = 'Days Between CI Creation, Investigation Start Date, Close Date and PRE Review', x='Date\n(Year-Month)', y='Average Days') + geom_text_repel(aes(label=format(AvgDays, digits=3)), fontface='bold') 
 
 # Became Aware vs CI Created, Last 120 Days - not on Web Hub
 exceedLimit <- subset(becameAware.df, Record > 30)
