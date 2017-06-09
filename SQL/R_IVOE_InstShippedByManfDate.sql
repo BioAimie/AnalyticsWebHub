@@ -1,10 +1,10 @@
 SET NOCOUNT ON
 
-SELECT
-	MIN(L.[DateOfManufacturing]) AS [DateOfManufacturing],
-	I.[Version]
-FROM [PMS1].[dbo].[bInstrumentShipment] I
-INNER JOIN [PMS1].[dbo].[bInstrumentProduced] L ON L.[NormalSerial] = I.[NormalSerial]
-WHERE I.[CustId] != 'IDATEC'
-GROUP BY I.[NormalSerial], I.[Version]
+SELECT DISTINCT
+	P.[NormalSerial],
+	P.[DateOfManufacturing] AS [DateOfManufacturing],
+	P.[Version]
+FROM [PMS1].[dbo].[bInstrumentProduced] P
+INNER JOIN [PMS1].[dbo].[bInstrumentShipment] I ON I.[NormalSerial] = P.[NormalSerial]
+WHERE I.[CustId] != 'IDATEC' AND P.[ProdNo] = 1
 ORDER BY [DateOfManufacturing]
