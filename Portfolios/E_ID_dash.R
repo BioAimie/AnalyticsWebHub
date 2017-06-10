@@ -57,7 +57,8 @@ theme_set(theme_grey() +
                 plot.subtitle = element_text(hjust = 0.5), 
                 text = element_text(size = fontSize, face = fontFace), 
                 axis.text = element_text(color='black',size = fontSize,face = fontFace),
-                axis.text.x=element_text(angle=90, hjust=1)));
+                axis.text.x=element_text(angle=90, hjust=1),
+                legend.margin = margin(b = .7, unit = 'cm')));
 
 # 2017 FilmArray Production
 instreleased <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', transferred.df, 'Version', start.month, 'Record', 'sum', 0)
@@ -197,9 +198,10 @@ newShipments.cust = shipments.inst %>%
 fail.hours <- fail.hours.df %>%
   filter(CustomerId != 'IDATEC', Version %in% c('FA2.0', 'Torch')) %>%
   inner_join(calendar.month, by = c(CreatedDate = 'Date')) %>%
-  group_by(TicketId) %>% mutate(Weight = 1/n(), 
-                                ProblemArea = ifelse(is.na(ProblemArea), 'Unknown', ProblemArea)) %>%
-  ungroup() %>% mutate(ProblemArea = fct_relevel(fct_infreq(ProblemArea), 'Unknown', after = Inf)) %>%
+  group_by(TicketId) %>% mutate(Weight = 1/n()) %>%
+  ungroup() %>% mutate(ProblemArea = fct_relevel(
+    fct_relevel(fct_infreq(ProblemArea), 'Cannot verify', after = Inf), 
+    'No failure complaint', after = Inf)) %>%
   group_by(DateGroup, Version, ProblemArea) %>% summarize(Failure = sum(Weight)) %>% ungroup() %>%
   complete(DateGroup = calendar.month$DateGroup, Version, ProblemArea, fill = list(Failure = 0)) %>%
   inner_join(newShipments.cust, by=c('DateGroup', Version='Product')) %>%
@@ -224,6 +226,7 @@ makePalette = function(f){
 
 
 fail.hours.pal = makePalette(fail.hours$ProblemArea)
+fail.hours.lineColor = '#404040';
 
 # 2017 FA 2.0 Rate of Failures at <100 run hours
 summ = fail.hours.summary %>% 
@@ -234,8 +237,8 @@ p.FA2.0Hours100 = fail.hours %>%
   ggplot(aes(x = DateGroup, y = Rate)) + 
   geom_col(aes(fill = ProblemArea), 
            color = 'black', position = position_stack(reverse = TRUE)) + 
-  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1) + 
-  geom_point(data = summ, aes(y = CumulativeRate), size = 3) +
+  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1, color = fail.hours.lineColor) + 
+  geom_point(data = summ, aes(y = CumulativeRate), size = 3, color = fail.hours.lineColor) +
   geom_errorbar(data = summ, aes(ymin = RateLower, ymax = RateUpper), width = .4,
                 position = position_nudge(x = -.25)) + 
   geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
@@ -258,8 +261,8 @@ p.TorchModHours100 <- fail.hours %>%
   ggplot(aes(x = DateGroup, y = Rate)) + 
   geom_col(aes(fill = ProblemArea), 
            color = 'black', position = position_stack(reverse = TRUE)) + 
-  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1) + 
-  geom_point(data = summ, aes(y = CumulativeRate), size = 3) +
+  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1, color = fail.hours.lineColor) + 
+  geom_point(data = summ, aes(y = CumulativeRate), size = 3, color = fail.hours.lineColor) +
   geom_errorbar(data = summ, aes(ymin = RateLower, ymax = RateUpper), width = .4,
                 position = position_nudge(x = -.25)) + 
   geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
@@ -282,8 +285,8 @@ p.FA2.0Hours100.long <- fail.hours %>%
   ggplot(aes(x = DateGroup, y = Rate)) + 
   geom_col(aes(fill = ProblemArea), 
            color = 'black', position = position_stack(reverse = TRUE)) + 
-  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1) + 
-  geom_point(data = summ, aes(y = CumulativeRate), size = 3) +
+  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1, color = fail.hours.lineColor) + 
+  geom_point(data = summ, aes(y = CumulativeRate), size = 3, color = fail.hours.lineColor) +
   geom_errorbar(data = summ, aes(ymin = RateLower, ymax = RateUpper), width = .4,
                 position = position_nudge(x = -.25)) + 
   geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
@@ -306,8 +309,8 @@ p.TorchModHours100.long <- fail.hours %>%
   ggplot(aes(x = DateGroup, y = Rate)) + 
   geom_col(aes(fill = ProblemArea), 
            color = 'black', position = position_stack(reverse = TRUE)) + 
-  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1) + 
-  geom_point(data = summ, aes(y = CumulativeRate), size = 3) +
+  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1, color = fail.hours.lineColor) + 
+  geom_point(data = summ, aes(y = CumulativeRate), size = 3, color = fail.hours.lineColor) +
   geom_errorbar(data = summ, aes(ymin = RateLower, ymax = RateUpper), width = .4,
                 position = position_nudge(x = -.25)) + 
   geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
