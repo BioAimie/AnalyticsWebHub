@@ -96,9 +96,9 @@ FROM (
 	WHERE TRY_CAST(U.[Quantity] AS INT)>0
 ) Q
 
+
 CREATE INDEX [idx_NormalSerial] ON [dbo].[bInstrumentParts_TEMP]([NormalSerial])
 CREATE INDEX [idx_PartNumber] ON [dbo].[bInstrumentParts_TEMP]([PartNumber])
-CREATE INDEX [idx_SerialNo] ON [dbo].[bInstrumentParts_TEMP]([SerialNo])
 
 IF OBJECT_ID('dbo.bInstrumentParts') IS NOT NULL
 DROP TABLE [dbo].[bInstrumentParts]
