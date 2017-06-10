@@ -195,92 +195,119 @@ p.boardEarlyFailureRMA = boardEarlyFailureRMA.gather %>%
 # Function to create board part-specific charts: 
 #   [Thermoboard/Valve board/Camera board/Image master board] NCRs and RMA failures <100 hours run
 makeBoardCharts = function(partDesc, partTitle, outputPrefix){
-  out.field.gather = boardFailureRMA.rate %>% 
+  # partDesc='PCB, FA Thermocycler 4CH'
+  # partTitle='Thermoboard'
+  # outputPrefix='thermo';
+  specificBoardFailureRMA.count = boardFailureRMA.df %>% 
     filter(PartDesc == partDesc) %>%
-    gather(Key, Value, c(EarlyFailureRMARate, EarlyFailureRMACount), factor_key = TRUE) %>% 
-    mutate(Key = fct_recode(Key, 'Failure RMAs <100 Hours'='EarlyFailureRMACount', 'Failure RMAs <100 Hours per Quantity Shipped'='EarlyFailureRMARate')) %>%
-    arrange(Key, PartDesc)
-  nudge1 = max(out.field.gather$FailureRMACount)*.025;
-  K1 = out.field.gather$Key[out.field.gather$Key == 'Failure RMAs <100 Hours'];
-  dummy1 = tibble(Key = K1, DateGroup=out.field.gather$DateGroup[1], Value = -nudge1*2);
-  out.field = out.field.gather %>%
-    ggplot(aes(x=DateGroup, y=Value)) +
+    mutate(HoursRunBin = cut(HoursRun, c(-Inf, 100, 500, 1000, Inf), labels = FALSE)) %>%
+    mutate(HoursRunBin = factor(HoursRunBin, levels=c(1:4,NA,0), exclude = NULL,
+                                labels = c('0-100', '100-500', '500-1000', '1000+', 'Unknown', 'NCR'))) %>%
+    inner_join(calendar.df, by = c("BoardReceiptDate" = "Date")) %>%
+    group_by(DateGroup, HoursRunBin, PartDesc) %>% summarize(FailureRMACount = n()) %>% ungroup() %>%
+    complete(DateGroup = calendar.df$DateGroup, HoursRunBin, PartDesc = partDesc, 
+             fill = list(FailureRMACount = 0)) %>%
+    filter(HoursRunBin != 'NCR', DateGroup >= '2015-01')
+  
+  specificBoardFailureRMA.rate = specificBoardFailureRMA.count %>%
+    inner_join(boardsInField.count, by = c("DateGroup", "PartDesc")) %>%
+    mutate(FailureRMARate = FailureRMACount / FieldCount)
+  
+  specificBoardFailureRMA.total = specificBoardFailureRMA.rate %>% 
+    group_by(DateGroup) %>% 
+    summarize(FailureRMACount = sum(FailureRMACount),
+              FieldCount = mean(FieldCount))
+
+  specificBoardFailureRMA.gather = specificBoardFailureRMA.rate %>% 
+    gather(Key, Value, c(FailureRMARate, FailureRMACount), factor_key = TRUE) %>% 
+    mutate(Key = fct_recode(Key, 'Failure RMAs'='FailureRMACount', 'Failure RMAs per Quantity Shipped'='FailureRMARate')) %>%
+    arrange(Key, HoursRunBin)
+  
+  nudge1 = max(specificBoardFailureRMA.total$FailureRMACount)*.03;
+  K1 = specificBoardFailureRMA.gather$Key[specificBoardFailureRMA.gather$Key == 'Failure RMAs'][1];
+  dummy1 = tibble(Key = K1, DateGroup = specificBoardFailureRMA.gather$DateGroup[1], 
+                  Value = -nudge1*2);
+  specificBoardFailureRMA.plot = specificBoardFailureRMA.gather %>%
+    ggplot(aes(x=DateGroup, y=Value, fill=HoursRunBin)) +
     geom_col(color='black') +
     facet_wrap(~Key, ncol=1, scale='free_y') +
-    geom_text(data = out.field.gather %>% filter(Key == 'Failure RMAs <100 Hours'),
-              aes(x = DateGroup, y = Value + nudge1, label = Value)) +
-    geom_text(data = out.field.gather %>% filter(Key == 'Failure RMAs <100 Hours'),
-              aes(x = DateGroup, y = -0.5*nudge1, label = FieldCount), angle = 90, hjust=1) +
-    geom_blank(data = dummy1) + # dummy data used to enlarge plot area to avoid clipping annotations
+    geom_text(data = specificBoardFailureRMA.total %>% mutate(Key = K1),
+              aes(x = DateGroup, y = FailureRMACount + nudge1, label = FailureRMACount),
+              inherit.aes = FALSE) +
+    geom_text(data = specificBoardFailureRMA.total%>% mutate(Key = K1),
+              aes(x = DateGroup, y = -0.5*nudge1, label = FieldCount),
+              inherit.aes = FALSE, angle = 90, hjust=1) +
+    # dummy data used to enlarge plot area to avoid clipping annotations
+    geom_blank(data = dummy1, aes(x = DateGroup, y = Value), inherit.aes = FALSE) + 
     theme(axis.text.x=element_text(angle=90, hjust=1)) +
+    scale_fill_manual(values = createPaletteOfVariableLength(
+      as.data.frame(specificBoardFailureRMA.gather), 'HoursRunBin')) +
     scale_x_discrete(breaks = dateBreaks) +
     labs(x='Board Receipt Date (Year-Week)',
-         y='Failure RMAs <100 Hours/Quantity Shipped',
+         y=element_blank(),
          fill=element_blank(),
-         title=paste0(partTitle,' Failure RMAs <100 Hours'))
-  assign(paste0('p.board.',outputPrefix,'.field'), out.field, globalenv());
+         title=paste0(partTitle,' Failure RMAs'))
   
-  boardNCR.quantity = 
+  assign(paste0('p.board.',outputPrefix,'.field'), specificBoardFailureRMA.plot, globalenv());
+  
+  specificBoardNCR.quantity = 
     boardNCR.df %>%
     inner_join(calendar.df, by = c("BoardReceiptDate" = "Date")) %>%
+    filter(PartDesc == partDesc) %>%
     group_by(DateGroup, PartDesc) %>% summarize(NCRQuantity = sum(QuantityAffected)) %>% ungroup() %>%
-    complete(DateGroup = calendar.df$DateGroup, PartDesc = boardsInField.parts, fill = list(NCRQuantity = 0));
-  boardLots.size = 
+    complete(DateGroup = calendar.df$DateGroup, PartDesc = partDesc, fill = list(NCRQuantity = 0)) %>%
+    filter(DateGroup >= '2015-01')
+  
+  specificBoardLots.size = 
     boardLots.df %>%
     inner_join(calendar.df, by = c("BoardReceiptDate" = "Date")) %>%
     group_by(DateGroup, PartDesc) %>% summarize(DesiredLotSize = sum(DesiredLotSize)) %>% ungroup() %>%
     complete(DateGroup = calendar.df$DateGroup, PartDesc = boardsInField.parts, fill = list(DesiredLotSize = 0));
-  boardEarlyFailure.rate = 
-    boardsInField.count %>%
-    left_join(boardFailureRMA.count, by = c("DateGroup", "PartDesc")) %>%
-    left_join(boardNCR.quantity, by = c("DateGroup", "PartDesc")) %>%
-    left_join(boardLots.size, by = c("DateGroup", "PartDesc")) %>%
-    mutate(NCRRate = ifelse(DesiredLotSize>minimumDenom, NCRQuantity / DesiredLotSize, NA),
-           EarlyFailureRMARate = ifelse(DesiredLotSize>minimumDenom, EarlyFailureRMACount / DesiredLotSize, NA))
-  boardEarlyFailure.filter = 
-    boardEarlyFailure.rate %>%
-    filter(DateGroup >= '2015-01', PartDesc == partDesc) 
-  boardEarlyFailure.gather = 
-    rbind(
-      boardEarlyFailure.filter %>% 
-        select(DateGroup, Rate = NCRRate, Quantity = NCRQuantity) %>%
-        mutate(Tracker = 'NCR'),
-      boardEarlyFailure.filter %>% 
-        select(DateGroup, Rate = EarlyFailureRMARate, Quantity = EarlyFailureRMACount) %>%
-        mutate(Tracker = 'RMA')
-    ) %>% 
+  
+  specificBoardFailure.rate = 
+    rbind(specificBoardFailureRMA.count %>% 
+            transmute(DateGroup, PartDesc, HoursRunBin, Quantity = FailureRMACount),
+          specificBoardNCR.quantity %>%
+            transmute(DateGroup, PartDesc, HoursRunBin = 'NCR', Quantity = NCRQuantity)
+    ) %>%
+    left_join(specificBoardLots.size, by = c("DateGroup", "PartDesc")) %>%
+    mutate(Rate = Quantity / DesiredLotSize)
+  
+  specificBoardFailure.total = specificBoardFailure.rate %>% 
+    group_by(DateGroup) %>% 
+    summarize(Quantity = sum(Quantity),
+              DesiredLotSize = mean(DesiredLotSize))
+  
+  specificBoardFailure.gather = specificBoardFailure.rate %>%
     gather(Key, Value, c(Rate, Quantity), factor_key=TRUE) %>%
     mutate(Key = fct_recode(Key, 
-        setNames('Quantity', 'NCR Qty Affected + RMA Failures <100 Hours'),
-        setNames('Rate', paste0('(NCR Qty Affected + RMA Failures <100 Hours)/Sum of Desired Lot Size\n',
-                                '(Minimum Denominator of ', minimumDenom, ')')))) %>%
+        setNames('Quantity', 'NCR Qty Affected + RMA Failures'),
+        setNames('Rate', '(NCR Qty Affected + RMA Failures)/Sum of Desired Lot Size'))) %>%
     arrange(Key, DateGroup);
-  boardEarlyFailure.pal = createPaletteOfVariableLength(as.data.frame(boardEarlyFailure.gather),'Tracker')
-  nudge2 = with(boardEarlyFailure.filter, max(NCRQuantity + EarlyFailureRMACount)*.03);
-  K2 = boardEarlyFailure.gather$Key[boardEarlyFailure.gather$Key == 'NCR Qty Affected + RMA Failures <100 Hours'][1];
-  dummy2 = tibble(Key = K2, DateGroup=boardEarlyFailure.gather$DateGroup[1], Value = -nudge2*2);
-  out.total = boardEarlyFailure.gather %>% 
-    ggplot(aes(x=DateGroup, y=Value, fill=Tracker)) + 
-    facet_wrap(~Key, ncol=1, scale='free_y') +
+  
+  nudge2 = max(specificBoardFailure.total$Quantity)*.03;
+  K2 = specificBoardFailure.gather$Key[specificBoardFailure.gather$Key == 'NCR Qty Affected + RMA Failures'][1];
+  dummy2 = tibble(Key = K2, DateGroup=specificBoardFailure.gather$DateGroup[1], Value = -nudge2*2);
+  specificBoardFailure.plot = specificBoardFailure.gather %>% 
+    ggplot(aes(x = DateGroup, y = Value, fill = HoursRunBin)) + 
+    facet_wrap(~Key, ncol = 1, scale = 'free_y') +
     geom_col(color='black') +
-    geom_text(data = boardEarlyFailure.filter %>% mutate(Key = K2),
-              aes(x = DateGroup, 
-                  y = NCRQuantity + EarlyFailureRMACount + nudge2, 
-                  label = NCRQuantity + EarlyFailureRMACount),
+    geom_text(data = specificBoardFailure.total %>% mutate(Key = K2),
+              aes(x = DateGroup, y = Quantity + nudge2, label = Quantity),
               inherit.aes = FALSE) + 
-    geom_text(data = boardEarlyFailure.filter %>% mutate(Key = K2),
+    geom_text(data = specificBoardFailure.total %>% mutate(Key = K2),
               aes(x = DateGroup, y = -0.5*nudge2, label = DesiredLotSize), 
-              angle = 90, hjust=1, 
-              inherit.aes = FALSE) +
-    geom_blank(data = dummy2, aes(x=DateGroup, y=Value), inherit.aes = FALSE) + 
-    theme(axis.text.x=element_text(angle=90, hjust=1)) +
+              angle = 90, hjust = 1, inherit.aes = FALSE) +
+    geom_blank(data = dummy2, aes(x = DateGroup, y = Value), inherit.aes = FALSE) + 
+    theme(axis.text.x=element_text(angle = 90, hjust = 1)) +
     scale_x_discrete(breaks = dateBreaks) +
-    scale_fill_manual(values = boardEarlyFailure.pal) +
+    scale_fill_manual(values = createPaletteOfVariableLength(
+      as.data.frame(specificBoardFailure.gather), 'HoursRunBin')) +
     labs(x='Board receipt date (Year-Week)',
          y=element_blank(),
          fill=element_blank(),
-         title=paste0(partTitle,' NCRs and Failure RMAs <100 Hours'))
-  assign(paste0('p.board.',outputPrefix,'.total'), out.total, globalenv());
+         title=paste0(partTitle,' NCRs and Failure RMAs'))
+  assign(paste0('p.board.',outputPrefix,'.total'), specificBoardFailure.plot, globalenv());
 }
 
 # BOARD VoEs: apply the function defined above to each of four cases

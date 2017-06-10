@@ -1,25 +1,23 @@
 SET NOCOUNT ON
 
 SELECT
-	Q.[TicketId],
-	Q.[TicketString],
-	Q.[SerialNo],
-	Q.[PartNumber],
-	CAST(Q.[CreatedDate] AS DATE) AS [CreatedDate],
-	Q.[HoursRun],
-	UPPER(REPLACE(R.[CustomerId], ' ', '')) AS [CustomerId],
+	I.[Version],
+	I.[TicketId],
+	I.[TicketString],
+	I.[SerialNo],
+	I.[PartNumber],
+	I.[CreatedDate],
+	I.[HoursRun],
+	I.[CustomerId] AS [CustomerId],
 	CASE 
-		WHEN [PartNumber] LIKE 'FLM1-%' THEN 'FA1.5'
-		WHEN [PartNumber] LIKE 'FLM2-%' THEN 'FA2.0'
-		WHEN [PartNumber] LIKE 'HTFA-ASY-0003%' OR [PartNumber] LIKE 'HTFA-SUB-0103%' THEN 'Torch Module'
-		ELSE 'Other'
-	END AS [Version]
-FROM (
-	SELECT 
-		*,
-		ROW_NUMBER() OVER(PARTITION BY [NormalSerial] ORDER BY [TicketId]) AS [RowNo]
-	FROM [PMS1].[dbo].[bInstrumentFailure]
-) Q 
-INNER JOIN [PMS1].[dbo].[RMA] R ON R.[TicketId] = Q.[TicketId]
-WHERE Q.[RowNo] = 1  AND Q.[Failure] = 1 AND Q.[HoursRun]<100
-ORDER BY [Version], [CreatedDate]
+		WHEN C.[ProblemArea] = 'Instrument Plunger' THEN 'Plunger Block'
+		WHEN C.[ProblemArea] IS NULL THEN 'No failure complaint'
+		ELSE REPLACE(C.[ProblemArea], 'Instrument ', '')
+	END AS [ProblemArea]
+FROM [PMS1].[dbo].[bInstrumentFailure] I
+LEFT JOIN [PMS1].[dbo].[RMARootCauses] C ON C.[TicketId] = I.[TicketId]
+WHERE I.[VisitNo] = 1 
+	AND I.[Failure] = 1 
+	AND I.[HoursRun]<100 
+	AND I.[CustomerId] != 'IDATEC'
+ORDER BY [ProblemArea], I.[Version], I.[TicketId]
