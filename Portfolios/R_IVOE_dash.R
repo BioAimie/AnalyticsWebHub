@@ -130,15 +130,15 @@ boardFailureRMA.rate = boardsInField.count %>%
 #         EarlyFailureRMARate0 = ifelse(FieldCount > minimumDenom, EarlyFailureRMACount / FieldCount, NA)
   ) %>%
   filter(DateGroup >= '2015-01') %>%
-  mutate(PartDesc = fct_reorder(PartDesc, FailureRMACount, sum, na.rm=TRUE));
+  mutate(PartDesc = fct_reorder(PartDesc, FailureRMACount, sum, na.rm=TRUE, .desc = TRUE));
 boardFailureRMA.total = boardFailureRMA.rate %>% 
   group_by(DateGroup) %>% 
   summarize(FailureRMACount = sum(FailureRMACount),
             EarlyFailureRMACount = sum(EarlyFailureRMACount))
 makePalette = function(n){
-  hex(HLS(rev(seq(0, length.out = n, by = 360/n)), 
-          .6 - .3 * ((1:n %/% 2) %%2 ),
-          .8 - .4 * (((0:(n - 1) %/% 2) %% 2))));
+  hex(HLS(seq(0, length.out = n, by = 360/n), 
+          rev(.6 - .3 * ((1:n %/% 2) %%2 )),
+          rev(.8 - .4 * (((0:(n - 1) %/% 2) %% 2)))));
 } 
 board.pal = makePalette(length(boardsInField.parts));
 
@@ -154,7 +154,7 @@ K1 = boardFailureRMA.gather$Key[boardFailureRMA.gather$Key == 'Failure RMA Count
 p.boardFailureRMA = boardFailureRMA.gather %>%
   ggplot(aes(x=DateGroup, y=Value, fill=PartDesc)) + 
   facet_wrap(~Key, ncol=1, scale='free_y') +
-  geom_col(color='black') +
+  geom_col(color='black', position = position_stack(reverse = TRUE)) +
   geom_text(data = boardFailureRMA.total %>% mutate(Key = K1),
             aes(x = DateGroup, y = FailureRMACount + nudge1, label = FailureRMACount),
             inherit.aes = FALSE) +
@@ -178,7 +178,7 @@ K2 = boardEarlyFailureRMA.gather$Key[boardEarlyFailureRMA.gather$Key == 'Failure
 p.boardEarlyFailureRMA = boardEarlyFailureRMA.gather %>%
   ggplot(aes(x=DateGroup, y=Value, fill=PartDesc)) + 
   facet_wrap(~Key, ncol=1, scale='free_y') +
-  geom_col(color='black') +
+  geom_col(color='black', position = position_stack(reverse = TRUE)) +
   geom_text(data = boardFailureRMA.total %>% mutate(Key = K2),
             aes(x = DateGroup, y = EarlyFailureRMACount + nudge2, label = EarlyFailureRMACount),
             inherit.aes = FALSE) +
@@ -227,9 +227,10 @@ makeBoardCharts = function(partDesc, partTitle, outputPrefix){
   K1 = specificBoardFailureRMA.gather$Key[specificBoardFailureRMA.gather$Key == 'Failure RMAs'][1];
   dummy1 = tibble(Key = K1, DateGroup = specificBoardFailureRMA.gather$DateGroup[1], 
                   Value = -nudge1*2);
+  
   specificBoardFailureRMA.plot = specificBoardFailureRMA.gather %>%
     ggplot(aes(x=DateGroup, y=Value, fill=HoursRunBin)) +
-    geom_col(color='black') +
+    geom_col(color='black', position = position_stack(reverse = TRUE)) +
     facet_wrap(~Key, ncol=1, scale='free_y') +
     geom_text(data = specificBoardFailureRMA.total %>% mutate(Key = K1),
               aes(x = DateGroup, y = FailureRMACount + nudge1, label = FailureRMACount),
@@ -291,7 +292,7 @@ makeBoardCharts = function(partDesc, partTitle, outputPrefix){
   specificBoardFailure.plot = specificBoardFailure.gather %>% 
     ggplot(aes(x = DateGroup, y = Value, fill = HoursRunBin)) + 
     facet_wrap(~Key, ncol = 1, scale = 'free_y') +
-    geom_col(color='black') +
+    geom_col(color='black', position = position_stack(reverse = TRUE)) +
     geom_text(data = specificBoardFailure.total %>% mutate(Key = K2),
               aes(x = DateGroup, y = Quantity + nudge2, label = Quantity),
               inherit.aes = FALSE) + 
