@@ -9,6 +9,7 @@ SELECT
 	I.[CreatedDate],
 	I.[HoursRun],
 	I.[CustomerId] AS [CustomerId],
+	I.[RMATitle],
 	CASE 
 		WHEN C.[ProblemArea] = 'Instrument Plunger' THEN 'Plunger Block'
 		WHEN C.[ProblemArea] IS NULL THEN 'No failure complaint'
@@ -20,4 +21,4 @@ WHERE I.[VisitNo] = 1
 	AND I.[Failure] = 1 
 	AND I.[HoursRun]<100 
 	AND I.[CustomerId] != 'IDATEC'
-ORDER BY [ProblemArea], I.[Version], I.[TicketId]
+ORDER BY I.[Version], I.[TicketId]
