@@ -1,26 +1,29 @@
 SET NOCOUNT ON
 
-SELECT *
-INTO #wireHarFail
+SELECT 
+	Q.[NormalSerial],
+	Q.[WireHarPart],
+	(
+		SELECT TOP 1
+			P.[LotNumber]
+		FROM [PMS1].[dbo].[bInstrumentParts] P
+		WHERE P.[NormalSerial] = Q.[NormalSerial] AND P.[PartNumber] = Q.[WireHarPart]
+			AND P.[DatePlaced] < Q.[CreatedDate]
+		ORDER BY P.[DatePlaced] DESC
+	) AS [LotNumber]
+INTO #wireHarFailLot
 FROM (
 	SELECT 
-		I.[TicketId],
-		I.[TicketString],
+		I.[NormalSerial],
 		I.[CreatedDate],
-		I.[SerialNo],
-		I.[PartNumber],
-		I.[HoursRun],
-		I.[CustomerId],
 		IIF(C.[FailureCategory] LIKE '%WIRE-HAR%',
 			SUBSTRING(C.[FailureCategory], CHARINDEX('WIRE-HAR',C.[FailureCategory]), 13),
-			UPPER(REPLACE(C.[PartNumber], ' ', ''))) AS [WireHarPart],
-		I.[NormalSerial]
+			UPPER(REPLACE(C.[PartNumber], ' ', ''))) AS [WireHarPart]
 	FROM [PMS1].[dbo].[bInstrumentFailure] I
 	INNER JOIN [PMS1].[dbo].[RMARootCauses] C ON C.[TicketId] = I.[TicketId]
+	WHERE [CustomerId] != 'IDATEC' 
 ) Q
-WHERE [CustomerId] != 'IDATEC' 
-	AND [WireHarPart] LIKE 'WIRE-HAR-%' 
-	AND [WireHarPart] != 'WIRE-HAR-0554'
+WHERE [WireHarPart] LIKE 'WIRE-HAR-%' AND [WireHarPart] != 'WIRE-HAR-0554'
 
 SELECT
 	[NormalSerial]
@@ -43,19 +46,6 @@ WHERE [PartNumber] LIKE 'WIRE-HAR-%' AND [PartNumber] != 'WIRE-HAR-0554'
 GROUP BY P.[LotNumber], P.[PartNumber]
 
 SELECT
-	[NormalSerial],
-	[WireHarPart],
-	(
-		SELECT TOP 1
-			P.[LotNumber]
-		FROM [PMS1].[dbo].[bInstrumentParts] P
-		WHERE P.[NormalSerial] = W.[NormalSerial] AND P.[PartNumber] = W.[WireHarPart]
-		ORDER BY P.[DatePlaced] DESC
-	) AS [LotNumber]
-INTO #wireHarFailLot
-FROM #wireHarFail W
-
-SELECT
 	W.[WireHarPart] AS [PartNumber],
 	W.[LotNumber],
 	CAST(W.[ReceiptDate] AS DATE) AS [ReceiptDate],
@@ -72,5 +62,4 @@ FROM #wireHarCountInField W
 WHERE ISDATE(W.[ReceiptDate]) = 1
 ORDER BY W.[WireHarPart], W.[ReceiptDate]
 
-DROP TABLE #instShipped, #wireHarCountInField, #wireHarFail, #wireHarFailLot
-
+DROP TABLE #instShipped, #wireHarCountInField, #wireHarFailLot
