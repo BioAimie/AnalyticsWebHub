@@ -6,6 +6,7 @@ setwd(workDir)
 
 # Load needed libraries
 library(tidyverse)
+library(forcats)
 library(scales)
 library(zoo)
 library(lubridate)
