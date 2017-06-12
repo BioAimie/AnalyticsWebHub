@@ -21,15 +21,13 @@ FROM (
 			UPPER(REPLACE(C.[PartNumber], ' ', ''))) AS [WireHarPart]
 	FROM [PMS1].[dbo].[bInstrumentFailure] I
 	INNER JOIN [PMS1].[dbo].[RMARootCauses] C ON C.[TicketId] = I.[TicketId]
-	WHERE [CustomerId] != 'IDATEC' 
 ) Q
 WHERE [WireHarPart] LIKE 'WIRE-HAR-%' AND [WireHarPart] != 'WIRE-HAR-0554'
 
-SELECT
-	[NormalSerial]
+SELECT [NormalSerial] 
 INTO #instShipped
 FROM [PMS1].[dbo].[bInstrumentShipment]
-WHERE [CustId] != 'IDATEC' AND [ShipNo] = 1
+WHERE [ShipNo] = 1
 
 SELECT
 	P.[LotNumber],
