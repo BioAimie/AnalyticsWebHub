@@ -20,7 +20,7 @@ SELECT
 	[LotNumber],
 	[PartAffected],
 	[QuantityAffected],
-	[ActualLotSize],
+	[DesiredLotSize],
 	YEAR([Date]) AS [Year],
 	MONTH([Date]) AS [Month],
 	DATEPART(ww,[Date]) AS [Week],
@@ -32,9 +32,9 @@ FROM (
 	FROM (
 		SELECT N.*,
 			'20' + SUBSTRING(RIGHT(N.[LotNumber], 9), 5, 2) + '-' + SUBSTRING(RIGHT(N.[LotNumber], 9), 1, 2) + '-' + SUBSTRING(RIGHT(N.[LotNumber], 9), 3, 2) AS [ManufactureDate],
-			(SELECT MAX(L.[ActualLotSize]) 
+			(SELECT MAX(L.[DesiredLotSize]) 
 			FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-			WHERE L.[LotNumber] = N.[LotNumber]) AS [ActualLotSize]
+			WHERE L.[LotNumber] = N.[LotNumber]) AS [DesiredLotSize]
 		FROM #NCRs N
 	) Q1
 ) Q2
