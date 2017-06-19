@@ -541,7 +541,7 @@ p.mtbf.first <- pfirst + labs(title='Average Hours Run To First Failure:\nCumula
 # make the denominator charts
 instShip.ver.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instShip.df, c('Version','Key'), plot.startDate.week, 'Record', 'sum', 0)
 rmasShip.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', rmasShip.df, c('Version','Key'), plot.startDate.week, 'Record', 'sum', NA)
-p.denom.rmasShipped <- ggplot(rmasShip.fill, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(rmasShip.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='RMAs Shipped by Version', y='Instruments Shipped', x='Ship Date\n(Year-Week)')
+p.denom.rmasShipped <- ggplot(rmasShip.fill, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(rmasShip.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1), plot.subtitle=element_text(hjust=0.5)) + scale_x_discrete(breaks = dateBreaks) + labs(title='RMAs Shipped by Version', subtitle = 'QC Date used', y='Instruments Shipped', x='Ship Date\n(Year-Week)')
 p.denom.newInstShipped <- ggplot(instShip.ver.fill, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(instShip.ver.fill, 'Version')) + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks = dateBreaks) + labs(title='New Instruments Shipped by Version', y='New Instruments Shipped', x='Ship Date\n(Year-Week)')
 
 # Send alert to DJ Holden if new computer ELF/DOA received
