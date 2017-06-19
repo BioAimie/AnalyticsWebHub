@@ -358,4 +358,4 @@ FROM
 	FROM #fourthBestMatch
 ) D
 
-DROP TABLE #complaint, #failure, #relatedRMA, #complexComplaint, #rmaAll, #rmaInfo, #greatMatch, #secondBestMatch, #thirdBestMatch, #fourthBestMatch
+--DROP TABLE #complaint, #failure, #relatedRMA, #complexComplaint, #rmaAll, #rmaInfo, #greatMatch, #secondBestMatch, #thirdBestMatch, #fourthBestMatch
