@@ -417,11 +417,27 @@ computerEF.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', co
 newShip.month <- aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', compShip.df, c('Version'), startMonth.2, 'Record', 'sum', 0)
 computerEF.fail.month <- mergeCalSparseFrames(subset(computerEF.month, Version!='FA1.5'), newShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
 #computerEF.fail.merge = merge(computerEF.fail.month, computerEF.month, by=c('DateGroup','Version','Key'))
+computerEF.textShiftFA2 = max(filter(computerEF.fail.month, Version == 'FA2.0')$Rate)*.05;
 computerEF.textShift = max(computerEF.fail.month$Rate)*.05;
 computerEF.agg = aggregateAndFillDateGroupGaps(calendar.df.month, 'Month', computerEF.df, c('Version'), startMonth.2, 'Record', 'sum', 0)
 computerEF.agg.rate = mergeCalSparseFrames(subset(computerEF.agg, Version!='FA1.5'), newShip.month, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, 0)
 computerEF.agg.merge = merge(computerEF.agg.rate, computerEF.agg, by=c('DateGroup','Version'))
-p.computerEF.month <- ggplot(computerEF.fail.month, aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(computerEF.fail.month, 'Key'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + scale_y_continuous(label=percent) + theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Computer Early Failure Rates by Month', x='Date\n(Year-Month)', y='Failures/New Computers Shipped (Count shown above)') + geom_text(data=subset(computerEF.agg.merge,Record>0), aes(x=DateGroup, y=Rate+computerEF.textShift, label=Record), inherit.aes=FALSE) 
+p.computerEF.month <- 
+  ggplot(computerEF.fail.month, aes(x=DateGroup, y=Rate, fill=Key)) + 
+  geom_bar(stat='identity') + 
+  scale_fill_manual(values=createPaletteOfVariableLength(computerEF.fail.month, 'Key'), name='') + 
+  facet_wrap(~Version, ncol=1, scale='free_y') + 
+  scale_y_continuous(label=percent) + 
+  theme(text=element_text(size=20, face='bold'), 
+        axis.text=element_text(size=20, face='bold', color='black'), 
+        axis.text.x=element_text(angle=90, hjust=1)) + 
+  labs(title='Computer Early Failure Rates by Month', 
+       x='Date\n(Year-Month)', 
+       y='Failures/New Computers Shipped (Count shown above)') + 
+  geom_text(data=subset(computerEF.agg.merge,Record>0), 
+            aes(x=DateGroup, y=Rate+ifelse(Version=='FA2.0', computerEF.textShiftFA2, computerEF.textShift), 
+                label=Record), 
+            inherit.aes=FALSE) 
 
 # create the chart of top ten failed parts in the last 90 days
 rootCause.agg <- with(rootCause.df, aggregate(cbind(thirtyDay, netSixtyDay, netNinetyDay, Record)~FailedPartDesc, FUN=sum))

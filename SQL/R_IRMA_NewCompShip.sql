@@ -7,8 +7,9 @@ SELECT
 	CASE
 		WHEN [ItemId] LIKE 'COMP-SUB-0016%' THEN 'FA1.5' 
 		WHEN [ItemId] LIKE 'FLM2-ASY-0003%' THEN 'FA2.0' 
-		WHEN [ItemId] LIKE 'HTFA-ASY-0001%' THEN 'Torch' 
+		WHEN [ItemId] LIKE 'HTFA-ASY-0001%' OR [ItemId] LIKE 'HTFA-ASY-0104%' THEN 'Torch' 
 	END	AS [Version],
+	[ItemId],
 	'NewCompShip' AS [Key],
 	1 AS [Record]
 FROM (
@@ -20,7 +21,7 @@ FROM (
 	INNER JOIN [RO_MAS].[mas500_app].[dbo].[timItem] I WITH(NOLOCK) ON I.[ItemKey] = S.[ItemKey]
 	INNER JOIN [RO_MAS].[mas500_app].[dbo].[tsoPackageContent] PC WITH(NOLOCK) ON PC.[ShipLineKey] = S.[ShipLineKey]
 	INNER JOIN [RO_MAS].[mas500_app].[dbo].[timInvtSerial] SER WITH(NOLOCK) ON SER.[InvtSerialKey] = PC.[InvtSerialKey]
-	WHERE [ItemId] LIKE 'COMP-SUB-0016%' OR [ItemId] LIKE 'FLM2-ASY-0003%' OR [ItemId] LIKE 'HTFA-ASY-0001%'
+	WHERE [ItemId] LIKE 'COMP-SUB-0016%' OR [ItemId] LIKE 'FLM2-ASY-0003%' OR [ItemId] LIKE 'HTFA-ASY-0001%' OR [ItemId] LIKE 'HTFA-ASY-0104%'
 ) Q
 WHERE [ShipNo] = 1
 ORDER BY [ShipDate]
