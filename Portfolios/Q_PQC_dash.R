@@ -51,10 +51,10 @@ runs.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', runs.all, c('Key
 hydra.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pqcRuns.df, c('Key'), startDate, 'Record', 'sum', 0)
 hydra.rate <- mergeCalSparseFrames(hydra.fail, runs.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 hydra.lims <- addStatsToSparseHandledData(hydra.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
-x_positions <- c('2016-18', '2016-24')
-annotations <- c('NCR-18150,\nNCR-18165', 'CAPA-13276')
-y_positions <- hydra.lims[(hydra.lims[,'DateGroup']) %in% c('2016-21','2016-24'), 'Rate'] + 0.001
-p.hydra.fail <- ggplot(hydra.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_line(aes(y=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Hydration Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + annotate("text", x=x_positions, y=y_positions, label=annotations, size=4)
+# x_positions <- c('2016-18', '2016-24')
+# annotations <- c('NCR-18150,\nNCR-18165', 'CAPA-13276')
+# y_positions <- hydra.lims[(hydra.lims[,'DateGroup']) %in% c('2016-21','2016-24'), 'Rate'] + 0.001
+p.hydra.fail <- ggplot(hydra.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_line(aes(y=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Hydration Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') #+ annotate("text", x=x_positions, y=y_positions, label=annotations, size=4)
 
 # Leak Failures in Pouch QC per all pouches run in pouch final QC
 pqcRuns.df[,'SerialNumber'] <- paste(0, pqcRuns.df[,'SerialNumber'],sep='')

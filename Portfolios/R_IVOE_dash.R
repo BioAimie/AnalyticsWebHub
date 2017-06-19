@@ -393,7 +393,7 @@ wireharness.fill = do.call(rbind,lapply(parts,function(part){
   subset(wireharness.all, PartNumber == part);
 }));
 wireharness.fill$PartNumber = factor(wireharness.fill$PartNumber, levels=wireharness.parts);
-p.wireharness.count = ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(stat='identity', position='identity', alpha=.5, color='black') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharness.maxrecord)) + scale_fill_manual(values=c('blue','red'), name='') + facet_wrap(~PartNumber) + theme(axis.text.x=element_text(angle=90)) + labs(title='Count of Wire Harness NCRs and RMAs - Top 25 parts', x='Wire Harness Manufacture Date (Year-Month)', y='Count of NCRs/RMAs')
+p.wireharness.count = ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(stat='identity', position='identity', alpha=.5, color='black') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharness.maxrecord)) + scale_fill_manual(values=c('blue','red'), name='') + facet_wrap(~PartNumber) + theme(axis.text.x=element_text(angle=90)) + labs(title='Count of Wire Harness NCRs and RMAs - Top 25 parts', x='Wire Harness Receipt Date (Year-Month)', y='Count of NCRs/RMAs')
 
 # Wire harness NCR quantity affected - Top 25 parts
 wireharnessNCR.qty.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'QuantityAffected', 'sum', 0)
@@ -421,7 +421,7 @@ wireharness.fill = do.call(rbind,lapply(parts,function(part){
   subset(wireharness.all, PartNumber == part);
 }));
 wireharness.fill$PartNumber = factor(wireharness.fill$PartNumber, levels=parts);
-p.wireharness.quantity = ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(color='black', stat='identity', position='identity', alpha=.5) + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.qty.max+1), sec.axis = sec_axis(~. * wireharnessRMA.rate.max / wireharnessNCR.qty.max, labels = scales::percent, name = "RMA Count / Lot Size In Field")) + facet_wrap(~PartNumber) + scale_fill_manual(values=c('blue','red'), name='')+ theme(axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCR Quantity Affected and RMA Count/Lot Size In Field - Top 25 parts', x='Wire Harness Manufacture Date (Year-Month)', y='NCR Quantity affected')
+p.wireharness.quantity = ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(color='black', stat='identity', position='identity', alpha=.5) + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.qty.max+1), sec.axis = sec_axis(~. * wireharnessRMA.rate.max / wireharnessNCR.qty.max, labels = scales::percent, name = "RMA Count / Lot Size In Field")) + facet_wrap(~PartNumber) + scale_fill_manual(values=c('blue','red'), name='')+ theme(axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCR Quantity Affected and RMA Count/Lot Size In Field - Top 25 parts', x='Wire Harness Receipt Date (Year-Month)', y='NCR Quantity affected')
 
 
 # Wire harness aggregate chart
@@ -507,7 +507,7 @@ for(i in 1:wireharness.numCharts){
   wireharness.fill = subset(wireharness.all, PartNumber %in% parts);
   wireharness.fill = wireharness.fill[order(as.character(wireharness.fill$PartNumber)),]
   assign(paste("p.wireharness.count",i,sep=""),
-         ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(stat='identity', position='identity', alpha=.5, color='black') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharness.maxrecord)) + scale_fill_manual(values=c('blue','red'), name='') + facet_wrap(~PartNumber) + theme(axis.text.x=element_text(angle=90)) + labs(title='Count of Wire Harness NCRs and RMAs', x='Wire Harness Manufacture Date (Year-Month)', y='Count of NCRs/RMAs')
+         ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(stat='identity', position='identity', alpha=.5, color='black') + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharness.maxrecord)) + scale_fill_manual(values=c('blue','red'), name='') + facet_wrap(~PartNumber) + theme(axis.text.x=element_text(angle=90)) + labs(title='Count of Wire Harness NCRs and RMAs', x='Wire Harness Receipt Date (Year-Month)', y='Count of NCRs/RMAs')
   );
 }
 
@@ -536,7 +536,7 @@ for(i in 1:wireharness.numCharts){
   wireharness.fill = subset(wireharness.qty.all, PartNumber %in% parts);
   wireharness.fill = wireharness.fill[order(as.character(wireharness.fill$PartNumber)),]
   assign(paste("p.wireharness.quantity",i,sep=""),
-         ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(color='black', stat='identity', position='identity', alpha=.5) + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.qty.max+1), sec.axis = sec_axis(~. * wireharnessRMA.rate.max / wireharnessNCR.qty.max, labels = scales::percent, name = "RMA Count / Lot Size In Field")) + facet_wrap(~PartNumber) + scale_fill_manual(values=c('blue','red'), name='')+ theme(axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCR Quantity Affected and RMA Count/Lot Size In Field', x='Wire Harness Manufacture Date (Year-Month)', y='NCR Quantity affected')
+         ggplot(wireharness.fill, aes(x=DateGroup, y=Record, group=Type, fill=Type)) + geom_bar(color='black', stat='identity', position='identity', alpha=.5) + scale_x_discrete(breaks=wireharness.dateBreaks) + scale_y_continuous(limits=c(0,wireharnessNCR.qty.max+1), sec.axis = sec_axis(~. * wireharnessRMA.rate.max / wireharnessNCR.qty.max, labels = scales::percent, name = "RMA Count / Lot Size In Field")) + facet_wrap(~PartNumber) + scale_fill_manual(values=c('blue','red'), name='')+ theme(axis.text.x=element_text(angle=90)) + labs(title='Wire harness NCR Quantity Affected and RMA Count/Lot Size In Field', x='Wire Harness Receipt Date (Year-Month)', y='NCR Quantity affected')
   );
 }
 
