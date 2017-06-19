@@ -230,7 +230,7 @@ makePalette = function(f){
 fail.hours.pal = makePalette(fail.hours$ProblemArea)
 fail.hours.lineColor = '#404040';
 
-# 2017 FA 2.0 Rate of Failures at <100 run hours
+# 2017 FA 2.0 Rate of Failures at <100 run hours (now hidden chart)
 summ = fail.hours.summary %>% 
   filter(DateGroup >= '2017-01', Version == 'FA2.0') %>%
   mutate(CumulativeRate = cumsum(Failure) / cumsum(Shipped))
@@ -246,6 +246,7 @@ p.FA2.0Hours100 = fail.hours %>%
   geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
   geom_text(data = summ, aes(y = 0, label = RollingAvg), vjust = 1.3, size = 6) +
   scale_fill_manual(values = rev(fail.hours.pal)) +
+  scale_y_continuous(labels = scales::percent) +
   guides(fill = guide_legend(nrow = 4)) +
   theme(legend.position = 'bottom') +
   labs(title = '2017 FA 2.0 Rate of Field Failures at <100 Hours Run', 
@@ -254,7 +255,7 @@ p.FA2.0Hours100 = fail.hours %>%
        y = 'Rate of Failure RMAs at <100 Hours Run',
        fill = '')
   
-# 2017 Torch Module Rate of Field Failures at <100 Hours Run
+# 2017 Torch Module Rate of Field Failures at <100 Hours Run (now hidden chart)
 summ = fail.hours.summary %>% 
   filter(DateGroup >= '2017-01', Version == 'Torch') %>%
   mutate(CumulativeRate = cumsum(Failure) / cumsum(Shipped))
@@ -270,6 +271,7 @@ p.TorchModHours100 <- fail.hours %>%
   geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
   geom_text(data = summ, aes(y = 0, label = RollingAvg), vjust = 1.3, size = 6) +
   scale_fill_manual(values = rev(fail.hours.pal)) +
+  scale_y_continuous(labels = scales::percent) +
   guides(fill = guide_legend(nrow = 4)) +
   theme(legend.position = 'bottom') +
   labs(title = '2017 Torch Module Rate of Field Failures at <100 Hours Run', 
@@ -294,9 +296,10 @@ p.FA2.0Hours100.long <- fail.hours %>%
   geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
   geom_text(data = summ, aes(y = 0, label = RollingAvg), vjust = 1.3, size = 4) +
   scale_fill_manual(values = rev(fail.hours.pal)) +
+  scale_y_continuous(labels = scales::percent) +
   guides(fill = guide_legend(nrow = 4)) +
   theme(legend.position = 'bottom') +
-  labs(title = 'Long-term FA 2.0 Rate of Field Failures at <100 Hours Run', 
+  labs(title = 'FA 2.0 Rate of Field Failures at <100 Hours Run', 
        subtitle = 'Per 4-Month Moving Average of Customer Instruments Shipped',
        x='RMA Created Date\n(Year-Month)',
        y='Rate of Failure RMAs at <100 Hours Run',
@@ -318,16 +321,17 @@ p.TorchModHours100.long <- fail.hours %>%
   geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
   geom_text(data = summ, aes(y = 0, label = RollingAvg), vjust = 1.3, size = 6) +
   scale_fill_manual(values = rev(fail.hours.pal)) +
+  scale_y_continuous(labels = scales::percent) +
   guides(fill = guide_legend(nrow = 4)) +
   theme(legend.position = 'bottom') +
-  labs(title = 'Long-term Torch Module Rate of Field Failures at <100 Hours Run', 
+  labs(title = 'Torch Module Rate of Field Failures at <100 Hours Run', 
        subtitle = 'Per 4-Month Moving Average of Customer Instruments Shipped',
        x='RMA Created Date\n(Year-Month)',
        y='Rate of Failure RMAs at <100 Hours Run',
        fill = '')
 
   
-# FA 2.0 DOA/ELF Failures Modes (new chart)
+# FA 2.0 DOA/ELF Failures Modes (now hidden chart)
 failmodes.yr <- fail.modes.df
 failmodes.yr$DateGroup <- with(failmodes.yr, ifelse(Month < 10, paste0(Year, '-0', Month), paste0(Year,'-', Month)))
 failmodes.yr <- subset(failmodes.yr, DateGroup >= start.monthyr)
@@ -336,13 +340,13 @@ modes2.0.agg <- with(modes2.0, aggregate(Record~ProblemArea+Fail, FUN=sum))
 modes2.0.agg$ProblemArea <- factor(modes2.0.agg$ProblemArea, levels = as.character(with(modes2.0.agg, aggregate(Record~ProblemArea, FUN=sum))[with(with(modes2.0.agg, aggregate(Record~ProblemArea, FUN=sum)),order(-Record)),'ProblemArea']))
 p.FA20FailureModes <- ggplot(modes2.0.agg, aes(x=ProblemArea, y=Record, fill=Fail)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(modes2.0.agg, 'Fail'), name='') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='FA 2.0 DOA/ELF Problem Areas', subtitle='Last 12 Months', y='Count', x='Problem Area')
 
-# Torch Module DOA/ELF Failures Modes (new chart)
+# Torch Module DOA/ELF Failures Modes (now hidden chart)
 modesMod <- subset(failmodes.yr, Department == 'Production' & Version == 'Torch Module')
 modesMod.agg <- with(modesMod, aggregate(Record~ProblemArea+Fail, FUN=sum))
 modesMod.agg$ProblemArea <- factor(modesMod.agg$ProblemArea, levels = as.character(with(modesMod.agg, aggregate(Record~ProblemArea, FUN=sum))[with(with(modesMod.agg, aggregate(Record~ProblemArea, FUN=sum)),order(-Record)),'ProblemArea']))
 p.TorchModFailureModes <- ggplot(modesMod.agg, aes(x=ProblemArea, y=Record, fill=Fail)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(modesMod.agg, 'Fail'), name='') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(size=fontSize, face=fontFace, color='black'), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Torch Module DOA/ELF Problem Areas', subtitle='Last 12 Months', y='Count', x='Problem Area')
 
-# Torch Base DOA/ELF Failures Modes (new chart)
+# Torch Base DOA/ELF Failures Modes (now hidden chart)
 modesBase <- subset(failmodes.yr, Department == 'Production' & Version == 'Torch Base')
 modesBase.agg <- with(modesBase, aggregate(Record~ProblemArea+Fail, FUN=sum))
 modesBase.agg$ProblemArea <- factor(modesBase.agg$ProblemArea, levels = as.character(with(modesBase.agg, aggregate(Record~ProblemArea, FUN=sum))[with(with(modesBase.agg, aggregate(Record~ProblemArea, FUN=sum)),order(-Record)),'ProblemArea']))
