@@ -230,6 +230,7 @@ makeProblemAreaChart = function(version, versionName, plotName){
     ggplot(aes(x=ProblemArea, y=Count)) + 
     geom_bar(stat='identity') + 
     scale_fill_manual(values=createPaletteOfVariableLength(modes2.0.agg, 'Fail'), name='') + 
+    scale_y_continuous(breaks = pretty_breaks()) +
     theme(axis.text.x=element_text(angle=45, hjust=1)) + 
     labs(title=paste0(versionName, ' Problem Areas at <100 Hours Run'), 
          subtitle='Last 6 Months', 
@@ -245,6 +246,7 @@ makeProblemAreaChart = function(version, versionName, plotName){
     ggplot(aes(x=ProblemArea, y=Count)) + 
     geom_bar(stat='identity') + 
     scale_fill_manual(values=createPaletteOfVariableLength(modes2.0.agg, 'Fail'), name='') + 
+    scale_y_continuous(breaks = pretty_breaks()) +
     theme(axis.text.x=element_text(angle=45, hjust=1)) + 
     labs(title='', 
          subtitle='Last 12 Months', 
