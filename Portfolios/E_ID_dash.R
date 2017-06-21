@@ -12,6 +12,7 @@ library(zoo)
 library(lubridate)
 library(dateManip)
 library(colorspace)
+library(gridExtra)
 source('Rfunctions/loadSQL.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
@@ -28,9 +29,7 @@ loadSQL(PMScxn, 'SQL/R_IQC_FirstPassYield.sql', 'firstPass.df')
 loadSQL(PMScxn, 'SQL/R_INCR_InstrumentsProduced_denom.sql', 'instBuilt.df')
 loadSQL(PMScxn, 'SQL/R_INCR_InstrumentNCRs.sql', 'instNCRs.df')
 loadSQL(PMScxn, 'SQL/R_INCR_InstrumentNCRs_WPFS.sql', 'wpfsNCR.df')
-loadSQL(PMScxn, 'SQL/E_ID_EarlyFailureWithModes.sql', 'fail.modes.df')
 loadSQL(PMScxn, 'SQL/E_ID_EarlyFailureHours.sql', 'fail.hours.df')
-loadSQL(PMScxn, 'SQL/R_IRMA_RMAsShippedByInstrumentVersion.sql', 'rmasShip.df')
 odbcClose(PMScxn)
 
 # Environmental variables
@@ -98,22 +97,6 @@ if(nrow(subset(refurbConv.df, TranDate >= Sys.Date()-365)) > 0) {
 shipVer$Product <- factor(shipVer$Product, levels = c('FA1.5', 'FA2.0', 'Torch Module', 'Torch Base'))
 p.Ship.Version <- ggplot(shipVer, aes(x=DateGroup, y=Record, fill=Product)) + geom_bar(stat="identity", position="stack") + labs(title = 'New Instrument Shipments by Version', subtitle = 'FA 1.5, FA 2.0, and Torch', x= 'Date\n(Year-Month)', y='Shipments') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, vjust=0.5,color='black',size=fontSize), axis.text.y=element_text(hjust=1, color='black', size=fontSize), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + scale_fill_manual(values=createPaletteOfVariableLength(shipVer, 'Product'), name='Version') + scale_y_continuous(breaks=pretty_breaks(n=10), minor_breaks = pretty_breaks(n=30)) + geom_text(data = with(shipVer, aggregate(Record~DateGroup, FUN=sum)), inherit.aes=FALSE, aes(x=DateGroup, y=Record, label=Record), vjust = -0.5, fontface = 'bold', size = 5)
 
-# Early Failure Rates by Month (RMA chart)
-newShipments <- subset(shipments.inst, ShipOrder == 1)
-newShip.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', newShipments, c('Product'), plot.start.monthyr, 'Record', 'sum', 0)
-failures.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(fail.modes.df, Version != 'Torch Base'), c('Version','Fail','Department'), plot.start.monthyr, 'Record', 'sum', 0)
-prod.fail.month <- mergeCalSparseFrames(subset(failures.month, Department=='Production' & Version != 'FA1.5'), newShip.month, c('DateGroup','Version'), c('DateGroup','Product'), 'Record', 'Record', 0, 0)
-prod.fail.month <- prod.fail.month[!(prod.fail.month$Version == 'Torch Module' & prod.fail.month$DateGroup < '2016-07'), ]
-failures.month[,'ComboCat'] <- do.call(paste, c(failures.month[,c('Version','Fail','Department')], sep=','))
-failures.month.cum <- do.call(rbind, lapply(1:length(unique(failures.month$ComboCat)), function(x) data.frame(DateGroup =  failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'DateGroup'], ComboCat = unique(failures.month$ComboCat)[x], CumFail = sapply(1:length(failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'DateGroup']), function(y) sum(failures.month[failures.month$ComboCat == unique(failures.month$ComboCat)[x], 'Record'][1:y], na.rm = TRUE)))))
-failures.month.cum <- data.frame(DateGroup = failures.month.cum$DateGroup, Version = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,1], Key = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,2], Department = do.call(rbind, strsplit(as.character(failures.month.cum[,'ComboCat']), split=','))[,3], Record = failures.month.cum$CumFail)
-newShip.month.cum <- do.call(rbind, lapply(1:length(unique(newShip.month$Product)), function(x) data.frame(DateGroup = newShip.month[newShip.month$Product == unique(newShip.month$Product)[x], 'DateGroup'], Product = unique(newShip.month$Product)[x], Record = sapply(1:length(newShip.month[newShip.month$Product == unique(newShip.month$Product)[x], 'DateGroup']), function(y) sum(newShip.month[newShip.month$Product == unique(newShip.month$Product)[x],'Record'][1:y])))))
-newShip.month.cum <- newShip.month.cum[!(newShip.month.cum$Product == 'Torch Module' & as.character(newShip.month.cum$DateGroup) < '2016-07'), ] 
-prod.fail.month.cum <- merge(subset(failures.month.cum, Department=='Production'), newShip.month.cum, by.x=c('DateGroup','Version'), by.y=c('DateGroup', 'Product'))
-prod.fail.month.cum$CumulativeRate <- with(prod.fail.month.cum, Record.x/Record.y)
-prod.fail.month <- merge(prod.fail.month, prod.fail.month.cum[,c('DateGroup','Version','Key','Department','CumulativeRate')], by.x=c('DateGroup','Version','Fail','Department'), by.y=c('DateGroup','Version','Key','Department'))
-p.Prod.Fail.Month <- ggplot(prod.fail.month, aes(x=DateGroup, y=Rate, fill=Fail)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(prod.fail.month, 'Fail'), name='') + facet_wrap(~Version, ncol=1, scale='free_y') + geom_line(data = prod.fail.month, aes(x=DateGroup, y=CumulativeRate, group=Fail, color=Fail), lwd=1.5, lty='dashed') + scale_color_manual(values=c('darkblue', 'chocolate4'), guide=FALSE) + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Early Failure Rates by Month', subtitle = '(12 Month Cumulative Rate Overlay)', x='Date\n(Year-Month)', y='Failures/New Instruments Shipped')
-
 # Instrument First Pass Yield in final QC (Final QC chart)
 firstPass.runs <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', subset(firstPass.df, TestNo==1), 'Key', plot.start.weekRoll, 'Record', 'sum', 0)
 firstPass.pass <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', subset(firstPass.df, TestNo==1 & Result=='Pass'), 'Key', plot.start.weekRoll, 'Record', 'sum', 0)
@@ -144,50 +127,6 @@ if(max(which(pareto.wpfsncr[with(pareto.wpfsncr, order(CumPercent)), 'CumPercent
   pareto.wpfsncr <- pareto.wpfsncr[1:min(which(pareto.wpfsncr[with(pareto.wpfsncr, order(CumPercent)), 'CumPercent'] >= 0.8)),]
   p.WPFS.pareto <- ggplot(subset(wpfs.count, RecordedValue %in% pareto.wpfsncr[,'RecordedValue']), aes(x=RecordedValue, y=Record.x, fill=Version, order=Version)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=70, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Problem Area in Instrument NCRs', subtitle = 'Last 8 weeks, Top 80%', y='Count of Occurrences', x='') + scale_fill_manual(values=pal.wpfs)
 }
-
-# 2017 FA 2.0 ELF/DOA Rate (4-month rolling average) (new chart)
-# rate calculated by using 4 month moving average of instruments shipped as denominator
-fails <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', subset(fail.modes.df, Department == 'Production'), c('Fail', 'Version'), plot.start.monthyr, 'DistinctRecord', 'sum', 0)
-new.ship <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', newShipments, 'Product', plot.start.month4, 'Record', 'sum', 0)
-#4 month moving average for denom for each version
-new.shipavg <- c()
-versions <- as.character(unique(new.ship$Product))
-for(i in 1:length(versions)) {
-  temp <- subset(new.ship, Product == versions[i])
-  l <- length(temp$DateGroup)  
-  temp <- cbind(temp[4:l,], sapply(4:l, function(x) mean(temp[(x-3):x,'Record'])))
-  colnames(temp)[4] <- 'RollingAvg'
-  new.shipavg <- rbind(new.shipavg, temp)
-}
-fail.rate <- mergeCalSparseFrames(fails, new.shipavg, c('DateGroup', 'Version'), c('DateGroup','Product'), 'DistinctRecord','RollingAvg',0,0)
-fail.pal <- createPaletteOfVariableLength(fail.rate, 'Fail')
-#YTD rates 
-fails.2017 <- subset(fails, DateGroup >= beg)
-new.ship2017 <- subset(new.ship, DateGroup >= beg)
-#cum sum per version
-fails.2017cum <- c()
-ship2017.cum <- c()
-for(i in 1:length(versions)) {
-  temp <- subset(fails.2017, Version == versions[i])
-  keys <- as.character(unique(temp$Fail))
-  for(j in 1:length(keys)) {
-    temp2 <- subset(temp, Fail == keys[j])
-    temp2$CumSum <- cumsum(temp2$DistinctRecord)
-    fails.2017cum <- rbind(fails.2017cum, temp2)
-  }
-  temp <- subset(new.ship2017, Product == versions[i])
-  temp$CumSum <- cumsum(temp$Record)
-  ship2017.cum <- rbind(ship2017.cum, temp)
-}
-ytdrates <- mergeCalSparseFrames(fails.2017cum, ship2017.cum, c('DateGroup', 'Version'), c('DateGroup', 'Product'), 'CumSum', 'CumSum', 0, 0)
-ytdrates$Key <- with(ytdrates, ifelse(Fail == 'ELF', 'ELF YTD Rate', 'DOA YTD Rate'))
-p.FA2.0ELFDOA <- ggplot(subset(fail.rate, DateGroup >= '2017-01' & Version == 'FA2.0'), aes(x=DateGroup, y=Rate, fill=Fail)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='2017 FA 2.0 DOA/ELF Rate', subtitle= 'DOA/ELF Per 4-Month Moving Average of Instruments Shipped\nGoal = Green Line', y='DOA/ELF Rate', x='Date\n(Year-Month)') + scale_fill_manual(values=fail.pal, name='') + geom_hline(yintercept=0.025, color='forestgreen', size=1) + geom_line(data=subset(ytdrates, Version == 'FA2.0'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Key, color=Key), size=1) + geom_point(data=subset(ytdrates, Version == 'FA2.0'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Key, color=Key)) + scale_color_manual(values=c('mediumblue','chocolate4'), name='') + guides(color=guide_legend(nrow=1, by.row=TRUE))
-
-# 2017 Torch Module ELF/DOA Rate (new chart)
-p.TorchModELFDOA <- ggplot(subset(fail.rate, DateGroup >= '2017-01' & Version == 'Torch Module'), aes(x=DateGroup, y=Rate, fill=Fail)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='2017 Torch Module DOA/ELF Rate', subtitle= 'DOA/ELF Per 4-Month Moving Average of Instruments Shipped\nGoal = Green Line', y='DOA/ELF Rate', x='Date\n(Year-Month)') + scale_fill_manual(values=fail.pal, name='') + geom_hline(yintercept=0.035, color='forestgreen', size=1) + geom_line(data=subset(ytdrates, Version == 'Torch Module'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Key, color=Key), size=1) + geom_point(data=subset(ytdrates, Version == 'Torch Module'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Key, color=Key)) + scale_color_manual(values=c('mediumblue','chocolate4'), name='') + guides(color=guide_legend(nrow=1, by.row=TRUE))
-
-# 2017 Torch Base ELF/DOA Rate (new chart)
-p.TorchBaseELFDOA <- ggplot(subset(fail.rate, DateGroup >= '2017-01' & Version == 'Torch Base'), aes(x=DateGroup, y=Rate, fill=Fail)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), legend.position = 'bottom') + labs(title='2017 Torch Base DOA/ELF Rate', subtitle= 'DOA/ELF Per 4-Month Moving Average of Instruments Shipped\nGoal = Green Line', y='DOA/ELF Rate', x='Date\n(Year-Month)') + scale_fill_manual(values=fail.pal, name='') + geom_hline(yintercept=0.035, color='forestgreen', size=1) + geom_line(data=subset(ytdrates, Version == 'Torch Base'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Key, color=Key), size=1) + geom_point(data=subset(ytdrates, Version == 'Torch Base'), inherit.aes = FALSE, aes(x=DateGroup, y=Rate, group=Key, color=Key)) + scale_color_manual(values=c('mediumblue','chocolate4'), name='') + guides(color=guide_legend(nrow=1, by.row=TRUE))
 
 # Aggregate failure RMAs and new shipments for use in next 4 charts: -------------------------------------
 newShipments.cust = shipments.inst %>%
@@ -229,56 +168,6 @@ makePalette = function(f){
 
 fail.hours.pal = makePalette(fail.hours$ProblemArea)
 fail.hours.lineColor = '#404040';
-
-# 2017 FA 2.0 Rate of Failures at <100 run hours (now hidden chart)
-summ = fail.hours.summary %>% 
-  filter(DateGroup >= '2017-01', Version == 'FA2.0') %>%
-  mutate(CumulativeRate = cumsum(Failure) / cumsum(Shipped))
-p.FA2.0Hours100 = fail.hours %>%
-  filter(DateGroup >= '2017-01', Version == 'FA2.0') %>% 
-  ggplot(aes(x = DateGroup, y = Rate)) + 
-  geom_col(aes(fill = ProblemArea), 
-           color = 'black', position = position_stack(reverse = TRUE)) + 
-  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1, color = fail.hours.lineColor) + 
-  geom_point(data = summ, aes(y = CumulativeRate), size = 3, color = fail.hours.lineColor) +
-  geom_errorbar(data = summ, aes(ymin = RateLower, ymax = RateUpper), width = .4,
-                position = position_nudge(x = -.25)) + 
-  geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
-  geom_text(data = summ, aes(y = 0, label = RollingAvg), vjust = 1.3, size = 6) +
-  scale_fill_manual(values = rev(fail.hours.pal)) +
-  scale_y_continuous(labels = scales::percent) +
-  guides(fill = guide_legend(nrow = 4)) +
-  theme(legend.position = 'bottom') +
-  labs(title = '2017 FA 2.0 Rate of Field Failures at <100 Hours Run', 
-       subtitle = 'Per 4-Month Moving Average of Customer Instruments Shipped',
-       x = 'RMA Created Date\n(Year-Month)',
-       y = 'Rate of Failure RMAs at <100 Hours Run',
-       fill = '')
-  
-# 2017 Torch Module Rate of Field Failures at <100 Hours Run (now hidden chart)
-summ = fail.hours.summary %>% 
-  filter(DateGroup >= '2017-01', Version == 'Torch') %>%
-  mutate(CumulativeRate = cumsum(Failure) / cumsum(Shipped))
-p.TorchModHours100 <- fail.hours %>%
-  filter(DateGroup >= '2017-01', Version == 'Torch') %>%
-  ggplot(aes(x = DateGroup, y = Rate)) + 
-  geom_col(aes(fill = ProblemArea), 
-           color = 'black', position = position_stack(reverse = TRUE)) + 
-  geom_line(data = summ, aes(y = CumulativeRate), size = 1, group = 1, color = fail.hours.lineColor) + 
-  geom_point(data = summ, aes(y = CumulativeRate), size = 3, color = fail.hours.lineColor) +
-  geom_errorbar(data = summ, aes(ymin = RateLower, ymax = RateUpper), width = .4,
-                position = position_nudge(x = -.25)) + 
-  geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
-  geom_text(data = summ, aes(y = 0, label = RollingAvg), vjust = 1.3, size = 6) +
-  scale_fill_manual(values = rev(fail.hours.pal)) +
-  scale_y_continuous(labels = scales::percent) +
-  guides(fill = guide_legend(nrow = 4)) +
-  theme(legend.position = 'bottom') +
-  labs(title = '2017 Torch Module Rate of Field Failures at <100 Hours Run', 
-       subtitle = 'Per 4-Month Moving Average of Customer Instruments Shipped',
-       x='RMA Created Date\n(Year-Month)',
-       y='Rate of Failure RMAs at <100 Hours Run',
-       fill = '')
 
 # Long-term FA 2.0 Rate of Field Failures at <100 Hours Run
 summ = fail.hours.summary %>% 
@@ -330,27 +219,45 @@ p.TorchModHours100.long <- fail.hours %>%
        y='Rate of Failure RMAs at <100 Hours Run',
        fill = '')
 
+makeProblemAreaChart = function(version, versionName, plotName){
+  # Problem Areas at <100 hours run
+  startDateGroup = (tibble(Date = today()-months(6)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
+  plot6 <- fail.hours %>% 
+    filter(Version == version, DateGroup >= startDateGroup) %>%
+    group_by(ProblemArea) %>% summarize(Count = sum(Failure)) %>%
+    filter(Count > 0) %>%
+    mutate(ProblemArea = fct_reorder(ProblemArea, -Count)) %>%
+    ggplot(aes(x=ProblemArea, y=Count)) + 
+    geom_bar(stat='identity') + 
+    scale_fill_manual(values=createPaletteOfVariableLength(modes2.0.agg, 'Fail'), name='') + 
+    scale_y_continuous(breaks = pretty_breaks()) +
+    theme(axis.text.x=element_text(angle=45, hjust=1)) + 
+    labs(title=paste0(versionName, ' Problem Areas at <100 Hours Run'), 
+         subtitle='Last 6 Months', 
+         y='Count', 
+         x=element_blank())
   
-# FA 2.0 DOA/ELF Failures Modes (now hidden chart)
-failmodes.yr <- fail.modes.df
-failmodes.yr$DateGroup <- with(failmodes.yr, ifelse(Month < 10, paste0(Year, '-0', Month), paste0(Year,'-', Month)))
-failmodes.yr <- subset(failmodes.yr, DateGroup >= start.monthyr)
-modes2.0 <- subset(failmodes.yr, Department == 'Production' & Version == 'FA2.0')
-modes2.0.agg <- with(modes2.0, aggregate(Record~ProblemArea+Fail, FUN=sum))
-modes2.0.agg$ProblemArea <- factor(modes2.0.agg$ProblemArea, levels = as.character(with(modes2.0.agg, aggregate(Record~ProblemArea, FUN=sum))[with(with(modes2.0.agg, aggregate(Record~ProblemArea, FUN=sum)),order(-Record)),'ProblemArea']))
-p.FA20FailureModes <- ggplot(modes2.0.agg, aes(x=ProblemArea, y=Record, fill=Fail)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(modes2.0.agg, 'Fail'), name='') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='FA 2.0 DOA/ELF Problem Areas', subtitle='Last 12 Months', y='Count', x='Problem Area')
+  startDateGroup = (tibble(Date = today()-months(12)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
+  plot12 <- fail.hours %>% 
+    filter(Version == version, DateGroup >= startDateGroup) %>%
+    group_by(ProblemArea) %>% summarize(Count = sum(Failure)) %>%
+    filter(Count > 0) %>%
+    mutate(ProblemArea = fct_reorder(ProblemArea, -Count)) %>%
+    ggplot(aes(x=ProblemArea, y=Count)) + 
+    geom_bar(stat='identity') + 
+    scale_fill_manual(values=createPaletteOfVariableLength(modes2.0.agg, 'Fail'), name='') + 
+    scale_y_continuous(breaks = pretty_breaks()) +
+    theme(axis.text.x=element_text(angle=45, hjust=1)) + 
+    labs(title='', 
+         subtitle='Last 12 Months', 
+         y='Count', 
+         x='Problem Area')
+  
+  assign(plotName, grid.arrange(plot6, plot12, ncol = 1), envir = globalenv())
+}
 
-# Torch Module DOA/ELF Failures Modes (now hidden chart)
-modesMod <- subset(failmodes.yr, Department == 'Production' & Version == 'Torch Module')
-modesMod.agg <- with(modesMod, aggregate(Record~ProblemArea+Fail, FUN=sum))
-modesMod.agg$ProblemArea <- factor(modesMod.agg$ProblemArea, levels = as.character(with(modesMod.agg, aggregate(Record~ProblemArea, FUN=sum))[with(with(modesMod.agg, aggregate(Record~ProblemArea, FUN=sum)),order(-Record)),'ProblemArea']))
-p.TorchModFailureModes <- ggplot(modesMod.agg, aes(x=ProblemArea, y=Record, fill=Fail)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(modesMod.agg, 'Fail'), name='') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(size=fontSize, face=fontFace, color='black'), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Torch Module DOA/ELF Problem Areas', subtitle='Last 12 Months', y='Count', x='Problem Area')
-
-# Torch Base DOA/ELF Failures Modes (now hidden chart)
-modesBase <- subset(failmodes.yr, Department == 'Production' & Version == 'Torch Base')
-modesBase.agg <- with(modesBase, aggregate(Record~ProblemArea+Fail, FUN=sum))
-modesBase.agg$ProblemArea <- factor(modesBase.agg$ProblemArea, levels = as.character(with(modesBase.agg, aggregate(Record~ProblemArea, FUN=sum))[with(with(modesBase.agg, aggregate(Record~ProblemArea, FUN=sum)),order(-Record)),'ProblemArea']))
-p.TorchBaseFailureModes <- ggplot(modesBase.agg, aes(x=ProblemArea, y=Record, fill=Fail)) + geom_bar(stat='identity') + scale_fill_manual(values=createPaletteOfVariableLength(modesBase.agg, 'Fail'), name='') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(size=fontSize, face=fontFace, color='black'), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Torch Base DOA/ELF Problem Areas', subtitle='Last 12 Months', y='Count', x='Problem Area')
+makeProblemAreaChart('FA2.0', 'FA 2.0', 'p.FA20FailureModes100')
+makeProblemAreaChart('Torch', 'Torch Module', 'p.TorchModFailureModes100')
 
 # Instrument NCR Problem Area per Instruments Built (NCR chart)
 wpfs.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', wpfsNCR.df, c('RecordedValue'), start.weekRoll, 'Record', 'sum', 0)
@@ -409,40 +316,30 @@ ef.report.lead.fill <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', lead
 pal.ef <- createPaletteOfVariableLength(ef.report.lead.fill,'RecordedValue')
 p.Indicator <- ggplot(ef.report.lead.fill, aes(x=DateGroup, y=Record, fill=RecordedValue)) + geom_bar(stat='identity') + facet_wrap(~Key) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',size=fontSize,face=fontFace), legend.position='bottom', plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + scale_x_discrete(breaks=dateBreaks.wk) + guides(fill=guide_legend(nrow=3, byrow=TRUE)) + labs(title='Customer Reported Failure Mode in Early Failure RMAs', subtitle='By Customer Reported Date of Failure ', x='Report Date\n(Year-Week)', y='Failures') + scale_fill_manual(values = pal.ef, name='')
 
-# Early Failures per Instruments Shipped (IRMA)
-failures <- subset(fail.modes.df, Version != 'Torch Base')
-instShip <- subset(newShipments, Product != 'Torch Base', select = c('Year', 'Month', 'Week', 'Product', 'Record'))
-instShip[,'Key'] <- 'Production'
-colnames(instShip)[colnames(instShip) == 'Product'] <- 'Version'
-rmasShip.df[,'Key'] <- 'Service'
-ships.df <- rbind(instShip, 
-                  rmasShip.df %>% select(Year, Month, Week, Version, Record, Key))
-ships.fill <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', ships.df, c('Key'), start.weekRoll, 'Record', 'sum', 1)
-failures.fill <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', failures, c('Department','Fail'), start.weekRoll, 'DistinctRecord', 'sum', 0)
-failures.rate <- mergeCalSparseFrames(failures.fill, ships.fill, c('DateGroup','Department'),c('DateGroup','Key'), 'DistinctRecord', 'Record', 0, 4)
-failures.lim <- addStatsToSparseHandledData(failures.rate, c('Department'), lagPeriods, TRUE, 3, 'upper', keepPeriods=53)
-# annotations for early failure rate
-# x_positions <- c('2016-08')
-# fail.annotations <- c('CAPA-13226')
-# y_positions <- max(failures.lim[as.character(failures.lim[,'DateGroup']) %in% x_positions, 'UL']) + 0.02
-pal.fail <- createPaletteOfVariableLength(failures.lim, 'Fail')
-p.Failures.all <- ggplot(failures.lim, aes(x=DateGroup, y=Rate, fill=Fail)) + geom_bar(stat='identity') + facet_wrap(~Department, ncol=1) + scale_fill_manual(values=pal.fail) + scale_y_continuous(labels=percent) + labs(title='Early Failures per Instruments Shipped:\nLimit = +3 standard deviations', caption = 'Red limits on this chart are actionable in the Instrument RMA portfolio.', x='Date\n(Year-Week)', y='4-week Rolling Average Rate') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1), plot.caption = element_text(hjust=0)) + scale_x_discrete(breaks = dateBreaks.wk) + geom_line(aes(y=UL), color='red', lty=2, group=1) #+ annotate("text",x=x_positions,y=y_positions,label=fail.annotations, size=4)
-
 # Export Images for the Web Hub
 plots <- ls()[grep('^p\\.', ls())]
 for(i in 1:length(plots)) {
-  imgName <- paste(substring(plots[i],3),'.png',sep='')
-  
-  png(file=paste0(imgDir,imgName), width=1200, height=800, units='px')
-  print(get(plots[i]))
+  imgName <- paste(substring(plots[i], 3), '.png', sep='')
+  png(file = paste0(imgDir, imgName), width = 1200, height = 800, units = 'px')
+  p = get(plots[i])
+  if(is(p, 'grob')){
+    grid.draw(p)
+  }else{
+    print(p)
+  }
   makeTimeStamp(author='Data Science')
   dev.off()
 }
 
 # Export PDF for the Web Hub
-pdf(paste0(pdfDir,"InstrumentDashboard.pdf"), width = 11, height = 8)
+pdf(paste0(pdfDir,"InstrumentDashboard.pdf"), width = 15, height = 10)
 for(i in 1:length(plots)) {
-  print(get(plots[i]))
+  p = get(plots[i])
+  if(is(p, 'grob')){
+    grid.draw(p)
+  }else{
+    print(p)
+  }
 }
 dev.off()
 
