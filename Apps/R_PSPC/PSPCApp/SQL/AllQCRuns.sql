@@ -7,21 +7,22 @@ SELECT
 	[PouchLotNumber],
 	[PouchTitle],
 	[InstrumentSerialNumber],
-	IIF([PouchTitle] LIKE 'Respiratory %', 'RP',
+	IIF([PouchTitle] LIKE 'RP2plus%', 'RP2plus',
+		IIF([PouchTitle] LIKE 'Respiratory Panel 2%' OR [PouchTitle] LIKE 'RP2%', 'RP2',
+		IIF([PouchTitle] LIKE 'Respiratory %', 'RP',
 		IIF([PouchTitle] LIKE 'BCID %', 'BCID',
 		IIF([PouchTitle] LIKE 'ME %', 'ME',
-		IIF([PouchTitle] LIKE 'GI %', 'GI', [PouchTitle])))) AS [Panel],
+		IIF([PouchTitle] LIKE 'GI %', 'GI', [PouchTitle])))))) AS [Panel],
 	[SampleId]
 INTO #FA15
 FROM [FILMARRAYDB].[FilmArray1].[FilmArray].[ExperimentRun] WITH(NOLOCK)
 WHERE CAST([StartTime] AS DATE) >= '2012-01-01' AND [SampleId] LIKE 'QC[_]%' AND
 (
-	[PouchTitle] LIKE 'Respiratory Panel v%' OR 
+	[PouchTitle] LIKE 'Respiratory Panel %' OR 
 	[PouchTitle] LIKE 'BCID Panel v%' OR 
 	[PouchTitle] LIKE 'ME Panel v%' OR 
 	[PouchTitle] LIKE 'GI Panel v%' OR
-	[PouchTitle] LIKE 'Respiratory Panel IVD v1.6' OR
-	[PouchTitle] LIKE 'Respiratory Panel RUO v1.6'
+	[PouchTitle] LIKE 'RP2%'
 ) AND [PouchLotNumber] NOT LIKE '%[^0-9]%' AND [ExperimentStatus] LIKE 'Completed'
 
 SELECT 
@@ -31,21 +32,22 @@ SELECT
 	[PouchLotNumber],
 	[PouchTitle],
 	[InstrumentSerialNumber],
-	IIF([PouchTitle] LIKE 'Respiratory %', 'RP',
+	IIF([PouchTitle] LIKE 'RP2plus%', 'RP2plus',
+		IIF([PouchTitle] LIKE 'Respiratory Panel 2%' OR [PouchTitle] LIKE 'RP2%', 'RP2',
+		IIF([PouchTitle] LIKE 'Respiratory %', 'RP',
 		IIF([PouchTitle] LIKE 'BCID %', 'BCID',
 		IIF([PouchTitle] LIKE 'ME %', 'ME',
-		IIF([PouchTitle] LIKE 'GI %', 'GI', [PouchTitle])))) AS [Panel],
+		IIF([PouchTitle] LIKE 'GI %', 'GI', [PouchTitle])))))) AS [Panel],
 	[SampleId]
 INTO #FA20
 FROM [FILMARRAYDB].[FilmArray2].[dbo].[ExperimentRun] WITH(NOLOCK)
 WHERE CAST([StartTime] AS DATE) >= '2012-01-01' AND [SampleId] LIKE 'QC[_]%' AND
 (
-	[PouchTitle] LIKE 'Respiratory Panel v%' OR 
+	[PouchTitle] LIKE 'Respiratory Panel %' OR 
 	[PouchTitle] LIKE 'BCID Panel v%' OR 
 	[PouchTitle] LIKE 'ME Panel v%' OR 
 	[PouchTitle] LIKE 'GI Panel v%' OR
-	[PouchTitle] LIKE 'Respiratory Panel IVD v1.6' OR
-	[PouchTitle] LIKE 'Respiratory Panel RUO v1.6'
+	[PouchTitle] LIKE 'RP2%'
 ) AND [PouchLotNumber] NOT LIKE '%[^0-9]%' AND [ExperimentStatus] LIKE 'Completed'
 
 SELECT 
@@ -129,17 +131,7 @@ SELECT
 	[Panel],
 	[SampleId],
 	[Mix],
-	CASE [Control_Failures]
-		WHEN 'PCR2, yeastDNA' THEN 'yeastDNA, PCR2'		
-		WHEN 'PCR2, yeastRNA' THEN 'yeastRNA, PCR2'
-		WHEN 'yeastDNA, yeastRNA' THEN 'yeastRNA, yeastDNA'
-		WHEN 'yeastRNA, PCR2, yeastDNA' THEN 'yeastRNA, yeastDNA, PCR2'
-		WHEN 'yeastDNA, yeastRNA, PCR2' THEN 'yeastRNA, yeastDNA, PCR2'
-		WHEN 'yeastDNA, PCR2, yeastRNA' THEN 'yeastRNA, yeastDNA, PCR2'
-		WHEN 'PCR2, yeastRNA, yeastDNA' THEN 'yeastRNA, yeastDNA, PCR2'
-		WHEN 'PCR2, yeastDNA, yeastRNA' THEN 'yeastRNA, yeastDNA, PCR2'
-	ELSE [Control_Failures] 
-	END AS [Control_Failures],
+	[Control_Failures],
 	[False_Negatives],
 	[False_Positives],
 	[CF],

@@ -17,9 +17,25 @@ shinyServer(function(input, output, session) {
   summaryDT <- reactive({
     temp <- summary.df
     temp[,'Start Time'] <- as.character(temp[,'Start Time'])
-    if(is.null(input$includeabg) | input$includeabg == FALSE) {
-      temp <- temp[!grepl('alpha', temp[,'Sample ID'], ignore.case=TRUE) & !grepl('beta', temp[,'Sample ID'], ignore.case=TRUE) & !grepl('gamma', temp[,'Sample ID'], ignore.case=TRUE), ]
+    
+    if(!is.null(input$excludeabg)){
+      if('Alpha' %in% input$excludeabg) {
+        temp <- temp[!grepl('alpha', temp[,'Sample ID'], ignore.case=TRUE), ]
+      }
+      
+      if('Beta' %in% input$excludeabg) {
+        temp <- temp[!grepl('beta', temp[,'Sample ID'], ignore.case=TRUE), ]
+      }
+      
+      if('Gamma' %in% input$excludeabg) {
+        temp <- temp[!grepl('gamma', temp[,'Sample ID'], ignore.case=TRUE), ]
+      }
+      
+      if('Omega' %in% input$excludeabg) {
+        temp <- temp[!grepl('omega', temp[,'Sample ID'], ignore.case=TRUE), ]
+      }
     }
+    
     temp[, input$columnsVisible]
   })
 
@@ -41,11 +57,26 @@ shinyServer(function(input, output, session) {
   
   #QC Pouches Run to Date-----------------------------------------------------------------------------------------------------------------------
   makeQCPouches <- reactive({
-    if(is.null(input$includeabg4) | input$includeabg4 == FALSE) {
-      temp <- subset(allruns.df, !grepl('alpha', allruns.df$SampleId, ignore.case = TRUE) & !grepl('beta', allruns.df$SampleId, ignore.case = TRUE) & !grepl('gamma', allruns.df$SampleId, ignore.case = TRUE))
-    } else {
-      temp <- allruns.df
+    temp <- allruns.df
+    
+    if(!is.null(input$excludeabg3)){
+      if('Alpha' %in% input$excludeabg3) {
+        temp <- temp[!grepl('alpha', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Beta' %in% input$excludeabg3) {
+        temp <- temp[!grepl('beta', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Gamma' %in% input$excludeabg3) {
+        temp <- temp[!grepl('gamma', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Omega' %in% input$excludeabg3) {
+        temp <- temp[!grepl('omega', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
     }
+    
     qcruns <- with(temp, aggregate(Record~Panel, FUN=sum))
     qcruns$Panel <- factor(qcruns$Panel, levels = as.character(qcruns[with(qcruns, order(Record)),'Panel']))
     ggplot(qcruns, aes(x=Panel, y=Record)) + geom_bar(stat='identity', fill = 'firebrick3') + coord_flip() + geom_text(aes(label=Record), hjust = 1.5, size = 5, fontface = 'bold', color='black') + theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='QC Pouches Run to Date', subtitle = 'Starting 1-1-2012', y='', x='')
@@ -99,12 +130,26 @@ shinyServer(function(input, output, session) {
 
   #QC Anomlay Rate-----------------------------------------------------------------------------------------------------------------------
   makeQCAnomRate <- reactive({
-    if(is.null(input$includeabg2) | input$includeabg2 == FALSE) {
-      temp <- subset(allruns.df, !grepl('alpha', allruns.df$SampleId, ignore.case = TRUE) & !grepl('beta', allruns.df$SampleId, ignore.case = TRUE) & !grepl('gamma', allruns.df$SampleId, ignore.case = TRUE))
-    } else {
-      temp <- allruns.df
-    }
+    temp <- allruns.df
     
+    if(!is.null(input$excludeabg2)){
+      if('Alpha' %in% input$excludeabg2) {
+        temp <- temp[!grepl('alpha', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Beta' %in% input$excludeabg2) {
+        temp <- temp[!grepl('beta', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Gamma' %in% input$excludeabg2) {
+        temp <- temp[!grepl('gamma', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Omega' %in% input$excludeabg2) {
+        temp <- temp[!grepl('omega', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+    }
+
     if(!is.null(input$panel2)) {
       temp <- subset(temp, Panel %in% input$panel2)
     }
@@ -152,9 +197,13 @@ shinyServer(function(input, output, session) {
       ggplot(anomaly.rate, aes(x=as.numeric(as.factor(DateGroup)), y=Rate, fill=Key.x)) + geom_area(stat='identity', position = 'stack') + scale_fill_manual(name='', values = c('#7a0000','#cc0000','#ff8585')) + scale_x_continuous(breaks=dateBreaks, labels=dateLabels) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.title = element_text(size=16), axis.text=element_text(size=16, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='QC Anomaly Rate', subtitle = panelsFiltered, y='Anomaly per QC Runs', x='Date\n(Year-Month)')
     }
   })
+  
+  generateChart1 <- eventReactive(input$goButton1, {
+    makeQCAnomRate()
+  })
 
   output$qcanomratechart <- renderPlot({
-    makeQCAnomRate()
+    generateChart1()
   })
 
   # Run Observation Rates--------------------------------------------------------------------------------------------------
@@ -167,23 +216,50 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  output$panVassay <- renderUI({
-    if(is.null(input$panVassayBut))
-      return()
-    
-    if(input$panVassayBut == 'Panel') {
-      selectizeInput('panel3', 'Panel:', choices = c('All', 'BCID', 'GI', 'ME', 'RP'), selected = 'All', multiple = TRUE)
+  createAssayList <- reactive({
+    if(is.null(input$panel3) | 'All' %in% input$panel3) {
+      temp <- subset(allruns.df, !is.na(RunObservation), select = c('Panel', 'Control_Failures', 'False_Negatives', 'False_Positives'))
+      cf <- unique(as.character(temp$Control_Failures)[!is.na(temp$Control_Failures)])
+      fn <- unique(as.character(temp$False_Negatives)[!is.na(temp$False_Negatives)])
+      fp <- unique(as.character(temp$False_Positives)[!is.na(temp$False_Positives)])
+      assays <- str_trim(unlist(strsplit(paste(fn, fp, cf, sep=','),',')), side = 'both')
+      c('All', sort(unique(assays)))
     } else {
-      selectizeInput('assay', 'Assay:', choices = c('All', sort(unique(c(unique(str_trim(unlist(strsplit(as.character(unique(allruns.df$Control_Failures)), ',')))), unique(str_trim(unlist(strsplit(as.character(unique(allruns.df$False_Positives)), ',')))), unique(str_trim(unlist(strsplit(as.character(unique(allruns.df$False_Negatives)), ',')))))))), selected = 'All', multiple = TRUE)
+      temp <- subset(allruns.df, !is.na(RunObservation), select = c('Panel', 'Control_Failures', 'False_Negatives', 'False_Positives'))
+      temp <- subset(temp, Panel %in% input$panel3)
+      cf <- unique(as.character(temp$Control_Failures)[!is.na(temp$Control_Failures)])
+      fn <- unique(as.character(temp$False_Negatives)[!is.na(temp$False_Negatives)])
+      fp <- unique(as.character(temp$False_Positives)[!is.na(temp$False_Positives)])
+      assays <- str_trim(unlist(strsplit(paste(fn, fp, cf, sep=','),',')), side = 'both')
+      c('All', sort(unique(assays)))
     }
   })
   
+  output$assayList <- renderUI({
+    selectizeInput('assay', 'Assay:', choices = createAssayList(), selected = 'All', multiple = TRUE)
+  })
+  
   makeRealFPPanel <- reactive({
-    if(is.null(input$includeabg3) | input$includeabg3 == FALSE) {
-      temp <- subset(allruns.df, !grepl('alpha', allruns.df$SampleId, ignore.case = TRUE) & !grepl('beta', allruns.df$SampleId, ignore.case = TRUE) & !grepl('gamma', allruns.df$SampleId, ignore.case = TRUE))
-    } else {
-      temp <- allruns.df
+    temp <- allruns.df
+    
+    if(!is.null(input$excludeabg4)){
+      if('Alpha' %in% input$excludeabg4) {
+        temp <- temp[!grepl('alpha', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Beta' %in% input$excludeabg4) {
+        temp <- temp[!grepl('beta', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Gamma' %in% input$excludeabg4) {
+        temp <- temp[!grepl('gamma', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Omega' %in% input$excludeabg4) {
+        temp <- temp[!grepl('omega', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
     }
+    
     #date input
     if(is.null(input$dateBut)) {
       return()
@@ -230,59 +306,184 @@ shinyServer(function(input, output, session) {
       runObSelected <- 'All Run Observations'
     }
     #Panel or Assay
-    if(is.null(input$panVassayBut) | input$panVassayBut == 'Panel') {
-      if(!is.null(input$panel3) & !('All' %in% input$panel3)) {
-        temp <- subset(temp, Panel %in% input$panel3)  
+    if(!is.null(input$panel3) & !('All' %in% input$panel3)) {
+      temp <- subset(temp, Panel %in% input$panel3)  
+    }
+    pouchAssays <- subset(temp, select = c('PouchSerialNumber', 'Control_Failures', 'False_Negatives', 'False_Positives'))  
+    serials <- as.character(unique(pouchAssays$PouchSerialNumber))
+    assaySerials <- c()
+    for(i in 1:length(serials)) {
+      fn <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Negatives'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Negatives']))]
+      fp <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Positives'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Positives']))]
+      cf <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'Control_Failures'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'Control_Failures']))]
+      assays <- str_trim(unlist(strsplit(paste(fn, fp, cf, sep=','),',')), side = 'both')
+      temp1 <- c()
+      if(length(assays) > 0) {
+        for(j in 1:length(assays)){
+          temp1 <- rbind(temp1, data.frame(PouchSerialNumber = serials[i], Assay = assays[j]))
+          temp1 <- subset(temp1, Assay != '')
+        }
+        if(nrow(temp1) > 0){
+          assaySerials <- rbind(assaySerials, temp1)
+        }
       }
-      temp[,'RunObservation'] <- gsub(', ','-',as.character(temp[,'RunObservation']))
+    }
+    if(!is.null(input$assay) & !('All' %in% input$assay)) {
+      temp <- merge(subset(assaySerials, Assay %in% input$assay), temp)  
+    } else {
+      temp <- merge(assaySerials, temp)
+    }
+    temp[,'RunObservation'] <- gsub(', ','-',as.character(temp[,'RunObservation']))
+    overallRate <- sum(temp$Record)/sum(allqcruns.denom$Record)
+    if(is.null(input$panVassayBut) | input$panVassayBut == 'Panel') {
       anomaly <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, c('Panel','RunObservation'), startD, 'Record', 'sum', 0)
       anomaly.rate <- mergeCalSparseFrames(anomaly, allqcruns.denom, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 0)
       anomaly.rate$RunObservation <- factor(anomaly.rate$RunObservation, levels = as.character(with(anomaly.rate, aggregate(Rate~RunObservation, FUN=sum))[with(with(anomaly.rate, aggregate(Rate~RunObservation, FUN=sum)), order(Rate)), 'RunObservation']))
-      ggplot(anomaly.rate, aes(x=DateGroup, y=Rate, fill=Panel, alpha=RunObservation)) + geom_bar(stat='identity', position='stack') + scale_fill_manual(name='', values = createPaletteOfVariableLength(anomaly.rate, 'Panel')) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Anomalies By Panel', subtitle = runObSelected, y='Anomaly Rate', x='Date\n(Year-Month)') + scale_alpha_discrete(name='Run Observation', range = c(0.3,1))
+      ggplot(anomaly.rate, aes(x=DateGroup, y=Rate, fill=Panel, alpha=RunObservation)) + geom_bar(stat='identity', position='stack') + scale_fill_manual(name='', values = createPaletteOfVariableLength(anomaly.rate, 'Panel')) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), plot.caption = element_text(size = 13)) + labs(title='Anomalies By Panel', subtitle = paste0(runObSelected, ';   Overall Rate: ', format(overallRate, digits = 3)), y='Anomaly Rate', x='Date\n(Year-Month)', caption = paste0('Panel(s): ', paste0(input$panel3, collapse=', '), '     Assay(s): ', paste0(input$assay, collapse = ', '))) + scale_alpha_discrete(name='Run Observation', range = c(0.3,1))
     } else {
-      pouchAssays <- subset(temp, select = c('PouchSerialNumber', 'Control_Failures', 'False_Negatives', 'False_Positives'))  
-      serials <- as.character(unique(pouchAssays$PouchSerialNumber))
-      assaySerials <- c()
-      for(i in 1:length(serials)) {
-        fn <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Negatives'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Negatives']))]
-        fp <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Positives'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Positives']))]
-        cf <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'Control_Failures'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'Control_Failures']))]
-        assays <- str_trim(unlist(strsplit(paste(fn, fp, cf, sep=','),',')), side = 'both')
-        temp1 <- c()
-        if(length(assays) > 0) {
-          for(j in 1:length(assays)){
-            temp1 <- rbind(temp1, data.frame(PouchSerialNumber = serials[i], Assay = assays[j]))
-            temp1 <- subset(temp1, Assay != '')
-          }
-          if(nrow(temp1) > 0){
-            assaySerials <- rbind(assaySerials, temp1)
-          }
-        }
-      }
-      if(!is.null(input$assay) & !('All' %in% input$assay)) {
-        temp <- merge(subset(assaySerials, Assay %in% input$assay), temp)  
-      } else {
-        temp <- merge(assaySerials, temp)
-      }
-      temp[,'RunObservation'] <- gsub(', ','-',as.character(temp[,'RunObservation']))
       anomaly <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, c('Assay','RunObservation'), startD, 'Record', 'sum', 0)
       anomaly.rate <- mergeCalSparseFrames(anomaly, allqcruns.denom, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 0)
       anomaly.rate$RunObservation <- factor(anomaly.rate$RunObservation, levels = as.character(with(anomaly.rate, aggregate(Rate~RunObservation, FUN=sum))[with(with(anomaly.rate, aggregate(Rate~RunObservation, FUN=sum)), order(Rate)), 'RunObservation']))
-      ggplot(anomaly.rate, aes(x=DateGroup, y=Rate, fill=Assay, alpha=RunObservation)) + geom_bar(stat='identity', position='stack') + scale_fill_manual(name='', values = colVector[1:length(unique(anomaly.rate$Assay))]) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5)) + labs(title='Anomalies By Assay', subtitle = runObSelected, y='Anomaly Rate', x='Date\n(Year-Month)') + scale_alpha_discrete(name='Run Observation', range = c(0.3,1))
+      ggplot(anomaly.rate, aes(x=DateGroup, y=Rate, fill=Assay, alpha=RunObservation)) + geom_bar(stat='identity', position='stack') + scale_fill_manual(name='', values = colVector[1:length(unique(anomaly.rate$Assay))]) + scale_y_continuous(labels = percent)+ theme(text=element_text(size=20, face='bold'), axis.text=element_text(size=20, face='bold', color='black'), axis.text.x=element_text(size = 15, angle=90, vjust=0.5), plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5), plot.caption = element_text(size = 13)) + labs(title='Anomalies By Assay', subtitle = paste0(runObSelected, ';   Overall Rate: ', format(overallRate, digits = 3)), y='Anomaly Rate', x='Date\n(Year-Month)', caption = paste0('Panel(s): ', paste0(input$panel3, collapse=', '), '     Assay(s): ', paste0(input$assay, collapse = ', '))) + scale_alpha_discrete(name='Run Observation', range = c(0.3,1))
     }
   })
-
-  output$fppanelchart <- renderPlot({
+  
+  generateRunObRateOnly <- reactive({
+    temp <- allruns.df
+    
+    if(!is.null(input$excludeabg4)){
+      if('Alpha' %in% input$excludeabg4) {
+        temp <- temp[!grepl('alpha', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Beta' %in% input$excludeabg4) {
+        temp <- temp[!grepl('beta', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Gamma' %in% input$excludeabg4) {
+        temp <- temp[!grepl('gamma', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Omega' %in% input$excludeabg4) {
+        temp <- temp[!grepl('omega', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+    }
+    
+    #date input
+    if(is.null(input$dateBut)) {
+      return()
+    } else if (input$dateBut == '1 Year') {
+      temp <- subset(temp, StartTime >= Sys.Date() - 365)
+      startD <- substr(as.character(Sys.Date()-365), 1, 7)
+    } else if (input$dateBut == 'Historic') {
+      startD <- substr(as.character(min(temp$StartTime)), 1, 7)
+    } else {
+      if(!is.null(input$dateRange2)) {
+        temp <- subset(temp, StartTime >= input$dateRange2[1] & StartTime <= as.Date(input$dateRange2[2])+1)
+        startD <- substr(input$dateRange2[1], 1, 7)
+      } else {
+        startD <- '2015-01'
+      }
+    }
+    #Version
+    if(!is.null(input$instVer))
+      temp <- subset(temp, Version %in% input$instVer)
+    #Pouch exclude
+    if(nrow(expouchserials) > 0) {
+      exserials <- as.character(expouchserials[,'PouchSerialNumber'])
+      if(!is.null(input$pouchserial5)) {
+        exserials <- c(exserials, str_trim(unlist(strsplit(input$pouchserial5,',')), side = 'both'))
+      }
+    } else if (!is.null(input$pouchserial5)) {
+      exserials <- str_trim(unlist(strsplit(input$pouchserial5,',')), side = 'both')
+    } else {
+      exserials <- c()
+    }
+    if(length(exserials > 0)) {
+      for(i in 1:length(exserials)) {
+        temp <- subset(temp, !grepl(exserials[i], temp$PouchSerialNumber))
+      }    
+    }
+    #denominator
+    allqcruns.denom <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', temp, 'Key', startD, 'Record', 'sum', 1)
+    #run ob input
+    if(!is.null(input$runOb2) & !('All' %in% input$runOb2)) {
+      temp <- subset(temp, RunObservation %in% input$runOb2)
+      runObSelected <- paste(input$runOb2, sep='', collapse = ', ')
+    } else {
+      temp <- subset(temp, !is.na(RunObservation))
+      runObSelected <- 'All Run Observations'
+    }
+    #Panel or Assay
+    if(!is.null(input$panel3) & !('All' %in% input$panel3)) {
+      temp <- subset(temp, Panel %in% input$panel3)  
+    }
+    pouchAssays <- subset(temp, select = c('PouchSerialNumber', 'Control_Failures', 'False_Negatives', 'False_Positives'))  
+    serials <- as.character(unique(pouchAssays$PouchSerialNumber))
+    assaySerials <- c()
+    for(i in 1:length(serials)) {
+      fn <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Negatives'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Negatives']))]
+      fp <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Positives'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'False_Positives']))]
+      cf <- as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'Control_Failures'])[!is.na(as.character(pouchAssays[pouchAssays$PouchSerialNumber == serials[i], 'Control_Failures']))]
+      assays <- str_trim(unlist(strsplit(paste(fn, fp, cf, sep=','),',')), side = 'both')
+      temp1 <- c()
+      if(length(assays) > 0) {
+        for(j in 1:length(assays)){
+          temp1 <- rbind(temp1, data.frame(PouchSerialNumber = serials[i], Assay = assays[j]))
+          temp1 <- subset(temp1, Assay != '')
+        }
+        if(nrow(temp1) > 0){
+          assaySerials <- rbind(assaySerials, temp1)
+        }
+      }
+    }
+    if(!is.null(input$assay) & !('All' %in% input$assay)) {
+      temp <- merge(subset(assaySerials, Assay %in% input$assay), temp)  
+    } else {
+      temp <- merge(assaySerials, temp)
+    }
+    temp[,'RunObservation'] <- gsub(', ','-',as.character(temp[,'RunObservation']))
+    format(sum(temp$Record)/sum(allqcruns.denom$Record), digits = 3)   
+  })
+  
+  generateRateOnly <- eventReactive(input$rateButton, {
+    generateRunObRateOnly()  
+  })
+  
+  output$rateOnlyOut <- renderUI({
+    paste0('Overall Rate: ', generateRateOnly())
+  })
+  
+  generateChart2 <- eventReactive(input$goButton2, {
     makeRealFPPanel()
+  })
+  
+  output$fppanelchart <- renderPlot({
+    generateChart2()
   })
 
   #Control Failure Pattern-----------------------------------------------------------------------------------------------------------------------
   makeControlFailurePattern <- reactive({
-    if(is.null(input$includeabg5) | input$includeabg5 == FALSE) {
-      temp <- subset(allruns.df, !grepl('alpha', allruns.df$SampleId, ignore.case = TRUE) & !grepl('beta', allruns.df$SampleId, ignore.case = TRUE) & !grepl('gamma', allruns.df$SampleId, ignore.case = TRUE))
-    } else {
-      temp <- allruns.df
+    temp <- allruns.df
+    
+    if(!is.null(input$excludeabg5)){
+      if('Alpha' %in% input$excludeabg5) {
+        temp <- temp[!grepl('alpha', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Beta' %in% input$excludeabg5) {
+        temp <- temp[!grepl('beta', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Gamma' %in% input$excludeabg5) {
+        temp <- temp[!grepl('gamma', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
+      
+      if('Omega' %in% input$excludeabg5) {
+        temp <- temp[!grepl('omega', temp[,'SampleId'], ignore.case=TRUE), ]
+      }
     }
+
     #date input
     if(!is.null(input$dateRange1)) {
       temp <- subset(allruns.df, StartTime >= input$dateRange1[1] & StartTime <= as.Date(input$dateRange1[2])+1)
@@ -338,8 +539,12 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  output$cfpatternchart <- renderPlot({
+  generateChart3 <- eventReactive(input$goButton3, {
     makeControlFailurePattern()
+  })
+  
+  output$cfpatternchart <- renderPlot({
+    generateChart3()
   })
   
   # Permanently Exclude Pouch Serials ---------------------------------------------------------------------------------------------

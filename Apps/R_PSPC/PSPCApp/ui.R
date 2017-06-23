@@ -46,7 +46,7 @@ dashboardPage(
                   tags$div(class='multicol', checkboxGroupInput('columnsVisible','Columns to Show', choices = colnames(summary.df), selected = colnames(summary.df), inline=FALSE)),
                   actionLink('selectAll', label = 'Select All/Deselect All'),
                   br(),
-                  checkboxInput('includeabg', 'Include alpha, beta, and gamma runs', value = FALSE),
+                  checkboxGroupInput('excludeabg', 'Exclude Mix:', choices = c('Alpha', 'Beta', 'Gamma', 'Omega'), selected = NA, inline = TRUE), 
                   br(),
                   downloadButton('downloaddt', 'Download Data Table')
                 )
@@ -87,9 +87,12 @@ dashboardPage(
                   br(),
                   textInput('pouchserial2', 'Temporarily Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
                   br(),
-                  checkboxInput('includeabg2', 'Include alpha, beta, and gamma runs', value = FALSE),
+                  checkboxGroupInput('excludeabg2', 'Exclude Mix:', choices = c('Alpha', 'Beta', 'Gamma', 'Omega'), selected = c('Alpha', 'Beta', 'Gamma'), inline = FALSE), 
                   br(),
                   br(),
+                  actionButton('goButton1', 'Generate Chart'), 
+                  br(), 
+                  br(), 
                   downloadButton('downloadqcanomrate', 'Download Chart')
                 ),
                 box(
@@ -104,7 +107,7 @@ dashboardPage(
                 box(
                   title = 'Filters',
                   width = 2,
-                  checkboxInput('includeabg4', 'Include alpha, beta, and gamma runs', value = FALSE),
+                  checkboxGroupInput('excludeabg3', 'Exclude Mix:', choices = c('Alpha', 'Beta', 'Gamma', 'Omega'), selected = NA, inline = FALSE), 
                   br(),
                   br(),
                   downloadButton('downloadqcpouches', 'Download Chart')
@@ -128,19 +131,29 @@ dashboardPage(
                   br(),
                   checkboxGroupInput('instVer', 'Instrument Version:', choices = c('FA 1.5', 'FA 2.0', 'Torch'), selected = c('FA 1.5', 'FA 2.0', 'Torch')), 
                   br(),
-                  radioButtons('panVassayBut', label=NULL, choices = c('Panel', 'Assay'), selected = 'Panel', inline = TRUE),
-                  uiOutput('panVassay'),
+                  radioButtons('panVassayBut', label='Color by:', choices = c('Panel', 'Assay'), selected = 'Panel', inline = TRUE),
+                  br(), 
+                  selectizeInput('panel3', 'Panel:', choices = c('All', 'BCID', 'GI', 'ME', 'RP', 'RP2', 'RP2plus'), selected = 'All', multiple = TRUE),
+                  br(), 
+                  uiOutput('assayList'),
                   br(),
                   textInput('pouchserial5', 'Temporarily Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
                   br(),
-                  checkboxInput('includeabg3', 'Include alpha, beta, and gamma runs', value = FALSE),
+                  checkboxGroupInput('excludeabg4', 'Exclude Mix:', choices = c('Alpha', 'Beta', 'Gamma', 'Omega'), selected = c('Alpha', 'Beta', 'Gamma'), inline = FALSE), 
                   br(),
                   br(),
+                  actionButton('goButton2', 'Generate Chart'), 
+                  br(), 
+                  br(), 
+                  actionButton('rateButton', 'Generate Rate Only'), 
+                  br(), 
+                  br(), 
                   downloadButton('downloadfppanel', 'Download Chart')
                 ),
                 box(
                   width = 10,
-                  busyIndicator(text = 'Making chart...', wait=0),
+                  busyIndicator(text = 'Processing data...', wait=0),
+                  uiOutput('rateOnlyOut'), 
                   plotOutput('fppanelchart', height = '700px')
                 )
               )#end fluidrow
@@ -160,9 +173,12 @@ dashboardPage(
                   br(), 
                   textInput('pouchserial4', 'Temporarily Exclude Pouch Serial Number(s):', value ='', placeholder = 'Separate with a comma'),
                   br(),
-                  checkboxInput('includeabg5', 'Include alpha, beta, and gamma runs', value = FALSE),
+                  checkboxGroupInput('excludeabg5', 'Exclude Mix:', choices = c('Alpha', 'Beta', 'Gamma', 'Omega'), selected = c('Alpha', 'Beta', 'Gamma'), inline = FALSE), 
                   br(),
                   br(),
+                  actionButton('goButton3', 'Generate Chart'), 
+                  br(), 
+                  br(), 
                   downloadButton('downloadcfpattern', 'Download Chart')
                 ),
                 box(
