@@ -221,15 +221,25 @@ p.TorchModHours100.long <- fail.hours %>%
 
 makeProblemAreaChart = function(version, versionName, plotName){
   # Problem Areas at <100 hours run
-  startDateGroup = (tibble(Date = today()-months(6)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
-  plot6 <- fail.hours %>% 
-    filter(Version == version, DateGroup >= startDateGroup) %>%
-    group_by(ProblemArea) %>% summarize(Count = sum(Failure)) %>%
+  startDateGroup6 = (tibble(Date = today()-months(5)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
+  startDateGroup12 = (tibble(Date = today()-months(11)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
+  endDateGroup12 = (tibble(Date = today()-months(6)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
+  
+  df = fail.hours %>% 
+    mutate(DatePeriod = ifelse(DateGroup >= startDateGroup6, 
+                               paste0(startDateGroup6, ' to Present'),
+                               ifelse(DateGroup >= startDateGroup12,
+                                      paste0(startDateGroup12, ' to ', endDateGroup12),
+                                                    NA))) %>%
+    filter(Version == version, DateGroup >= startDateGroup12) %>%
+    group_by(ProblemArea, DatePeriod) %>% summarize(Count = sum(Failure)) %>% ungroup() %>%
     filter(Count > 0) %>%
-    mutate(ProblemArea = fct_reorder(ProblemArea, -Count)) %>%
+    mutate(ProblemArea = fct_reorder(ProblemArea, -Count, fun = sum))
+  
+  plot <- df %>% 
     ggplot(aes(x=ProblemArea, y=Count)) + 
-    geom_bar(stat='identity') + 
-    scale_fill_manual(values=createPaletteOfVariableLength(modes2.0.agg, 'Fail'), name='') + 
+    geom_bar(aes(fill = DatePeriod), stat='identity') + 
+    scale_fill_manual(values=createPaletteOfVariableLength(as.data.frame(df), 'DatePeriod'), name='') + 
     scale_y_continuous(breaks = pretty_breaks()) +
     theme(axis.text.x=element_text(angle=45, hjust=1)) + 
     labs(title=paste0(versionName, ' Problem Areas at <100 Hours Run'), 
@@ -237,23 +247,7 @@ makeProblemAreaChart = function(version, versionName, plotName){
          y='Count', 
          x=element_blank())
   
-  startDateGroup = (tibble(Date = today()-months(12)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
-  plot12 <- fail.hours %>% 
-    filter(Version == version, DateGroup >= startDateGroup) %>%
-    group_by(ProblemArea) %>% summarize(Count = sum(Failure)) %>%
-    filter(Count > 0) %>%
-    mutate(ProblemArea = fct_reorder(ProblemArea, -Count)) %>%
-    ggplot(aes(x=ProblemArea, y=Count)) + 
-    geom_bar(stat='identity') + 
-    scale_fill_manual(values=createPaletteOfVariableLength(modes2.0.agg, 'Fail'), name='') + 
-    scale_y_continuous(breaks = pretty_breaks()) +
-    theme(axis.text.x=element_text(angle=45, hjust=1)) + 
-    labs(title='', 
-         subtitle='Last 12 Months', 
-         y='Count', 
-         x='Problem Area')
-  
-  assign(plotName, grid.arrange(plot6, plot12, ncol = 1), envir = globalenv())
+  assign(plotName, plot, envir = globalenv())
 }
 
 makeProblemAreaChart('FA2.0', 'FA 2.0', 'p.FA20FailureModes100')
