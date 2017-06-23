@@ -11,8 +11,8 @@ copyPath.gd <- '\\\\Filer01/Data/Departments/PostMarket/~Dashboards/WebHub/image
 copyPath.it <- '\\\\biofirestation/WebHub/WebHub/images/'
 
 # remove the images from the PouchManufacturingQuality folders on biofirestation and the prod server
-file.remove(paste('\\\\biofirestation/WebHub/WebHub/images//Dashboard_PouchManufacturingQuality/', list.files('\\\\biofirestation/WebHub/WebHub/images//Dashboard_PouchManufacturingQuality'), sep=''))
-file.remove(paste('~/WebHub/images/Dashboard_PouchManufacturingQuality/', list.files('~/WebHub/images/Dashboard_PouchManufacturingQuality'), sep=''))
+#file.remove(paste('\\\\biofirestation/WebHub/WebHub/images//Dashboard_PouchManufacturingQuality/', list.files('\\\\biofirestation/WebHub/WebHub/images//Dashboard_PouchManufacturingQuality'), sep=''))
+#file.remove(paste('~/WebHub/images/Dashboard_PouchManufacturingQuality/', list.files('~/WebHub/images/Dashboard_PouchManufacturingQuality'), sep=''))
 
 # copy all the images that are generated on the PROD server
 for (i in 1:length(dashboards)) {
