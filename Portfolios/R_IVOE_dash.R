@@ -5,17 +5,16 @@ pdfDir <- '../pdfs/'
 setwd(workDir)
 
 # Load needed libraries
-library(dplyr)
 library(lubridate)
-library(tidyr)
+library(tidyverse)
 library(forcats)
-library(ggplot2)
 library(zoo)
 library(scales)
 library(devtools)
 library(colorspace)
 #install_github('BioAimie/dateManip')
 library(dateManip)
+library(ggrepel)
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 source('Rfunctions/loadSQL.R')
@@ -435,13 +434,16 @@ wireharnessRMA.total = wireharnessRMA.df %>%
 wireharnessNCR.total = wireharnessNCR.df %>%
   inner_join(calendar.df, by = 'Date') %>%
   rename(PartNumber = PartAffected) %>%
-  group_by(DateGroup, PartNumber) %>% summarize(Num = sum(QuantityAffected), Denom = sum(DesiredLotSize)) %>%
-  ungroup() %>% complete(DateGroup = calendar.df$DateGroup, PartNumber, fill = list(Num = 0, Denom = 0)) %>%
+  group_by(DateGroup, PartNumber) %>% summarize(Num = sum(QuantityAffected), 
+                                                Denom = sum(DesiredLotSize),
+                                                Count = n()) %>%
+  ungroup() %>% complete(DateGroup = calendar.df$DateGroup, PartNumber, 
+                         fill = list(Num = 0, Denom = 0, Count = 0)) %>%
   filter(DateGroup >= '2015-01') %>%
   mutate(Rate = Num / Denom)
 
 wireharness.total = rbind(
-    wireharnessRMA.total %>% mutate(Key = 'RMA'),
+    wireharnessRMA.total %>% mutate(Count = Num, Key = 'RMA'),
     wireharnessNCR.total %>% mutate(Key = 'NCR')
   ) %>%
   mutate(PartNumber = fct_lump(fct_reorder(PartNumber, 
@@ -483,6 +485,34 @@ p.wireharness.total = wireharness.total %>%
   labs(x = 'Wire Harness Receipt Date (Year-Week)',
        y = '',
        title = 'Wire Harness Failure RMAs and NCRs')
+
+wireharness.agg = 
+  wireharnessRMA.total %>% group_by(PartNumber) %>% summarize(RMACount = sum(Num)) %>%
+  inner_join(wireharnessNCR.total %>% group_by(PartNumber) %>% summarize(NCRCount = sum(Count)), 
+              by = 'PartNumber') %>%
+  mutate(PartNumber = fct_relevel(fct_other(PartNumber, head(names(wireharness.total.pal), -1)), 
+                                  names(wireharness.total.pal)),
+         x = RMACount + runif(length(RMACount), -.5, .5),
+         y = NCRCount + runif(length(RMACount), -.5, .5)) # Manual jitter works better with ggrepel
+pal = makePalette(wireharness.agg$PartNumber)
+
+
+p.wireharness.scatter = 
+  wireharness.agg %>%
+  ggplot(aes(x, y)) +
+  geom_point(aes(color = PartNumber), size = 5) +
+  geom_text_repel(aes(label = PartNumber), 
+                  data = wireharness.agg %>% filter(PartNumber != 'Other'),
+                  box.padding = unit(0.3, "lines"),
+                  point.padding = unit(0.3, "lines")) +
+  scale_color_manual(values = wireharness.total.pal) +
+  guides(color = guide_legend(nrow = 4, title = '')) +
+  theme(legend.position = 'bottom',
+        legend.margin = margin(b = .7, unit = 'cm')) +
+  labs(x = 'RMA Count',
+       y = 'NCR Count',
+       title = 'Total Wire Harness Failure RMAs and NCRs')
+
 
 # Wire harness NCR count
 wireharnessNCR.fill <- aggregateAndFillDateGroupGaps(wireharness.calendar.df, 'Month', wireharnessNCR.df, c('PartAffected'), startDate, 'Record', 'sum', 0)
