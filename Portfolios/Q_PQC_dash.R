@@ -1,4 +1,3 @@
-
 workDir <- '~/WebHub/AnalyticsWebHub/'
 imgDir <- '~/WebHub/images/Dashboard_PouchQC/'
 pdfDir <- '~/WebHub/pdfs/'
@@ -17,8 +16,15 @@ library(grid)
 library(png)
 library(lubridate)
 library(devtools)
-install_github('BioAimie/dateManip')
-library(dateManip)
+#install_github('BioAimie/dateManip')
+#library(dateManip)
+source('~/WebHub/dateManipV1/addStatsToSparseHandledData.R')
+source('~/WebHub/dateManipV1/aggregateAndFillDateGroupGaps.R')
+source('~/WebHub/dateManipV1/createCalendarLikeMicrosoft.R')
+source('~/WebHub/dateManipV1/createEvenWeeks.R')
+source('~/WebHub/dateManipV1/findStartDate.R')
+source('~/WebHub/dateManipV1/mergeCalSparseFrames.R')
+source('~/WebHub/dateManipV1/transformToEpiWeeks.R')
 
 # Load data
 source('Portfolios/Q_PQC_load.R')
@@ -32,13 +38,12 @@ lagPeriods <- 4
 validateDate <- '2015-40'
 
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
-startYear <- year(Sys.Date()) - 3
+startYear <- year(Sys.Date()) - 2
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
-startDate <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=53)
-plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=0)
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
-dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup']))), seqBreak)]
+dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]
 fontSize <- 20
 fontFace <- 'bold'
 theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
@@ -50,11 +55,11 @@ runs.all <- data.frame(Year = rehydration.df[,'Year'], Week = rehydration.df[,'W
 runs.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', runs.all, c('Key'), startDate, 'Record', 'sum', NA)
 hydra.fail <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pqcRuns.df, c('Key'), startDate, 'Record', 'sum', 0)
 hydra.rate <- mergeCalSparseFrames(hydra.fail, runs.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-hydra.lims <- addStatsToSparseHandledData(hydra.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
-# x_positions <- c('2016-18', '2016-24')
-# annotations <- c('NCR-18150,\nNCR-18165', 'CAPA-13276')
-# y_positions <- hydra.lims[(hydra.lims[,'DateGroup']) %in% c('2016-21','2016-24'), 'Rate'] + 0.001
-p.hydra.fail <- ggplot(hydra.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_line(aes(y=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Hydration Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') #+ annotate("text", x=x_positions, y=y_positions, label=annotations, size=4)
+hydra.lims <- addStatsToSparseHandledData(hydra.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0)
+x_positions <- c('2016-18', '2016-24')
+annotations <- c('NCR-18150,\nNCR-18165', 'CAPA-13276')
+y_positions <- hydra.lims[(hydra.lims[,'DateGroup']) %in% c('2016-21','2016-24'), 'Rate'] + 0.001
+p.hydra.fail <- ggplot(hydra.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_hline(aes(yintercept=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Hydration Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') #+ annotate("text", x=x_positions, y=y_positions, label=annotations, size=4)
 
 # Leak Failures in Pouch QC per all pouches run in pouch final QC
 pqcRuns.df[,'SerialNumber'] <- paste(0, pqcRuns.df[,'SerialNumber'],sep='')
@@ -62,30 +67,30 @@ ptRuns.df[,'SerialNumber'] <- as.character(ptRuns.df[,'SerialNumber'])
 leak.fail <- merge(pqcRuns.df[,c('SerialNumber','Year','Week')], ptRuns.df, by='SerialNumber')[,c('Year','Week','Key','Record')]
 leak.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', leak.fail, c('Key'), startDate, 'Record', 'sum', 0)
 leak.rate <- mergeCalSparseFrames(leak.fill, runs.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-leak.lims <- addStatsToSparseHandledData(leak.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
+leak.lims <- addStatsToSparseHandledData(leak.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0)
 x_pos.leak <- c('2016-32', '2017-02')
 annot.leak <- c('DX-DCT-031999', 'CAPA 13316')
 y_pos.leak <- leak.lims[(leak.lims[,'DateGroup']) %in% x_pos.leak, 'Rate'] + 0.0001
-p.leak.fail <- ggplot(leak.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + geom_line(aes(y=UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Leak Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + annotate("text", x=x_pos.leak, y=y_pos.leak, label=annot.leak, size=4)
+p.leak.fail <- ggplot(leak.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + geom_hline(aes(yintercept=UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Leak Failures per Pouch Run in Final QC', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + annotate("text", x=x_pos.leak, y=y_pos.leak, label=annot.leak, size=4)
 
 # Rehydration trends
 rehydration.df <- rehydration.df[rehydration.df[,'Record'] >= 0 & rehydration.df[,'Record'] <= 1.6, ]
 rehydration.box <- rehydration.df
 rehydration.box[,'DateGroup'] <- with(rehydration.box, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))
-p.rehydration.box <- ggplot(rehydration.box[rehydration.box[,'DateGroup'] >= plot.startDate.week, ], aes(x=DateGroup, y=Record)) + geom_boxplot(outlier.colour = 'orange', fill='dodgerblue') + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(size=fontSize, color='black',face=fontFace)) + labs(x='Date\n(Year-Week)', y='Rehydration Weight', title='Rehydration Weight Distributions by Week')
+p.rehydration.box <- ggplot(rehydration.box[rehydration.box[,'DateGroup'] >= startDate, ], aes(x=DateGroup, y=Record)) + geom_boxplot(outlier.colour = 'orange', fill='dodgerblue') + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(size=fontSize, color='black',face=fontFace)) + labs(x='Date\n(Year-Week)', y='Rehydration Weight', title='Rehydration Weight Distributions by Week')
 rehydration.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', rehydration.df, c('Key'), startDate, 'Record', 'sum', 0)
 rehydration.avg <- mergeCalSparseFrames(rehydration.fill, runs.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-rehydration.lims <- addStatsToSparseHandledData(rehydration.avg, c('Key'), lagPeriods, TRUE, 3, 'two.sided', 0, 100, keepPeriods=53)
-p.rehydration.trend <- ggplot(rehydration.box[rehydration.box[,'DateGroup'] >= plot.startDate.week, ], aes(x=DateGroup, y=Record)) + geom_point(color='lightskyblue') + geom_line(aes(x=DateGroup, y=Rate, group=Key), data=rehydration.lims, color='black') + geom_point(aes(x=DateGroup, y=Rate, color=Color), data=rehydration.lims) + scale_color_manual(values=c('blue','orange'), guide=FALSE) + geom_line(aes(y=UL), data=rehydration.lims, color='black', lty=2, group=1) + geom_line(aes(y=LL), data=rehydration.lims, color='black', lty=2, group=1) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(size=fontSize, color='black',face=fontFace)) + labs(x='Date\n(Year-Week)', y='Rehydration Weight, 4-week Rolling Average', title='Rehydration Weight Trends')
-p.rehydration.trend.hist <- ggplot(rehydration.box[rehydration.box[,'DateGroup'] >= plot.startDate.week, ], aes(x=Record)) + geom_histogram() + coord_flip() + theme(text=element_text(size=fontSize, face=fontFace), axis.text.y=element_blank(), axis.text.x=element_text(size=fontSize, color='black', angle=90, face=fontFace), axis.ticks.y=element_blank()) + labs(x='',y='',title='Weight\nDistribution')
+rehydration.lims <- addStatsToSparseHandledData(rehydration.avg, c('Key'), lagPeriods, TRUE, 3, 'two.sided', 0, 100)
+p.rehydration.trend <- ggplot(rehydration.box[rehydration.box[,'DateGroup'] >= startDate, ], aes(x=DateGroup, y=Record)) + geom_point(color='lightskyblue') + geom_line(aes(x=DateGroup, y=Rate, group=Key), data=rehydration.lims, color='black') + geom_point(aes(x=DateGroup, y=Rate, color=Color), data=rehydration.lims) + scale_color_manual(values=c('blue','orange'), guide=FALSE) + geom_hline(aes(yintercept=UL), data=rehydration.lims, color='black', lty=2) + geom_hline(aes(yintercept=LL), data=rehydration.lims, color='black', lty=2) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(size=fontSize, color='black',face=fontFace)) + labs(x='Date\n(Year-Week)', y='Rehydration Weight, 4-week Rolling Average', title='Rehydration Weight Trends')
+p.rehydration.trend.hist <- ggplot(rehydration.box[rehydration.box[,'DateGroup'] >= startDate, ], aes(x=Record)) + geom_histogram() + coord_flip() + theme(text=element_text(size=fontSize, face=fontFace), axis.text.y=element_blank(), axis.text.x=element_text(size=fontSize, color='black', angle=90, face=fontFace), axis.ticks.y=element_blank()) + labs(x='',y='',title='Weight\nDistribution')
 
 # Compare the rate of control failures in the field to those in Pouch QC
-  # # first, check to see if the failure rate per pouches shipped matches BioMath's... it doesn't, why???
-  # cf.df <- rbind(fa2.cf.df, fa1.cf.df[!(fa1.cf.df$SerialNo %in% fa2.cf.df$SerialNo), ])
-  # cf.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(cf.df, Key=='ControlFailure'), c('Key'), startDate, 'Record', 'sum', 0)
-  # pouches.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c('Key'), startDate, 'Record','sum', 0)
-  # cf.rate <- mergeCalSparseFrames(cf.fill, pouches.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
-  # ggplot(cf.rate, aes(x=DateGroup, y=Rate, group=Key)) + geom_line() + geom_point() + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels = percent)
+# # first, check to see if the failure rate per pouches shipped matches BioMath's... it doesn't, why???
+# cf.df <- rbind(fa2.cf.df, fa1.cf.df[!(fa1.cf.df$SerialNo %in% fa2.cf.df$SerialNo), ])
+# cf.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(cf.df, Key=='ControlFailure'), c('Key'), startDate, 'Record', 'sum', 0)
+# pouches.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c('Key'), startDate, 'Record','sum', 0)
+# cf.rate <- mergeCalSparseFrames(cf.fill, pouches.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
+# ggplot(cf.rate, aes(x=DateGroup, y=Rate, group=Key)) + geom_line() + geom_point() + scale_x_discrete(breaks=dateBreaks) + scale_y_continuous(labels = percent)
 #   # -------------------------------------------
 # once the data match, this part will find the control failure rate by lot in Pouch QC and in the Field
 control.fail.qc.df <- rbind(fa2.cf.df[,c('SerialNo','LotNo','Key','Record')] , fa1.cf.df[!(fa1.cf.df[,'SerialNo'] %in% fa2.cf.df[,'SerialNo']), c('SerialNo','LotNo','Key','Record')])
