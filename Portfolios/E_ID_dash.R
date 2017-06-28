@@ -30,6 +30,7 @@ loadSQL(PMScxn, 'SQL/R_INCR_InstrumentsProduced_denom.sql', 'instBuilt.df')
 loadSQL(PMScxn, 'SQL/R_INCR_InstrumentNCRs.sql', 'instNCRs.df')
 loadSQL(PMScxn, 'SQL/R_INCR_InstrumentNCRs_WPFS.sql', 'wpfsNCR.df')
 loadSQL(PMScxn, 'SQL/E_ID_EarlyFailureHours.sql', 'fail.hours.df')
+loadSQL(PMScxn, 'SQL/E_ID_TorchBaseFailures.sql', 'torchBase.fail.df')
 odbcClose(PMScxn)
 
 # Environmental variables
@@ -169,7 +170,7 @@ makePalette = function(f){
 fail.hours.pal = makePalette(fail.hours$ProblemArea)
 fail.hours.lineColor = '#404040';
 
-# Long-term FA 2.0 Rate of Field Failures at <100 Hours Run
+# FA 2.0 Rate of Field Failures at <100 Hours Run
 summ = fail.hours.summary %>% 
   filter(DateGroup >= '2015-05', Version == 'FA2.0') %>%
   mutate(CumulativeRate = cumsum(Failure) / cumsum(Shipped))
@@ -194,7 +195,7 @@ p.FA2.0Hours100.long <- fail.hours %>%
        y='Rate of Failure RMAs at <100 Hours Run',
        fill = '')
 
-# Long-term Torch Module Rate of Field Failures at <100 Hours Run
+# Torch Module Rate of Field Failures at <100 Hours Run
 summ = fail.hours.summary %>% 
   filter(DateGroup >= '2016-08', Version == 'Torch') %>%
   mutate(CumulativeRate = cumsum(Failure) / cumsum(Shipped))
@@ -218,6 +219,52 @@ p.TorchModHours100.long <- fail.hours %>%
        x='RMA Created Date\n(Year-Month)',
        y='Rate of Failure RMAs at <100 Hours Run',
        fill = '')
+
+# Torch Base Field Failures
+torchBase.fail <- torchBase.fail.df %>%
+  mutate(ProblemArea = ifelse(is.na(ProblemArea), 'Unknown', ProblemArea)) %>%
+  inner_join(calendar.month, by = c(CreatedDate = 'Date')) %>%
+  group_by(TicketId) %>% mutate(Weight = 1/n()) %>% ungroup() %>%
+  group_by(DateGroup, ProblemArea, EarlyFailureType) %>% summarize(Failure = sum(Weight)) %>% ungroup() %>%
+  complete(DateGroup = calendar.month$DateGroup, ProblemArea, EarlyFailureType, fill = list(Failure = 0)) %>%
+  filter(DateGroup >= '2016-08') %>%
+  mutate(ProblemArea = fct_relevel(fct_infreq(ProblemArea), 
+                                   'No failure complaint', after = Inf),
+         EarlyFailureType = factor(EarlyFailureType)) %>%
+  inner_join(newShipments.cust %>% filter(Product == 'Torch Base'), by=c('DateGroup')) %>%
+  mutate(Rate = Failure/RollingAvg)
+torchBase.summary <- torchBase.fail %>%
+  group_by(DateGroup, RollingAvg, Shipped) %>% summarize(Failure = sum(Failure)) %>% do({
+    CI = poisson.test(round(.$Failure));
+    mutate(as_tibble(.), FailureLower = CI$conf.int[1], FailureUpper = CI$conf.int[2])
+  }) %>% ungroup() %>% 
+  mutate(RateLower = FailureLower / RollingAvg,
+         Rate = Failure / RollingAvg,
+         RateUpper = FailureUpper / RollingAvg)
+summ = torchBase.summary %>% 
+  mutate(CumulativeRate = cumsum(Failure) / cumsum(Shipped))
+torchBase.pal = makePalette(torchBase.fail$ProblemArea)
+torchBase.colorPal = createPaletteOfVariableLength(as.data.frame(torchBase.fail), 'EarlyFailureType')
+torchBase.colorPal['N/A'] = '#808080'
+p.TorchBase.fail <- torchBase.fail %>%
+  filter(Rate > 0) %>%
+  ggplot(aes(x = DateGroup, y = Rate)) + 
+  geom_col(aes(fill = ProblemArea, color = EarlyFailureType), 
+           position = position_stack(reverse = TRUE), size = 2) + 
+  geom_text(data = summ, aes(y = Rate, label = Failure), vjust = -.5, size = 6) +
+  geom_text(data = summ, aes(y = 0, label = RollingAvg), vjust = 1.3, size = 6) +
+  scale_fill_manual(values = rev(torchBase.pal)) +
+  scale_color_manual(values = torchBase.colorPal) +
+  scale_y_continuous(labels = scales::percent) +
+  #guides(fill = guide_legend(nrow = 4)) +
+  #theme(legend.position = 'bottom') +
+  labs(title = 'Torch Base Rate of Field Failures', 
+       subtitle = 'Per 4-Month Moving Average of Torch Bases Shipped to Customers',
+       x='RMA Created Date\n(Year-Month)',
+       y='Rate of Failure RMAs',
+       fill = 'Problem Area',
+       color = 'Early Failure Type')
+
 
 makeProblemAreaChart = function(version, versionName, plotName){
   # Problem Areas at <100 hours run
@@ -243,7 +290,7 @@ makeProblemAreaChart = function(version, versionName, plotName){
     scale_y_continuous(breaks = pretty_breaks()) +
     theme(axis.text.x=element_text(angle=45, hjust=1)) + 
     labs(title=paste0(versionName, ' Problem Areas at <100 Hours Run'), 
-         subtitle='Last 6 Months', 
+         subtitle='Past 12 Months', 
          y='Count', 
          x=element_blank())
   
@@ -252,6 +299,33 @@ makeProblemAreaChart = function(version, versionName, plotName){
 
 makeProblemAreaChart('FA2.0', 'FA 2.0', 'p.FA20FailureModes100')
 makeProblemAreaChart('Torch', 'Torch Module', 'p.TorchModFailureModes100')
+
+# Torch Base Problem Areas
+startDateGroup6 = (tibble(Date = today()-months(5)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
+startDateGroup12 = (tibble(Date = today()-months(11)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
+endDateGroup12 = (tibble(Date = today()-months(6)) %>% inner_join(calendar.month, by = 'Date'))$DateGroup
+
+df = torchBase.fail %>% 
+  mutate(DatePeriod = ifelse(DateGroup >= startDateGroup6, 
+                             paste0(startDateGroup6, ' to Present'),
+                             ifelse(DateGroup >= startDateGroup12,
+                                    paste0(startDateGroup12, ' to ', endDateGroup12),
+                                    NA))) %>%
+  filter(DateGroup >= startDateGroup12) %>%
+  group_by(ProblemArea, DatePeriod) %>% summarize(Count = sum(Failure)) %>% ungroup() %>%
+  filter(Count > 0) %>%
+  mutate(ProblemArea = fct_reorder(ProblemArea, -Count, fun = sum))
+
+p.TorchBaseProblemAreas <- df %>% 
+  ggplot(aes(x=ProblemArea, y=Count)) + 
+  geom_bar(aes(fill = DatePeriod), stat='identity') + 
+  scale_fill_manual(values = createPaletteOfVariableLength(as.data.frame(df), 'DatePeriod'), name='') + 
+  scale_y_continuous(breaks = pretty_breaks()) +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) + 
+  labs(title=paste0('Torch Base Problem Areas'), 
+       subtitle='Past 12 Months', 
+       y='Count', 
+       x=element_blank())
 
 # Instrument NCR Problem Area per Instruments Built (NCR chart)
 wpfs.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', wpfsNCR.df, c('RecordedValue'), start.weekRoll, 'Record', 'sum', 0)

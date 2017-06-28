@@ -316,8 +316,24 @@ faivLineWater.ltd.agg$LineType <- rep('Auto', nrow(faivLineWater.ltd.agg))
 faivLineWater.ltd.agg$LineType[which(!grepl('Auto', faivLineWater.ltd.agg$Equipment))] <- 'Manual'
 p.hydra.wsw.fail.ltd <- ggplot(hydra.wsw.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.wsw.ltd[,'Date'])[order(unique(hydra.wsw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Water Side Weight < 0.8g)', x='Date', y='Count of Failed Tests')
 p.hydra.ssw.fail.ltd <- ggplot(hydra.ssw.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.ssw.ltd[,'Date'])[order(unique(hydra.ssw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Sample Side Weight < 0.2g)', x='Date', y='Count of Failed Tests')
-p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
-p.faivLineWater.fail.ltd <- ggplot(faivLineWater.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + facet_wrap(~LineType) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(faivLineWater.ltd[,'Date'])[order(unique(faivLineWater.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing FAIV Water Weight Tests in Last 30 Days\n(Result < 1.4)', x='Date', y='Count of Failed Tests') + ylim(c(0, ifelse(max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
+
+annotate.text <- grobTree(textGrob('NCR-21878', x=0.25,  y=0.90,gp=gpar(col='black', fontsize=13, fontface='bold')))
+
+p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
+  geom_bar(stat='identity') + 
+  scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + 
+  annotation_custom(annotate.text) +
+  theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+  labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + 
+  ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
+
+p.faivLineWater.fail.ltd <- ggplot(faivLineWater.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
+  facet_wrap(~LineType) + 
+  geom_bar(stat='identity') + 
+  scale_x_discrete(breaks = as.factor(unique(faivLineWater.ltd[,'Date'])[order(unique(faivLineWater.ltd[,'Date']))])) + 
+  theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+  labs(title='Failing FAIV Water Weight Tests in Last 30 Days\n(Result < 1.4)', x='Date', y='Count of Failed Tests') + 
+  ylim(c(0, ifelse(max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
 
 # TREND CHARTS -- not a moving average... the team perfers a box and whisker plot by week ---------------------------------------------------------------------------
 burst.df[,'DateGroup'] <- with(burst.df, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))
