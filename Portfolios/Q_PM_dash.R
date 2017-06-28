@@ -145,6 +145,10 @@ for(line.name in burst.lines$Line) {
   plot.data <- subset(burst.imr.lsd, Equipment == line.name)
   # make the lables 
   increment.value <- floor((nrow(plot.data)/2)/5)
+  if(increment.value < 1){
+    increment.value <- 1
+  }
+  
   # labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
   breaks <- seq(1, nrow(plot.data)/2, increment.value)
   labels <- plot.data[plot.data$Key=='Individual Value', 'DateOpened'][order(plot.data[plot.data$Key=='Individual Value', 'DateOpened'])][breaks]
@@ -177,6 +181,9 @@ for( line.name in wsw.lines$Line) {
   plot.names <- c(plot.names, plot.name)
   # make the lables 
   increment.value <- floor((nrow(plot.data)/2)/5)
+  if(increment.value < 1){
+    increment.value <- 1
+  }
   # labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
   breaks <- seq(1, nrow(plot.data)/2, increment.value)
   labels <- plot.data[plot.data$Key=='Individual Value', 'DateOpened'][order(plot.data[plot.data$Key=='Individual Value', 'DateOpened'])][breaks]
@@ -209,6 +216,10 @@ for(line.name in ssw.lines$Line) {
   plot.names <- c(plot.names, plot.name)
    # make the lables 
   increment.value <- floor((nrow(plot.data)/2)/5)
+  if(increment.value < 1){
+    increment.value <- 1
+  }
+  
   # labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
   breaks <- seq(1, nrow(plot.data)/2, increment.value)
   labels <- plot.data[plot.data$Key=='Individual Value', 'DateOpened'][order(plot.data[plot.data$Key=='Individual Value', 'DateOpened'])][breaks]
@@ -234,7 +245,11 @@ for(line.name in ssw.lines$Line) {
 ## split up the graphs by pouch line 
 for( pouchLine in unique(faivLine.imr.lsd$Equipment)){
 	pouchline.subset <- subset(faivLine.imr.lsd, Equipment == pouchLine)
-	increment.value <- floor((nrow(pouchline.subset)/2)/5) 
+	increment.value <- floor((nrow(pouchline.subset)/2)/5)
+	if(increment.value < 1){
+	  increment.value <- 1
+	}
+	
 	# print(seq(1, length(pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'])))
 	# labels <-  pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'][seq(1, nrow(pouchline.subset)/2, increment.value)]
 	breaks <- seq(1, nrow(pouchline.subset)/2, increment.value)
@@ -256,6 +271,9 @@ for( pouchLine in unique(faivLine.imr.lsd$Equipment)){
 for( pouchLine in unique(faivLineWater.imr.lsd$Equipment)){
 	pouchline.subset <- subset(faivLineWater.imr.lsd, Equipment == pouchLine)
 	increment.value <- floor((nrow(pouchline.subset)/2)/5) 
+	if(increment.value < 1){
+	  increment.value <- 1
+	}
 	labels <-  pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'][seq(1, nrow(pouchline.subset)/2, increment.value)]
 	#breaks <- pouchline.subset[pouchline.subset$Key=='Individual Value', 'Observation'][seq(1, length(pouchline.subset[pouchline.subset$Key=='Individual Value', 'Observation']), increment.value)]
 	breaks <- seq(1, nrow(pouchline.subset)/2, increment.value)
