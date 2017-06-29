@@ -335,16 +335,27 @@ faivLineWater.ltd.agg$LineType[which(!grepl('Auto', faivLineWater.ltd.agg$Equipm
 p.hydra.wsw.fail.ltd <- ggplot(hydra.wsw.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.wsw.ltd[,'Date'])[order(unique(hydra.wsw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Water Side Weight < 0.8g)', x='Date', y='Count of Failed Tests')
 p.hydra.ssw.fail.ltd <- ggplot(hydra.ssw.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.ssw.ltd[,'Date'])[order(unique(hydra.ssw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Sample Side Weight < 0.2g)', x='Date', y='Count of Failed Tests')
 
-annotate.text <- grobTree(textGrob('NCR-21878', x=0.25,  y=0.90,gp=gpar(col='black', fontsize=13, fontface='bold')))
+annotation.x.value <-  .2 - (36- as.numeric(difftime(Sys.Date(), as.Date('2017-05-23'), units=c('days')), units='days'))*.05
+if(annotation.x.value < 0){
+  p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
+    geom_bar(stat='identity') + 
+    scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + 
+    theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+    labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + 
+    ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) +1, 5+1)))
+  
+  
+}else{
+  annotate.text <- grobTree(textGrob('NCR-21878', x=annotation.x.value,  y=0.90,gp=gpar(col='black', fontsize=13, fontface='bold')))
 
-p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
-  geom_bar(stat='identity') + 
-  scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + 
-  annotation_custom(annotate.text) +
-  theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
-  labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + 
-  ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
-
+  p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
+    geom_bar(stat='identity') + 
+    scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + 
+    annotation_custom(annotate.text) +
+    theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+    labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + 
+    ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) +1, 5+1)))
+}
 p.faivLineWater.fail.ltd <- ggplot(faivLineWater.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
   facet_wrap(~LineType) + 
   geom_bar(stat='identity') + 
