@@ -63,10 +63,9 @@ FROM #awareDate D INNER JOIN
 		ON F.[TicketId] = C.[TicketId]
 --WHERE ISNUMERIC([Record]) = 1
 
-SELECT
+SELECT DISTINCT
 	[CustID],
-	IIF(LEFT([CustID],2)='99', 'Demo', 
-		IIF([SalesTerritoryID] IS NULL, 'Other', [SalesTerritoryID])) AS [CustType]
+	IIF([SalesTerritoryID] LIKE 'International', 'International', 'Domestic') AS [CustType]
 INTO #custType
 FROM [PMS1].[dbo].[vPouchShipmentsWithAnnotations_IOID] WITH(NOLOCK)
 WHERE [CustID] IS NOT NULL
@@ -93,11 +92,11 @@ FROM #cat C LEFT JOIN #custType T
 SELECT
 	[Year],
 	[Week],
-	IIF([CustType] LIKE 'International','International','Domestic') AS [Version],
+	[CustType] AS [Version],
 	[KeyByString] AS [Key],
 	IIF(ISNUMERIC(RIGHT([RecordedValue],1))=1, SUBSTRING([RecordedValue],1,LEN([RecordedValue])-4), [RecordedValue]) AS [RecordedValue],
 	IIF([KeyByString]='Instrument',1,[Record]) AS [Record]
 FROM #agg
-ORDER BY [TicketString]
+ORDER BY [Year], [Week]
 
 DROP TABLE #awareDate, #fail, #cat, #cust, #custType, #agg
