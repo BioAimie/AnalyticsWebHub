@@ -12,7 +12,15 @@ library(devtools)
 library(tidyverse)
 library(forcats)
 library(lubridate)
-library(dateManip)
+#library(dateManip)
+source('~/WebHub/dateManipV1/addStatsToSparseHandledData.R')
+source('~/WebHub/dateManipV1/aggregateAndFillDateGroupGaps.R')
+source('~/WebHub/dateManipV1/createCalendarLikeMicrosoft.R')
+source('~/WebHub/dateManipV1/createEvenWeeks.R')
+source('~/WebHub/dateManipV1/findStartDate.R')
+source('~/WebHub/dateManipV1/mergeCalSparseFrames.R')
+source('~/WebHub/dateManipV1/transformToEpiWeeks.R')
+
 
 # load dashboard data
 source('Portfolios/R_INCR_load.R')
@@ -32,10 +40,10 @@ calendar.week.trunc <- createCalendarLikeMicrosoft(year(Sys.Date())-2, 'Week')
 calendar.df.month <- createCalendarLikeMicrosoft(startYear, 'Month')
 calendar.df.quarter <- createCalendarLikeMicrosoft(startYear, 'Quarter')
 calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
-startDate <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=53)
-plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=0)
-plot.startDate.month <- findStartDate(calendar.df.month, 'Month', 12, periods, keepPeriods=0)
-plot.startDate.quarter <- findStartDate(calendar.df.quarter, 'Quarter', 4, periods, keepPeriods=0)
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods)
+plot.startDate.month <- findStartDate(calendar.df.month, 'Month', 12, periods)
+plot.startDate.quarter <- findStartDate(calendar.df.quarter, 'Quarter', 4, periods)
 
 
 seqBreak <- 12
@@ -56,7 +64,7 @@ instNCRs.ver$VersionGroup[as.character(instNCRs.ver$Version) == 'Torch Module' |
 instNCRs.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instNCRs.df, c('Key'), startDate, 'Record', 'sum', 0)
 ncr.rate.all <- mergeCalSparseFrames(instNCRs.all, instBuilt.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 ncr.rate.ver <- mergeCalSparseFrames(instNCRs.ver, instBuilt.ver, c('DateGroup','VersionGroup'), c('DateGroup','Version'), 'Record', 'Record', NA, periods)
-ncr.lims.all <- addStatsToSparseHandledData(ncr.rate.all, c('Key'), lagPeriods, TRUE, 2, 'upper', keepPeriods=53)
+ncr.lims.all <- addStatsToSparseHandledData(ncr.rate.all, c('Key'), lagPeriods, TRUE, 2, 'upper')
 x_positions <- c('2016-23','2016-51')
 rate.all.annotations <- c('Bead Beater Rework-CAPA 13262,\nTorch Build Ramp', 'Manifold-DX-DCN-33636,DX-CO-35011\nPCB-CAPA 13210')
 y_positions <- ncr.lims.all[(ncr.lims.all[,'DateGroup']) %in% x_positions, 'Rate'] + 0.4
@@ -141,8 +149,8 @@ wpfs.ver <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', wpfsNCR.df, c('Ve
 wpfs.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', wpfsNCR.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
 wpfs.rate.all <- mergeCalSparseFrames(subset(wpfs.all, RecordedValue %in% pareto[,'RecordedValue']), instBuilt.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 wpfs.rate.ver <- mergeCalSparseFrames(subset(wpfs.ver, RecordedValue %in% pareto[,'RecordedValue']), instBuilt.ver, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', NA, periods)
-wpfs.lims.all.blue <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.04, keepPeriods=53)
-wpfs.lims.all.red <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 4, 'upper', 0.05, keepPeriods=53)
+wpfs.lims.all.blue <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.04)
+wpfs.lims.all.red <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 4, 'upper', 0.05)
 x_pos.wpfs <- c('2016-49', '2017-02')
 problemArea.annot <- c('Board', 'Wire Harness')
 y_pos.wpfs <- c(0.35, 0.22)
@@ -168,7 +176,7 @@ if(max(which(pareto[with(pareto, order(CumPercent)), 'CumPercent'] > 0.8)) <= 10
 }
 incoming.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', incoming.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
 incoming.rate <- mergeCalSparseFrames(incoming.all, instNCRs.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-incoming.lims.all <- addStatsToSparseHandledData(incoming.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', keepPeriods=53)
+incoming.lims.all <- addStatsToSparseHandledData(incoming.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper')
 p.incoming <- ggplot(subset(incoming.lims.all,RecordedValue %in% pareto[,'RecordedValue']), aes(x=DateGroup, y=Rate, group=RecordedValue)) + geom_line() + geom_point() + facet_wrap(~RecordedValue, scale='free_y') + scale_y_continuous(labels = percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Incoming Inspection Problem Area per Instrument NCRs', x='Date\n(Year-Week)', y='4-week Rolling Average') + geom_line(aes(y=UL), color='blue', lty=2)
 
 min.year <- min(earlyfailures.df[,'Year'])
@@ -178,7 +186,7 @@ dateBreaks.alt <- as.character(unique(calendar.week.trunc[calendar.week.trunc[,'
 earlyfailures.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(earlyfailures.df,Key=='InternallyFlaggedFailure'), c('Key'), startDate.alt, 'Record', 'sum', 0)
 instBuilt.all.alt <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', instBuilt.df, c('Key'), startDate.alt, 'Record', 'sum', 1)
 earlyfailures.rate <- mergeCalSparseFrames(earlyfailures.all, instBuilt.all.alt, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-earlyfailures.lims <- addStatsToSparseHandledData(earlyfailures.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', keepPeriods=53)
+earlyfailures.lims <- addStatsToSparseHandledData(earlyfailures.rate, c('Key'), lagPeriods, TRUE, 3, 'upper')
 x_pos_labels <- c('2015-30','2015-40','2016-08', '2016-28', '2016-43')
 x_pos <- c('2015-30','2015-41','2016-11','2016-22','2016-42')
 # y_pos <- earlyfailures.lims[earlyfailures.lims$DateGroup %in% x_pos, 'Rate'] - .01 
@@ -214,7 +222,7 @@ p.denom.instsbuilt <- ggplot(instBuilt.ver.trunc, aes(x=DateGroup, y=Record, fil
 
 earlyfailures.cust <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(earlyfailures.df,Key!='InternallyFlaggedFailure'), c('Key'), startDate.alt, 'Record', 'sum', 0)
 earlyfailures.cust.rate <- mergeCalSparseFrames(earlyfailures.cust, instBuilt.all.alt, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-earlyfailures.cust.lims <- addStatsToSparseHandledData(earlyfailures.cust.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', keepPeriods=53)
+earlyfailures.cust.lims <- addStatsToSparseHandledData(earlyfailures.cust.rate, c('Key'), lagPeriods, TRUE, 3, 'upper')
 x_pos_cust_labels <- c('2015-13','2015-32','2015-45','2016-12','2016-27','2016-50')
 x_pos_cust <- c('2015-11','2015-32','2015-43','2016-10','2016-22','2016-51')
 y_pos_cust <- c(0.045, 0.085, 0.16, 0.135, 0.05, 0.015)
@@ -225,7 +233,7 @@ p.earlyfailures.cust <- ggplot(earlyfailures.cust.lims) + geom_rect(aes(xmin=x1,
 instshipments.df$Key <- 'Instrument Shipments'
 inst.ship <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(instshipments.df, CustID != 'IDATEC'), c('Key'), startDate.alt, 'Record', 'sum', 1)
 earlyfailures.instship.rate <- mergeCalSparseFrames(earlyfailures.cust, inst.ship, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-earlyfailures.instship.lims <- addStatsToSparseHandledData(earlyfailures.instship.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', keepPeriods=53)
+earlyfailures.instship.lims <- addStatsToSparseHandledData(earlyfailures.instship.rate, c('Key'), lagPeriods, TRUE, 3, 'upper')
 p.earlyfailures.custship <- ggplot(earlyfailures.instship.lims) + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2_cust), color='cyan', fill='white', alpha=0.2) + geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + geom_point(aes(x=DateGroup, y=Rate)) + geom_line(aes(x=DateGroup, y=UL, group=1), color='blue', lty='dashed') + labs(title='Customer Reported DOA/ELF per Customer Instruments Shipped:\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + scale_y_continuous(label=percent) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + scale_x_discrete(breaks=dateBreaks.alt) + annotate("text",x=x_pos_cust_labels,y=y_pos_cust,label=fail.annotations.cust, size=5.25) + expand_limits(y=0.2)
 inst.ship.trunc <- aggregateAndFillDateGroupGaps(calendar.week.trunc, 'Week', subset(instshipments.df, CustID != 'IDATEC'), c('Key'), startDate.alt, 'Record', 'sum', 1)
 p.customershipments.denom <- ggplot(inst.ship.trunc, aes(x=DateGroup, y=Record)) + geom_bar(stat='identity', fill='cornflowerblue') + labs(title='Customer Instrument Shipments', x='Date\n(Year-Week)', y='Instruments') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, vjust=0.5)) + scale_x_discrete(breaks=dateBreaks.alt)
