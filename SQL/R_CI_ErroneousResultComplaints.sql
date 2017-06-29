@@ -12,7 +12,7 @@ FROM
 		[PropertyName],
 		[RecordedValue]
 	FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-	WHERE [PropertyName] IN ('Issue CI','Justification for Complaint Escalation') AND [CreatedDate] > GETDATE() - 400
+	WHERE [PropertyName] IN ('Issue CI','Justification for Complaint Escalation') AND [CreatedDate] > GETDATE() - 800 AND [Tracker] LIKE 'COMPLAINT'
 ) P
 PIVOT
 (
@@ -30,19 +30,19 @@ SELECT
 	[RecordedValue] AS [preCriteria]
 INTO #pre
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'PRE' AND [CreatedDate] > GETDATE() - 400
+WHERE [ObjectName] LIKE 'PRE' AND [CreatedDate] > GETDATE() - 800 AND [Tracker] LIKE 'COMPLAINT'
 
 SELECT *
 INTO #bfdxPartNo
 FROM [PMS1].[dbo].[vTrackers_AllObjectPropertiesByStatus] WITH(NOLOCK)
-WHERE [ObjectName] LIKE 'BFDX Part Number' AND [CreatedDate] > GETDATE() - 400
+WHERE [ObjectName] LIKE 'BFDX Part Number' AND [CreatedDate] > GETDATE() - 800 AND [Tracker] LIKE 'COMPLAINT'
 
 SELECT 
 	[TicketId],
 	[RecordedValue] AS [RelatedCI]
 INTO #ciLink
 FROM [PMS1].[dbo].[vTrackers_AllPropertiesByStatus] WITH(NOLOCK)
-WHERE [PropertyName] LIKE 'Related CI' AND [RecordedValue] IS NOT NULL AND [RecordedValue] NOT IN ('','N/A') AND [CreatedDate] > GETDATE() - 400
+WHERE [PropertyName] LIKE 'Related CI' AND [RecordedValue] IS NOT NULL AND [RecordedValue] NOT IN ('','N/A') AND [CreatedDate] > GETDATE() - 800 AND [Tracker] LIKE 'COMPLAINT'
 
 SELECT
 	[CreatedDate], 
@@ -111,7 +111,7 @@ SELECT
 INTO #final
 FROM #master M LEFT JOIN #panels P
 	ON M.[Version] = P.[ItemID]
-WHERE ISNUMERIC([Record]) = 1 AND M.[CreatedDate] > GETDATE() - 400
+WHERE ISNUMERIC([Record]) = 1 AND M.[CreatedDate] > GETDATE() - 800
 
 SELECT 
 	F.[Year],
