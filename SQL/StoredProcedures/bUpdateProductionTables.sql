@@ -118,8 +118,6 @@ FROM [ProductionWeb].[dbo].[Lots] L
 INNER JOIN [ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
 INNER JOIN [PMS1].[dbo].[bInstrumentVersion] V ON V.[PartNumber] = P.[PartNumber]
 
-DROP TABLE [dbo].[bInstrumentProduced_TEMP]
-
 CREATE INDEX [idx_NormalSerial] ON [dbo].[bInstrumentProduced_TEMP]([NormalSerial])
 CREATE INDEX [idx_SerialNo] ON [dbo].[bInstrumentProduced_TEMP]([SerialNo])
 
