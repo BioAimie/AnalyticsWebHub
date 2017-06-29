@@ -141,9 +141,10 @@ fail.hours <- fail.hours.df %>%
   filter(CustomerId != 'IDATEC', Version %in% c('FA2.0', 'Torch')) %>%
   inner_join(calendar.month, by = c(CreatedDate = 'Date')) %>%
   group_by(TicketId) %>% mutate(Weight = 1/n()) %>%
-  ungroup() %>% mutate(ProblemArea = fct_relevel(
-    fct_relevel(fct_infreq(ProblemArea), 'Cannot verify', after = Inf), 
-    'No failure complaint', after = Inf)) %>%
+  ungroup() %>% mutate(ProblemArea = fct_infreq(ProblemArea) %>% 
+                         fct_relevel('Cannot verify', after = Inf) %>%
+                         fct_relevel('No failure complaint', after = Inf) %>%
+                         fct_relevel('Unknown', after = Inf)) %>%
   group_by(DateGroup, Version, ProblemArea) %>% summarize(Failure = sum(Weight)) %>% ungroup() %>%
   complete(DateGroup = calendar.month$DateGroup, Version, ProblemArea, fill = list(Failure = 0)) %>%
   inner_join(newShipments.cust, by=c('DateGroup', Version='Product')) %>%
