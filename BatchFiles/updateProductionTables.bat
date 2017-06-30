@@ -1,4 +1,1 @@
-REM start cmd.exe /k
-
-cd C:\Users\pms_user\Documents\WebHub\AnalyticsWebHub\Rfunctions\
-Rscript.exe updateProductionTables.R
+sqlcmd -S PMS1.PRODSQL.BIOFIREDX.NET -Q "EXEC PMS1.dbo.bUpdateProductionTables"
