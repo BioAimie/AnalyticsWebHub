@@ -11,8 +11,15 @@ library(scales)
 library(zoo)
 library(lubridate)
 library(devtools)
-install_github('BioAimie/dateManip')
-library(dateManip)
+#install_github('BioAimie/dateManip')
+#library(dateManip)
+source('~/WebHub/dateManipV1/addStatsToSparseHandledData.R')
+source('~/WebHub/dateManipV1/aggregateAndFillDateGroupGaps.R')
+source('~/WebHub/dateManipV1/createCalendarLikeMicrosoft.R')
+source('~/WebHub/dateManipV1/createEvenWeeks.R')
+source('~/WebHub/dateManipV1/findStartDate.R')
+source('~/WebHub/dateManipV1/mergeCalSparseFrames.R')
+source('~/WebHub/dateManipV1/transformToEpiWeeks.R')
 
 # get the data needed
 source('Portfolios/R_IQC_load.R')
@@ -34,8 +41,8 @@ lagPeriods <- 4
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
 startYear <- year(Sys.Date()) - 2
 calendar.df <- createCalendarLikeMicrosoft(startYear, smallGroup)
-startDate <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=53)
-plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=0)
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup']))), seqBreak)]
@@ -50,12 +57,12 @@ runs.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', runs.all, c('Key
 
 run.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', subset(IQC.df, PouchResult %in% c('Review','Fail')), c('Key','Version'), startDate, 'Record', 'sum', 0)
 run.review.rate <- mergeCalSparseFrames(run.review.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
-run.review.lims <- addStatsToSparseHandledData(run.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper', keepPeriods=53)
+run.review.lims <- addStatsToSparseHandledData(run.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper')
 p.run.review <- ggplot(subset(run.review.lims,Key != 'PouchQC'), aes(x=DateGroup, y=Rate, color=Color, group=1)) + geom_line(color='black') + geom_point() + facet_grid(Key~Version, scale='free_y') + scale_color_manual(values=c('blue','red'), guide=FALSE) + scale_y_continuous(labels=percent, limits=c(0,1)) + scale_x_discrete(breaks=dateBreaks) + geom_line(aes(y=UL), color='red', lty=2) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date', y='4 Week Rolling Average', title='Pouch Review Rates:\nLimit = mean + 3sdev   (Torch limits not actionable)')
 
 rna.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', subset(IQC.df, RNA %in% c('Review','Fail')), c('Key','Version'), startDate, 'Record', 'sum', 0)
 rna.review.rate <- mergeCalSparseFrames(rna.review.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
-rna.review.lims <- addStatsToSparseHandledData(rna.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper', keepPeriods=53)
+rna.review.lims <- addStatsToSparseHandledData(rna.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper')
 rna.review.lims <- rna.review.lims[!(rna.review.lims$Version=='FA1.5' & rna.review.lims$Key=='Production'), ]
 # x_positions <- c('2016-17')
 # annotations <- c('Evaluated for\nCAPA 13259')
@@ -64,11 +71,11 @@ p.rna.review <- ggplot(subset(rna.review.lims,Key != 'PouchQC'), aes(x=DateGroup
 
 mp.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', IQC.df[IQC.df[,'60TmRange'] %in% c('Review','Fail'),], c('Key','Version'), startDate, 'Record', 'sum', 0)
 mp.review.rate <- mergeCalSparseFrames(mp.review.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
-mp.review.lims <- addStatsToSparseHandledData(mp.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper', keepPeriods=53)
+mp.review.lims <- addStatsToSparseHandledData(mp.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper')
 p.mp.tm.review <- ggplot(subset(mp.review.lims,Key != 'PouchQC'), aes(x=DateGroup, y=Rate, color=Color, group=1)) + geom_line(color='black') + geom_point() + facet_grid(Key~Version, scale='free_y') + scale_color_manual(values=c('blue','red'), guide=FALSE) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + geom_line(aes(y=UL), color='red', lty=2, group=1) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date', y='4 Week Rolling Average', title='60D Melt Probe Tm Range Review Rates:\nLimit = mean + 3sdev   (Torch limits not actionable)')
 mp.review.fill <- aggregateAndFillDateGroupGaps(calendar.df,'Week', IQC.df[IQC.df[,'60DFMed'] %in% c('Review','Fail'),], c('Key','Version'), startDate, 'Record', 'sum', 0)
 mp.review.rate <- mergeCalSparseFrames(mp.review.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
-mp.review.lims <- addStatsToSparseHandledData(mp.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper', keepPeriods=53)
+mp.review.lims <- addStatsToSparseHandledData(mp.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper')
 mp.review.lims <- mp.review.lims[!(mp.review.lims$Version=='FA1.5' & mp.review.lims$Key=='Production'), ]
 y_positions <- 0.12
 p.mp.df.review <- ggplot(subset(mp.review.lims,Key != 'PouchQC'), aes(x=DateGroup, y=Rate, color=Color, group=1)) + geom_line(color='black') + geom_point() + facet_grid(Key~Version, scales="free_y") + scale_color_manual(values=c('blue','red'), guide=FALSE) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + geom_line(aes(y=UL), color='red', lty=2, group=1) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date', y='4 Week Rolling Average', title='60D Melt Probe Median dF Review Rates:\nLimit = mean + 3sdev   (Torch limits not actionable)')
@@ -80,18 +87,18 @@ if(nrow(IQC.df[IQC.df[,'Noise'] %in% c('Review','Fail') & IQC.df$DateGroup >= st
   noise.review.fill$Record <- 0
 }
 noise.review.rate <- mergeCalSparseFrames(noise.review.fill, runs.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
-noise.review.lims <- addStatsToSparseHandledData(noise.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper', keepPeriods=53)
+noise.review.lims <- addStatsToSparseHandledData(noise.review.rate, c('Version','Key'), periods, TRUE, 3, 'upper')
 p.noise.review <- ggplot(subset(noise.review.lims,Key != 'PouchQC'), aes(x=DateGroup, y=Rate, color=Color, group=1)) + geom_line(color='black') + geom_point() + facet_grid(Key~Version, scale='free_y') + scale_color_manual(values=c('blue','red'), guide=FALSE) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + geom_line(aes(y=UL), color='red', lty=2, group=1) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date', y='4 Week Rolling Average', title='Noise Review Rates:\nLimit = mean + 3sdev')
 
 # ------------------------------------------------ Make 4-Week Rolling Average Charts - Moving Average --------------------------------------------------
 rna.Cp.denom <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df[!(is.na(IQC.df[,'Cp_RNA'])), ], c('Key','Version'), startDate, 'Record', 'sum', NA)
 rna.Cp <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df, c('Key','Version'), startDate, 'Cp_RNA', 'sum', NA)
 rna.Cp.rate <- mergeCalSparseFrames(rna.Cp, rna.Cp.denom, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Cp_RNA', 'Record', NA, periods)
-rna.Cp.lims <- addStatsToSparseHandledData(rna.Cp.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 1, 100, keepPeriods=53)
+rna.Cp.lims <- addStatsToSparseHandledData(rna.Cp.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 1, 100)
 rna.Tm.denom <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df[!(is.na(IQC.df[,'Tm_RNA'])), ], c('Key','Version'), startDate, 'Record', 'sum', NA)
 rna.Tm <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df, c('Key','Version'), startDate, 'Tm_RNA', 'sum', NA)
 rna.Tm.rate <- mergeCalSparseFrames(rna.Tm, rna.Tm.denom, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Tm_RNA', 'Record', NA, periods)
-rna.Tm.lims <- addStatsToSparseHandledData(rna.Tm.rate, c('Version','Key'), periods, TRUE, 4, 'two.sided', 1, 100, keepPeriods=53)
+rna.Tm.lims <- addStatsToSparseHandledData(rna.Tm.rate, c('Version','Key'), periods, TRUE, 4, 'two.sided', 1, 100)
 rna.Tm.lims <- rna.Tm.lims[!(rna.Tm.lims$Version=='FA1.5' & rna.Tm.lims$Key=='Production'), ]
 rna.Cp.lims <- rna.Cp.lims[!(rna.Cp.lims$Version=='FA1.5' & rna.Cp.lims$Key=='Production'), ]
 p.rna.Cp <- ggplot(subset(IQC.df, Key != 'PouchQC' & DateGroup >= startDate), aes(x=DateGroup, y=Cp_RNA)) + geom_point(color='lightskyblue', size=1) + geom_line(aes(x=DateGroup, y=Rate, group=1), data=subset(rna.Cp.lims,Key != 'PouchQC'), color='black') + geom_point(aes(x=DateGroup, y=Rate, color=Color), data=subset(rna.Cp.lims,Key != 'PouchQC')) + facet_grid(Key~Version) + scale_color_manual(values = c('blue','red'), guide=FALSE) + scale_x_discrete(breaks = dateBreaks) + geom_line(aes(y=UL), data=subset(rna.Cp.lims,Key != 'PouchQC'), color='red', lty=2, group=1) + geom_line(aes(y=LL), data=subset(rna.Cp.lims,Key != 'PouchQC'), color='red', lty=2, group=1) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + ylim(c(12.0,25.0)) + labs(x='Date', y='4 Week Rolling Average', title='Yeast Control Cp:\nLimit = mean +/- 3sdev   (Torch limits not actionable)')
@@ -100,11 +107,11 @@ p.rna.Tm <- ggplot(subset(IQC.df, Key != 'PouchQC' & DateGroup >= startDate), ae
 mp.dT.denom <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df[!(is.na(IQC.df[,'TmRange_60'])), ], c('Key','Version'), startDate, 'Record', 'sum', NA)
 mp.dT <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df, c('Key','Version'), startDate, 'TmRange_60', 'sum', NA)
 mp.dT.rate <- mergeCalSparseFrames(mp.dT, mp.dT.denom, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'TmRange_60', 'Record', NA, periods)
-mp.dT.lims <- addStatsToSparseHandledData(mp.dT.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 100, keepPeriods=53)
+mp.dT.lims <- addStatsToSparseHandledData(mp.dT.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 100)
 mp.dF.denom <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df[!(is.na(IQC.df[,'medianDeltaRFU_60'])), ], c('Key','Version'), startDate, 'Record', 'sum', NA)
 mp.dF <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df, c('Key','Version'), startDate, 'medianDeltaRFU_60', 'sum', NA)
 mp.dF.rate <- mergeCalSparseFrames(mp.dF, mp.dF.denom, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'medianDeltaRFU_60', 'Record', NA, periods)
-mp.dF.lims <- addStatsToSparseHandledData(mp.dF.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 100, keepPeriods=53)
+mp.dF.lims <- addStatsToSparseHandledData(mp.dF.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 100)
 mp.dT.lims <- mp.dT.lims[!(mp.dT.lims$Version=='FA1.5' & mp.dT.lims$Key=='Production'), ]
 mp.dF.lims <- mp.dF.lims[!(mp.dF.lims$Version=='FA1.5' & mp.dF.lims$Key=='Production'), ]
 p.mp.dT <- ggplot(subset(IQC.df, Key != 'PouchQC' & DateGroup >= startDate), aes(x=DateGroup, y=TmRange_60)) + geom_point(color='lightskyblue', size=1) + geom_line(aes(x=DateGroup, y=Rate, group=1), data=subset(mp.dT.lims,Key != 'PouchQC'), color='black') + geom_point(aes(x=DateGroup, y=Rate, color=Color), data=subset(mp.dT.lims,Key != 'PouchQC')) + facet_grid(Key~Version) + scale_color_manual(values = c('blue','red'), guide=FALSE) + scale_x_discrete(breaks = dateBreaks) + geom_line(aes(y=UL), data=subset(mp.dT.lims,Key != 'PouchQC'), color='red', lty=2, group=1) + geom_line(aes(y=LL), data=subset(mp.dT.lims,Key != 'PouchQC'), color='red', lty=2, group=1) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + ylim(c(0,1)) + labs(x='Date', y='4 Week Rolling Average', title='60D Melt Probe Tm Range:\nLimit = mean +/- 3sdev   (Torch limits not actionable)')
@@ -113,7 +120,7 @@ p.mp.dF <- ggplot(subset(IQC.df, Key != 'PouchQC' & DateGroup >= startDate), aes
 noise.denom <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df[!(is.na(IQC.df[,'Noise_med'])), ], c('Key','Version'), startDate, 'Record', 'sum', NA)
 noise <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', IQC.df, c('Key','Version'), startDate, 'Noise_med', 'sum', NA)
 noise.rate <- mergeCalSparseFrames(noise, noise.denom, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Noise_med', 'Record', NA, periods)
-noise.lims <- addStatsToSparseHandledData(noise.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 100, keepPeriods=53)
+noise.lims <- addStatsToSparseHandledData(noise.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 100)
 noise.lims <- noise.lims[!(noise.lims$Version=='FA1.5' & noise.lims$Key=='Production'), ]
 p.noise <- ggplot(subset(IQC.df, Key != 'PouchQC' & DateGroup >= startDate), aes(x=DateGroup, y=Noise_med)) + geom_point(color='lightskyblue', size=1) + geom_line(aes(x=DateGroup, y=Rate, group=1), data=subset(noise.lims,Key != 'PouchQC'), color='black') + geom_point(aes(x=DateGroup, y=Rate, color=Color), data=subset(noise.lims,Key != 'PouchQC')) + facet_grid(Key~Version) + scale_color_manual(values = c('blue','red'), guide=FALSE) + scale_x_discrete(breaks = dateBreaks) + geom_line(aes(y=UL), data=subset(noise.lims,Key != 'PouchQC'), color='red', lty=2, group=1) + geom_line(aes(y=LL), data=subset(noise.lims,Key != 'PouchQC'), color='red', lty=2, group=1) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + ylim(c(0,0.1)) + labs(x='Date', y='4 Week Rolling Average', title='Noise dF/dT:\nLimit = mean +/- 3sdev   (Torch limits not actionable)')
 
@@ -176,9 +183,9 @@ spread.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', spread.fluor, 
 baseline.rate <- mergeCalSparseFrames(baseline.fill, fluor.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
 max.rate <- mergeCalSparseFrames(max.fill, fluor.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
 spread.rate <- mergeCalSparseFrames(spread.fill, fluor.fill, c('DateGroup','Version','Key'), c('DateGroup','Version','Key'), 'Record', 'Record', NA, periods)
-baseline.lims <- addStatsToSparseHandledData(baseline.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 500, keepPeriods=53)
-max.lims <- addStatsToSparseHandledData(max.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 500, keepPeriods=53)
-spread.lims <- addStatsToSparseHandledData(spread.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 500, keepPeriods=53)
+baseline.lims <- addStatsToSparseHandledData(baseline.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 500)
+max.lims <- addStatsToSparseHandledData(max.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 500)
+spread.lims <- addStatsToSparseHandledData(spread.rate, c('Version','Key'), periods, TRUE, 3, 'two.sided', 0, 500)
 # make the charts
 baseline.fluor[,'DateGroup'] <- with(baseline.fluor, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))
 max.fluor[,'DateGroup'] <- with(max.fluor, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))

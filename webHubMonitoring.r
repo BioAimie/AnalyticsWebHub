@@ -2,6 +2,7 @@
 # If the charts haven't been refreshed on schedule, this script should generate an email 
 # to the data science developers so that the developer can start working on the bug.
 
+source('Rfunctions/loadSQL.R')
 library(sendmailR)
 
 #list of items not updated
@@ -50,4 +51,18 @@ if(length(itemsNotUpdated) != 0) {
   sendmail(from=from,to=to,subject=subject,msg=body,control=mailControl)
 }
 
+# Also check if auto-generated tables have updated
+PMScxn <- odbcConnect('PMS_PROD')
+loadSQL(PMScxn, 'SQL/Monitoring_TablesModified.SQL', 'tables');
+odbcClose(PMScxn)
+
+df = subset(tables, modify_date < Sys.time()-3600*25)
+if(nrow(df)>0){
+  sendmail(from = 'brent.kerby@biofiredx.com',
+           to = 'brent.kerby@biofiredx.com',
+           subject = 'Table(s) Did Not Update',
+           msg = paste0(c('The following tables did not update: ', df$name), collapse='\n'),
+           control = list(smtpServer = 'webmail.biofiredx.com'))
+}
+  
 rm(list=ls())

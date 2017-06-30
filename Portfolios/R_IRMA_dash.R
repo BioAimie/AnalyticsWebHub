@@ -16,7 +16,15 @@ library(sendmailR)
 library(gtable)
 library(grid)
 #install_github('BioAimie/dateManip')
-library(dateManip)
+#library(dateManip)
+source('~/WebHub/dateManipV1/addStatsToSparseHandledData.R')
+source('~/WebHub/dateManipV1/aggregateAndFillDateGroupGaps.R')
+source('~/WebHub/dateManipV1/createCalendarLikeMicrosoft.R')
+source('~/WebHub/dateManipV1/createEvenWeeks.R')
+source('~/WebHub/dateManipV1/findStartDate.R')
+source('~/WebHub/dateManipV1/mergeCalSparseFrames.R')
+source('~/WebHub/dateManipV1/transformToEpiWeeks.R')
+
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 source('Rfunctions/loadSQL.r')
@@ -58,12 +66,12 @@ startYear <- year(Sys.Date()) - 2
 calendar.df <- createCalendarLikeMicrosoft(startYear, smallGroup)
 calendar.df.month <- createCalendarLikeMicrosoft(startYear, 'Month')
 calendar.df.quarter <- createCalendarLikeMicrosoft(startYear, 'Quarter')
-startDate <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=53)
-startMonth.plot <- findStartDate(calendar.df.month, 'Month', 12, 0, keepPeriods=0)
-startMonth.2 <- findStartDate(calendar.df.month, 'Month', 12, 0, keepPeriods=12)
-plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=0)
-plot.startDate.month <- findStartDate(calendar.df.month, 'Month', 12, periods, keepPeriods=0)
-plot.startDate.quarter <- findStartDate(calendar.df.quarter, 'Quarter', 4, periods, keepPeriods=0)
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+startMonth.plot <- findStartDate(calendar.df.month, 'Month', 12, 0)
+startMonth.2 <- findStartDate(calendar.df.month, 'Month', 12, 0)
+plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods)
+plot.startDate.month <- findStartDate(calendar.df.month, 'Month', 12, periods)
+plot.startDate.quarter <- findStartDate(calendar.df.quarter, 'Quarter', 4, periods)
 
 
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
@@ -80,7 +88,7 @@ pouches.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c
 complaints.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', complaints.df, c('Key'), startDate, 'Record', 'sum', 1)
 reliability.rate <- mergeCalSparseFrames(pouches.fill, complaints.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', NA, periods)
 #reliability.rate <- reliability.rate[which(reliability.rate$DateGroup  >= plot.startDate.week), ]
-reliability.lim <- addStatsToSparseHandledData(reliability.rate, c('Key'), lagPeriods, TRUE, 2, 'lower', NULL, 100000, keepPeriods=53)
+reliability.lim <- addStatsToSparseHandledData(reliability.rate, c('Key'), lagPeriods, TRUE, 2, 'lower', NULL, 100000)
 x.val <- which(as.character(unique(reliability.lim[,'DateGroup'])) == validateDate)
 # annotations for pouches shipped per complaint RMA
 # x_positions <- c('2015-37')
@@ -90,12 +98,12 @@ x.val <- which(as.character(unique(reliability.lim[,'DateGroup'])) == validateDa
 p.reliability <- ggplot(reliability.lim, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), name='Key', guide=FALSE) + expand_limits(y=0) + geom_line(aes(y=LL), color='red', lty='dashed') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',size=fontSize,face=fontFace)) + scale_x_discrete(breaks=dateBreaks) + labs(title='Pouches Shipped per Complaint RMA:\nLimit = -2 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average')
 
 # remake this reliability chart, but lag the pouches shipped by 4 weeks (i.e. use pouches shipped 4 weeks ago per complaints this week)
-startDate.lag <- findStartDate(calendar.df, 'Week', weeks+4, periods, keepPeriods=53)
+startDate.lag <- findStartDate(calendar.df, 'Week', weeks+4, periods)
 pouches.fill.lag <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c('Key'), startDate.lag, 'Record', 'sum', 0)
 total.length <- nrow(pouches.fill.lag)
 pouches.fill.lag <- data.frame(DateGroup = pouches.fill.lag$DateGroup[periods:total.length], Key = pouches.fill.lag$Key[1:(total.length-periods+1)], Record = pouches.fill.lag$Record[1:(total.length-periods+1)])
 reliability.rate.lag <- mergeCalSparseFrames(pouches.fill.lag, complaints.fill, c('DateGroup'), c('DateGroup'), 'Record', 'Record', NA, periods)
-reliability.lim.lag <- addStatsToSparseHandledData(reliability.rate.lag, c('Key'), lagPeriods, TRUE, 2, 'lower', NULL, 100000, keepPeriods=53)
+reliability.lim.lag <- addStatsToSparseHandledData(reliability.rate.lag, c('Key'), lagPeriods, TRUE, 2, 'lower', NULL, 100000)
 p.reliability.lag <- ggplot(reliability.lim.lag, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), name='Key', guide=FALSE) + expand_limits(y=0) + geom_line(aes(y=LL, group=1), color='black', lty='dashed') + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',size=fontSize,face=fontFace)) + scale_x_discrete(breaks=dateBreaks) + labs(title='Pouches Shipped per Complaint RMA Adjusted for Ship Time:\nFYI Limit = -2 standard deviations', x='Date\n(Year-Week)', y='4-week Rolling Average')
 # so this has the weihrd huge peak and drop off, which is caused by the wierdness of week 1 in 2016... the pouches shipped and complaints were both zero in week 1,
 # but because the pouches are shifted, the zero occurs in week 4 instead. This causes the peak at week 1 and the downward plunge in week 4
@@ -171,7 +179,7 @@ for(k in 1:length(versions)) {
 parts.out <- with(parts.out, aggregate(Record~DateGroup+Version+Key+AvgHours, FUN=sum))
 
 parts.rate <- mergeCalSparseFrames(parts.fill, rmasShip.fill, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', NA, periods)
-parts.lim <- addStatsToSparseHandledData(parts.rate, c('Version','Key'), lagPeriods, TRUE, 2, 'upper', keepPeriods=53)
+parts.lim <- addStatsToSparseHandledData(parts.rate, c('Version','Key'), lagPeriods, TRUE, 2, 'upper')
 parts.lim[parts.lim[,'Rate'] > 1 & !(is.na(parts.lim[,'Rate'])), 'Rate'] <- 1
 parts.lim[parts.lim[,'UL'] > 1 & !(is.na(parts.lim[,'UL'])), 'UL'] <- 1
 
@@ -218,7 +226,7 @@ if(length(subset(parts.merge, Version == 'Torch')[,1]) > 0) {
 codes.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', codes.df, c('Version','Key'), startDate, 'Record', 'sum', NA)
 codes.merged <- merge(codes.fill, codeDescript.df, by.x='Key', by.y='Code')
 codes.rate <- mergeCalSparseFrames(codes.merged, rmasShip.fill, c('DateGroup', 'Version'), c('DateGroup', 'Version'), 'Record', 'Record', NA, periods)
-codes.lim <- addStatsToSparseHandledData(codes.rate, c('Version', 'Key'), lagPeriods, TRUE, 3, 'upper', keepPeriods=53)
+codes.lim <- addStatsToSparseHandledData(codes.rate, c('Version', 'Key'), lagPeriods, TRUE, 3, 'upper')
 codes.lim[,'Key'] <- as.integer(as.character(codes.lim[,'Key']))
 codes.lim[codes.lim[,'Rate'] > 1 & !(is.na(codes.lim[,'Rate'])), 'Rate'] <- 1
 codes.lim[codes.lim[,'UL'] > 1 & !(is.na(codes.lim[,'UL'])), 'UL'] <- 1
