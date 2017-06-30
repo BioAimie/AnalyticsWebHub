@@ -10,21 +10,12 @@ library(forcats)
 library(scales)
 library(zoo)
 library(lubridate)
-#library(dateManip)
+library(dateManip)
 library(colorspace)
 library(gridExtra)
 source('Rfunctions/loadSQL.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
-
-source('~/WebHub/dateManipV1/addStatsToSparseHandledData.R')
-source('~/WebHub/dateManipV1/aggregateAndFillDateGroupGaps.R')
-source('~/WebHub/dateManipV1/createCalendarLikeMicrosoft.R')
-source('~/WebHub/dateManipV1/createEvenWeeks.R')
-source('~/WebHub/dateManipV1/findStartDate.R')
-source('~/WebHub/dateManipV1/mergeCalSparseFrames.R')
-source('~/WebHub/dateManipV1/transformToEpiWeeks.R')
-
 
 # load the data from SQL
 PMScxn <- odbcConnect('PMS_PROD')
@@ -45,16 +36,16 @@ odbcClose(PMScxn)
 # Environmental variables
 calendar.week <- createCalendarLikeMicrosoft(year(Sys.Date()) - 2, 'Week')
 calendar.month <- createCalendarLikeMicrosoft(2012, 'Month')
-start.month <- findStartDate(calendar.month, 'Month', 13, 0)
-plot.start.month <- findStartDate(calendar.month, 'Month', 13, 0)
-start.monthyr <- findStartDate(calendar.month, 'Month', 12, 0)
-plot.start.monthyr <- findStartDate(calendar.month, 'Month', 12, 0)
-start.month4 <- findStartDate(calendar.month, 'Month', 12, 4)
-plot.start.month4 <- findStartDate(calendar.month, 'Month', 12, 4)
-start.week <- findStartDate(calendar.week, 'Week', 53, 0)
-plot.start.week <- findStartDate(calendar.week, 'Week', 53, 0)
-start.weekRoll <- findStartDate(calendar.week, 'Week', 53, 4)
-plot.start.weekRoll <- findStartDate(calendar.week, 'Week', 53, 4)
+start.month <- findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=12)
+plot.start.month <- findStartDate(calendar.month, 'Month', 13, 0, keepPeriods=0)
+start.monthyr <- findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=12)
+plot.start.monthyr <- findStartDate(calendar.month, 'Month', 12, 0, keepPeriods=0)
+start.month4 <- findStartDate(calendar.month, 'Month', 12, 4, keepPeriods=12)
+plot.start.month4 <- findStartDate(calendar.month, 'Month', 12, 4, keepPeriods=0)
+start.week <- findStartDate(calendar.week, 'Week', 53, 0, keepPeriods=53)
+plot.start.week <- findStartDate(calendar.week, 'Week', 53, 0, keepPeriods=0)
+start.weekRoll <- findStartDate(calendar.week, 'Week', 53, 4, keepPeriods=53)
+plot.start.weekRoll <- findStartDate(calendar.week, 'Week', 53, 4, keepPeriods=0)
 periods <- 4
 lagPeriods <- 4
 seqBreak <- 12
@@ -64,12 +55,12 @@ dateBreaks.wk <- as.character(unique(calendar.week[calendar.week[,'DateGroup'] >
 fontSize <- 20
 fontFace <- 'bold'
 theme_set(theme_grey() +
-          theme(plot.title = element_text(hjust = 0.5), 
-                plot.subtitle = element_text(hjust = 0.5), 
-                text = element_text(size = fontSize, face = fontFace), 
-                axis.text = element_text(color='black',size = fontSize,face = fontFace),
-                axis.text.x=element_text(angle=90, hjust=1),
-                legend.margin = margin(b = .7, unit = 'cm')));
+            theme(plot.title = element_text(hjust = 0.5), 
+                  plot.subtitle = element_text(hjust = 0.5), 
+                  text = element_text(size = fontSize, face = fontFace), 
+                  axis.text = element_text(color='black',size = fontSize,face = fontFace),
+                  axis.text.x=element_text(angle=90, hjust=1),
+                  legend.margin = margin(b = .7, unit = 'cm')));
 
 # 2017 FilmArray Production
 instreleased <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', transferred.df, 'Version', start.month, 'Record', 'sum', 0)
@@ -80,7 +71,7 @@ current <- ifelse(month(Sys.Date()) < 10, paste0(year(Sys.Date()), '-0', month(S
 goals.FAprod <- data.frame(DateGroup = c('2017-01','2017-02','2017-03','2017-04','2017-05','2017-06','2017-07','2017-08','2017-09','2017-10','2017-11','2017-12'),
                            Goal = c(306,289,357,306,340,323,289,357,306,340,306,224))
 goals90.FAprod <- data.frame(DateGroup = c('2017-01','2017-02','2017-03','2017-04','2017-05','2017-06','2017-07','2017-08','2017-09','2017-10','2017-11','2017-12'),
-                           Goal = c(275.4,260.1,321.3,275.4,306.0,290.7,260.1,321.3,275.4,306.0,275.4,201.6))
+                             Goal = c(275.4,260.1,321.3,275.4,306.0,290.7,260.1,321.3,275.4,306.0,275.4,201.6))
 p.FilmArrayProduction <- ggplot(subset(instreleased, DateGroup >= beg), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + geom_line(data=subset(goals.FAprod, as.character(DateGroup) <= current), inherit.aes=FALSE, aes(x=DateGroup, y=Goal, group=1), color='forestgreen', size=1) + geom_point(data=subset(goals.FAprod, as.character(DateGroup) <= current), inherit.aes=FALSE, aes(x=DateGroup, y=Goal, group=1), color='forestgreen') + labs(title = '2017 FilmArray Production', subtitle='Goal = Green Line, 90% of Goal = Blue Line', x = 'Date\n(Year-Month)', y = 'Instruments') + theme(axis.text.x=element_text(angle=90, vjust=0.5)) + scale_fill_manual(values=createPaletteOfVariableLength(instreleased, 'Version')) + geom_line(data=subset(goals90.FAprod, as.character(DateGroup) <= current), inherit.aes=FALSE, aes(x=DateGroup, y=Goal, group=1), color='blue', size=1) + geom_point(data=subset(goals90.FAprod, as.character(DateGroup) <= current), inherit.aes=FALSE, aes(x=DateGroup, y=Goal, group=1), color='blue') + geom_text(data = subset(instreleased, DateGroup >= beg & Record != 0), aes(label=Record), size = 4, position = position_stack(vjust = 0.5), fontface = fontFace)
 
 # New Instrument Shipments by Sales Type (IMAN chart)
@@ -117,7 +108,7 @@ p.Production.FirstPass <- ggplot(subset(firstPass.rate, Key == 'Production'), ae
 instBuilt.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', instBuilt.df, c('Key'), start.weekRoll, 'Record', 'sum', 0)
 instNCRs.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', instNCRs.df, c('Key'), start.weekRoll, 'Record', 'sum', 0)
 ncr.rate.all <- mergeCalSparseFrames(instNCRs.all, instBuilt.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-ncr.lims.all <- addStatsToSparseHandledData(ncr.rate.all, c('Key'), lagPeriods, TRUE, 2, 'upper')
+ncr.lims.all <- addStatsToSparseHandledData(ncr.rate.all, c('Key'), lagPeriods, TRUE, 2, 'upper', keepPeriods=53)
 x_positions <- c('2016-39', '2016-51')
 rate.all.annotations <- c('Process Change\n1 NCR/Lot', 'Manifold-DX-DCN-33636,DX-CO-35011\nPCB-CAPA 13210')
 y_positions <- ncr.lims.all[(ncr.lims.all[,'DateGroup']) %in% x_positions, 'Rate'] + 0.4
@@ -287,7 +278,7 @@ makeProblemAreaChart = function(version, versionName, plotName){
                                paste0(startDateGroup6, ' to Present'),
                                ifelse(DateGroup >= startDateGroup12,
                                       paste0(startDateGroup12, ' to ', endDateGroup12),
-                                                    NA))) %>%
+                                      NA))) %>%
     filter(Version == version, DateGroup >= startDateGroup12) %>%
     group_by(ProblemArea, DatePeriod) %>% summarize(Count = sum(Failure)) %>% ungroup() %>%
     filter(Count > 0) %>%
@@ -340,8 +331,8 @@ p.TorchBaseProblemAreas <- df %>%
 # Instrument NCR Problem Area per Instruments Built (NCR chart)
 wpfs.all <- aggregateAndFillDateGroupGaps(calendar.week, 'Week', wpfsNCR.df, c('RecordedValue'), start.weekRoll, 'Record', 'sum', 0)
 wpfs.rate.all <- mergeCalSparseFrames(subset(wpfs.all, RecordedValue %in% pareto.wpfsncr[,'RecordedValue']), instBuilt.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-wpfs.lims.all.blue <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.04)
-wpfs.lims.all.red <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 4, 'upper', 0.05)
+wpfs.lims.all.blue <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.04, keepPeriods=53)
+wpfs.lims.all.red <- addStatsToSparseHandledData(wpfs.rate.all, c('RecordedValue'), lagPeriods, TRUE, 4, 'upper', 0.05, keepPeriods=53)
 x_pos.wpfs <- c('2016-49', '2017-02')
 problemArea.annot <- c('Board', 'Wire Harness')
 y_pos.wpfs <- c(0.35, 0.22)
