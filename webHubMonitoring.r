@@ -62,7 +62,7 @@ if(nrow(df)>0){
            to = 'brent.kerby@biofiredx.com',
            subject = 'Table(s) Did Not Update',
            msg = paste0('The following tables did not update: ', df$name),
-           control = list('webmail.biofiredx.com'))
+           control = list(smtpServer = 'webmail.biofiredx.com'))
 }
   
 rm(list=ls())
