@@ -68,15 +68,15 @@ AS (
 		[LotNumberID] AS [TopLotID],
 		[LotNumber] AS [BottomLot],
 		[PartNumber] AS [BottomPart]
-	FROM [ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
+	FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
 	WHERE [Quantity]>0
 	UNION ALL
 	SELECT
 		U.[LotNumberId] AS [TopLotID],
 		D.[BottomLot] AS [BottomLot],
 		D.[BottomPart] AS [BottomPart]
-	FROM [BirthLot] D INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
+	FROM [BirthLot] D INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
 			ON L.[LotNumber] = U.[LotNumber]
 	WHERE U.[Quantity]>0 AND U.[LotNumber] != 'N/A'
 )
@@ -84,9 +84,9 @@ SELECT DISTINCT
 	REPLACE(REPLACE(REPLACE(TL.[LotNumber],'.',''),'_',''),' ','') AS [SerialNo],
 	BL.[DateOfManufacturing]
 INTO #manifoldDate
-FROM [BirthLot] B INNER JOIN [ProductionWeb].[dbo].[Lots] BL WITH(NOLOCK)
-	ON B.[BottomLot] = BL.[LotNumber] INNER JOIN [ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK)
-		ON B.[TopLotID] = TL.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Parts] TP WITH(NOLOCK)
+FROM [BirthLot] B INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] BL WITH(NOLOCK)
+	ON B.[BottomLot] = BL.[LotNumber] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK)
+		ON B.[TopLotID] = TL.[LotNumberId] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] TP WITH(NOLOCK)
 			ON TP.[PartNumberId] = TL.[PartNumberId]
 WHERE TP.[PartNumber] IN ('FLM2-ASY-0001','HTFA-SUB-0103')
 	AND [BottomPart] IN ('FLM2-SUB-0055','FLM2-SUB-0081','HTFA-SUB-0110')

@@ -46,7 +46,7 @@ SELECT
 	END AS [HoursRunBin],
 	1 AS [Record]
 FROM #RMAs R
-INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) ON L.[LotNumber] = R.[SerialNo]
+INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) ON L.[LotNumber] = R.[SerialNo]
 ORDER BY [DateOfManufacturing]
 
 DROP TABLE #firstTicket, #RMAs

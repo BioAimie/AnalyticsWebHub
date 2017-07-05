@@ -18,6 +18,6 @@ SELECT
 	1 AS [Record],
 	'Torch' AS [Version]
 FROM #failSerial F
-LEFT JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) ON L.[LotNumber] = F.[SerialNo]
+LEFT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) ON L.[LotNumber] = F.[SerialNo]
 
 DROP TABLE #failSerial
