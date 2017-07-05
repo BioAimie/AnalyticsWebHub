@@ -9,7 +9,7 @@ SELECT
 	L.[VersionId],
 	IIF(L.[VersionId] IN ('IP','01','02','03','05','FrNew'), 1, 0) AS [New]
 INTO #cleanSerials
-FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
+FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
 	ON L.[PartNumberId] = P.[PartNumberId]
 WHERE (P.[PartNumber] LIKE 'FLM%-ASY-0001%' OR P.[PartNumber] LIKE 'HTFA-ASY-0003%' OR P.[PartNumber] = 'HTFA-SUB-0103') 
 

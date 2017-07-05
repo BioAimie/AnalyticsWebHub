@@ -12,6 +12,7 @@ library(gridExtra)
 library(grid)
 library(lubridate)
 library(devtools)
+library(plyr)
 
 #install_github('BioAimie/dateManip')
 #library(dateManip)
@@ -177,13 +178,30 @@ instrument.build.version.count[,'RecordedValue'] <- factor(instrument.build.vers
 pal.build <- createPaletteOfVariableLength(instrument.build.version.count, 'Version')
 p.instrument.build.pareto <- ggplot(instrument.build.version.count, aes(x=RecordedValue, y=Record.x, fill=Version)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1)) + labs(title='Customer Instrument Complaints by Version (16 weeks)', x='Complaint Type', y='Quantities Affected by Type') + scale_fill_manual(values=pal.build)
 instrument.build <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('Version','RecordedValue'), startDate, 'Record', 'sum', 0)
-installed.fill <- do.call(rbind, lapply(1:length(unique(installed.df[,'Version'])), function(x) cbind(merge(unique(calendar.df[,c('Year','DateGroup')]), installed.df[installed.df[,'Version'] == unique(installed.df[,'Version'])[x], c('DateGroup','Record')], by='DateGroup', all.x=TRUE), Version = unique(installed.df[,'Version'])[x])))
-installed.back <- do.call(rbind, lapply(1:length(unique(installed.fill[,'Version'])), function(y) data.frame(Version = unique(installed.fill[,'Version'])[y], DateGroup = installed.fill[installed.fill[,'Version'] == unique(installed.fill[,'Version'])[y], 'DateGroup'], DateGroupBackup = sapply(1:length(unique(installed.fill[,'DateGroup'])), function(x) ifelse(is.na(installed.fill[installed.fill[,'Version'] == unique(installed.fill[,'Version'])[y] & installed.fill[,'DateGroup'] == unique(installed.fill[,'DateGroup'])[x], 'Record']), max(installed.fill[installed.fill[,'Version'] == unique(installed.fill[,'Version'])[y] & !(is.na(installed.fill[,'Record'])) & installed.fill[,'DateGroup'] <= unique(installed.fill[,'DateGroup'])[x],'DateGroup']), unique(installed.fill[,'DateGroup'])[x])))))
-installed.back <- merge(installed.back, installed.fill, by.x=c('DateGroupBackup','Version'), by.y=c('DateGroup','Version'))
-install.base <- merge(installed.fill, installed.back, by=c('DateGroup','Version'), all.x=TRUE)
-install.base[is.na(install.base[,'Record.y']),'Record.y'] <- 0
-install.base <- install.base[,c('DateGroup','Version','Record.y')]
-colnames(install.base) <- c('DateGroup','Version','Record')
+dateGroups <- sort(as.character(unique(installed.df$DateGroup)))
+installed.df$DateGroup <- as.character(installed.df$DateGroup)
+FieldInstallBase <- c()
+for(i in 1:length(dateGroups)) {
+  temp <- subset(installed.df, DateGroup <= dateGroups[i])
+  temp <- temp[with(temp, order(SerialNo, Row)),]
+  serialsOut <- as.character(subset(with(temp, aggregate(DistQty~SerialNo, FUN=sum)), DistQty == 0)[,'SerialNo'])
+  FieldInstallBase <- rbind(FieldInstallBase, data.frame(DateGroup = dateGroups[i], subset(merge(subset(with(temp, aggregate(Row~SerialNo, FUN=max)), SerialNo %in% serialsOut), temp, by.x=c('Row', 'SerialNo'), by.y=c('Row', 'SerialNo')), select=c('Version', 'CustType')), Record=1))
+}
+#isolate customer instruments for field install base
+CustFieldInstallBase <- subset(FieldInstallBase, CustType == 'Domestic')
+CustFieldInstallBase <- with(CustFieldInstallBase, aggregate(Record~DateGroup+Version, FUN=sum))
+#create calendar with entry for each week and each unique instrument version
+InstallBaseCalendar <- data.frame(createCalendarLikeMicrosoft(2009, 'Week'), Record = 0)
+InstallBaseCalendar <- subset(with(InstallBaseCalendar, aggregate(Record~DateGroup, FUN=sum)), DateGroup >= '2009-52')
+InstallBaseCalendar <- merge(InstallBaseCalendar, data.frame(Version = as.character(unique(FieldInstallBase$Version))))
+#merge calendar with dataframe to get an entry for each week and each version
+CustFieldInstallBase$DateGroup <- as.character(CustFieldInstallBase$DateGroup)
+CustFieldInstallBase <- merge(CustFieldInstallBase, InstallBaseCalendar, by.x=c('DateGroup', 'Version', 'Record'), by.y=c('DateGroup', 'Version', 'Record'), all=TRUE)
+CustFieldInstallBase.fill <- with(CustFieldInstallBase, aggregate(Record~DateGroup+Version, FUN=sum))
+#for each version, fill in 0s with last previous non-0 number (need to change to NA first for this to work with zoo function)
+CustFieldInstallBase.fill$Record <- with(CustFieldInstallBase.fill, ifelse(Record == 0, NA, Record))
+install.base <- ddply(CustFieldInstallBase.fill, 'Version', na.locf, na.rm=FALSE)
+install.base$Record <- as.numeric(install.base$Record)
 install.base.count <- install.base
 install.base <- merge(install.base, with(install.base, aggregate(Record~DateGroup, FUN=sum)), by='DateGroup')
 install.base[,'Portion'] <- with(install.base, Record.x/Record.y)
@@ -270,7 +288,9 @@ p.BioThreat.pareto <- ggplot(biothreat.df, aes(x=RecordedValue, y=Record, fill=Y
 # denominator charts
 pouches.panel.trunc <- aggregateAndFillDateGroupGaps(calendar.week.categories, 'Week', pouches.df, c('Version'), plot.startDate.week, 'Record', 'sum', 0)
 p.denom.pouches <- ggplot(pouches.panel.trunc[with(pouches.panel, order(Version, decreasing = TRUE)), ], aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.panel, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pouches Shipped', x='Date', y='Pouches Shipped')
-p.denom.installed <- ggplot(subset(install.base.count, DateGroup >= plot.startDate.week), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(install.base.count, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instruments in Install Base', x='Date', y='Install Base Size')
+currentDateGroup <- as.character(tail(calendar.df, 1)['DateGroup'])
+currentInstallBase <- paste0('Current Customer Install Base: FA 1.5 = ', install.base.count[install.base.count[,'DateGroup'] == currentDateGroup & install.base.count[,'Version'] == 'FA1.5', 'Record'], ', FA 2.0 = ', install.base.count[install.base.count[,'DateGroup'] == currentDateGroup & install.base.count[,'Version'] == 'FA2.0', 'Record'], ', Torch = ', install.base.count[install.base.count[,'DateGroup'] == currentDateGroup & install.base.count[,'Version'] == 'Torch', 'Record'])
+p.denom.installed <- ggplot(subset(install.base.count, DateGroup >= plot.startDate.week), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(install.base.count, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90), plot.subtitle=element_text(hjust=0.5)) + labs(title='Instruments in Customer Install Base', subtitle = currentInstallBase, x='Date', y='Install Base Size')
 pouches.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', pouches.df, c('Version'), findStartDate(calendar.month, 'Month', 12), 'Record', 'sum', 0)
 p.pouchesShipped.month <- ggplot(pouches.month, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.month, 'Version')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(color='black',size=fontSize,face=fontFace), axis.text.x=element_text(angle=90, vjust=0.5)) + labs(title='Pouches Shipped', y='Pouches Shipped', x='Ship Date\n(Year-Month)') + scale_y_continuous(labels=comma, breaks=pretty_breaks())
 

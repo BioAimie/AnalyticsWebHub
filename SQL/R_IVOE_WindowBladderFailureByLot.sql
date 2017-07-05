@@ -6,15 +6,15 @@ AS (
 		[LotNumberID] AS [TopLotID],
 		[LotNumber] AS [BottomLot],
 		[PartNumber] AS [BottomPart]
-	FROM [ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
+	FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
 	WHERE [Quantity]>0
 	UNION ALL
 	SELECT
 		U.[LotNumberId] AS [TopLotID],
 		D.[BottomLot] AS [BottomLot],
 		D.[BottomPart] AS [BottomPart]
-	FROM [BirthLot] D INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
+	FROM [BirthLot] D INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
 			ON L.[LotNumber] = U.[LotNumber]
 	WHERE U.[Quantity]>0
 )
@@ -24,8 +24,8 @@ SELECT DISTINCT
 	B.[BottomLot] AS [WindowBladderLot]
 INTO #windowBladderAtBirth
 FROM [BirthLot] B
-	INNER JOIN [ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK) ON B.[TopLotID] = TL.[LotNumberId] 
-	INNER JOIN [ProductionWeb].[dbo].[Parts] TP WITH(NOLOCK) ON TP.[PartNumberId] = TL.[PartNumberId]
+	INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK) ON B.[TopLotID] = TL.[LotNumberId] 
+	INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] TP WITH(NOLOCK) ON TP.[PartNumberId] = TL.[PartNumberId]
 WHERE [BottomPart] = 'FLM1-SUB-0044' 
 	AND TP.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103') 
 
@@ -178,7 +178,7 @@ FROM
 		WHERE [WindowBladderReplacementLot] IS NOT NULL
 	) D
 	GROUP BY [WindowBladderLot]
-) W LEFT JOIN [ProductionWeb].[dbo].[Lots] L
+) W LEFT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L
 	ON W.[WindowBladderLot] = L.[LotNumber]
 WHERE [WindowBladderLot] NOT LIKE 'N%A'
 
