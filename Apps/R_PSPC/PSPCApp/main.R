@@ -26,7 +26,8 @@ instversion.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)
 
-expouchserials <- read.csv('exclude.csv')
+#expouchserials <- read.csv('exclude.csv')
+expouchserials <- read.csv('C:/Users/amber_kiser/Documents/AWH/exclude.csv')
 
 source('createPaletteOfVariableLength.R')
 
