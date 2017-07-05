@@ -123,8 +123,8 @@ FROM #field F INNER JOIN
 	SELECT
 		L.[LotNumber] AS [KitLot],
 		LEFT(UL.[LotNumber],6) AS [LotNo]
-	FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
-			ON L.[LotNumberId] = U.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
+	FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
+			ON L.[LotNumberId] = U.[LotNumberId] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
 				ON U.[LotNumber] = UL.[LotNumber]
 	WHERE L.[LotNumber] IN (SELECT DISTINCT [LotNo] FROM #field) AND UL.[BatchRecordId] LIKE 'FA-201C'
 	GROUP BY L.[LotNumber], LEFT(UL.[LotNumber],6)
