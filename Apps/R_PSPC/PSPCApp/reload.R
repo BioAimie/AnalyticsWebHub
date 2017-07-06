@@ -18,8 +18,7 @@ runobs.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)
 
-#expouchserials <- read.csv('exclude.csv')
-expouchserials <- read.csv('C:/Users/amber_kiser/Documents/AWH/exclude.csv')
+expouchserials <- read.csv('C:/Users/pms_user/Documents/WebHub/PouchSPCExclude.csv')
 
 allruns.df <- merge(allruns.df, instversion.df, all.x=TRUE, by.x='InstrumentSerialNumber', by.y='SerialNo')
 allruns.df$Version[allruns.df$InstrumentSerialNumber %in% c('AFA07','FA2000','FA2001','FA2002','FA2003','FA2004')] <- 'FA 1.5'

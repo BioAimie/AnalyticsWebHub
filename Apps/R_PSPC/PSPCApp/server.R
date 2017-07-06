@@ -548,8 +548,7 @@ shinyServer(function(input, output, session) {
     if(!is.null(input$hot)) {
       DF <- hot_to_r(input$hot)
     } else {
-      # DF <- read.csv('exclude.csv')
-      DF <- read.csv('C:/Users/amber_kiser/Documents/AWH/exclude.csv')
+      DF <- read.csv('C:/Users/pms_user/Documents/WebHub/PouchSPCExclude.csv')
     }
     rhandsontable(DF) %>%
       hot_cols(columnSorting=TRUE)
@@ -559,8 +558,7 @@ shinyServer(function(input, output, session) {
     input$savetable
     hot <- isolate(input$hot)
     if(!is.null(hot)) {
-      #write.csv(hot_to_r(input$hot), 'exclude.csv', row.names = FALSE)
-      write.csv(hot_to_r(input$hot), 'C:/Users/amber_kiser/Documents/AWH/exclude.csv', row.names = FALSE)
+      write.csv(hot_to_r(input$hot), 'C:/Users/pms_user/Documents/WebHub/PouchSPCExclude.csv', row.names = FALSE)
     }
   })
 
