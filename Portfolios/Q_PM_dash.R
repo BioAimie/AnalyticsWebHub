@@ -11,13 +11,18 @@ library(zoo)
 library(ggplot2)
 library(devtools)
 library(dateManip)
-
+library(DomoR)
 # Load data and functions
 source('Portfolios/Q_PM_load.R')
 source('Rfunctions/analyzeOrderIMR.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 source('Rfunctions/xbarRangeCalculator.R')
+
+
+domo_token <- '9198c073cd2f74d947f4f0ddeca70d0ec8564fe596a1408b' 
+DomoR::init('biofiredx', domo_token)
+
 
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
@@ -413,5 +418,29 @@ for(i in 1:length(plots)) {
   print(eval(parse(text = plots[i])))
 }
 dev.off()
+
+
+
+burst.imr.ltd$Equipment <- rep('BurstLTD', nrow(burst.imr.ltd))
+hydra.imr.wsw.ltd$Equipment <- rep('wswHydrationAllLines', nrow(hydra.imr.wsw.ltd))
+hydra.imr.ssw.ltd$Equipment <- rep('sswHydrationAllLines', nrow(hydra.imr.ssw.ltd))
+
+faivLineWater.imr.ltd$Equipment <- rep('FAIVLineWaterWeight', nrow(faivLineWater.imr.ltd))
+faivLine.imr.ltd$Equipment <- rep('FAIVLineCannula', nrow(faivLine.imr.ltd))
+
+burst.imr.lsd$LineKey <- NULL
+burst.imr.lsd$Equipment <- paste('burstLSD', burst.imr.lsd$Equipment, sep='')
+
+hydration.imr.lsd.wsw$Equipment <- paste('hydrationLSDWSW', hydration.imr.lsd.wsw$Equipment, sep='')
+hydration.imr.lsd.ssw$Equipment <- paste('hydrationLSDSSW', hydration.imr.lsd.ssw$Equipment, sep='')
+faivLine.imr.lsd <- faivLine.imr.lsd[, c('LotNumber', 'TestNumber', 'Equipment', 'DateOpened', 'Observation', 'Result', 'Key', 'Average', 'LCL', 'UCL')]
+faivLine.imr.lsd$Equipment <- paste('faivLineLSD', faivLine.imr.lsd$Equipment)
+
+faivLineWater.imr.lsd$Equipment <- paste('faivLineWaterLSD', faivLineWater.imr.lsd$Equipment)
+
+data.set <- rbind(hydra.imr.wsw.ltd, hydra.imr.ssw.ltd, faivLineWater.imr.ltd, faivLine.imr.ltd, burst.imr.lsd, hydration.imr.lsd.wsw, hydration.imr.lsd.ssw, faivLine.imr.lsd, faivLineWater.imr.lsd, burst.imr.ltd, stringsAsFactors=FALSE)
+
+replace_ds('61af94e0-803f-4b4b-a207-0572b3c4e7a4', data.set)
+
 
 rm(list = ls())

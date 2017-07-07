@@ -1013,21 +1013,22 @@ avgreceived.trade.US <- cbind(avgreceived.trade.US[4:l,], sapply(4:l, function(x
 colnames(avgreceived.trade.US)[5] <- 'RollingAvg'
 avgreceived.trade.US$facetHeader <- paste0('Salt Lake - US Customers\nOverall Avg = ', format(subset(avgreceived.trade.US, DateGroup == currentMonth)[,'OverallAvg'], digits=3), ', Current Rolling Avg = ', format(subset(avgreceived.trade.US, DateGroup == currentMonth)[,'RollingAvg'], digits = 3))
 #SL -BMX
-avgreceived.trade.BMX <- c()
-temp <- subset(tradeupReceipt.df, DateGroup >= '2015-03' & ServiceCenter == 'Salt Lake' & CustomerType == 'BMX')
-for(i in 1:l) {
-  temp2 <- subset(temp, DateGroup == dategroups[i])
-  if(nrow(temp2) > 0) {
-    avgreceived.trade.BMX <- rbind(avgreceived.trade.BMX, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - BMX Customers', avgDays = mean(temp2$DaysUntilReceipt, na.rm=TRUE)))
-  } else {
-    avgreceived.trade.BMX <- rbind(avgreceived.trade.BMX, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - BMX Customers', avgDays = NA))
-  }
-}
-avgreceived.trade.BMX$OverallAvg <- with(avgreceived.trade.BMX, mean(avgDays, na.rm=TRUE))
-avgreceived.trade.BMX <- cbind(avgreceived.trade.BMX[4:l,], sapply(4:l, function(x) mean(avgreceived.trade.BMX[(x-3):x,'avgDays'], na.rm=TRUE)))
-colnames(avgreceived.trade.BMX)[5] <- 'RollingAvg'
-avgreceived.trade.BMX$facetHeader <- paste0('Salt Lake - BMX Customers\nOverall Avg = ', format(subset(avgreceived.trade.BMX, DateGroup == currentMonth)[,'OverallAvg'], digits=3), ', Current Rolling Avg = ', format(subset(avgreceived.trade.BMX, DateGroup == currentMonth)[,'RollingAvg'], digits = 3))
-avgreceived.trade <- rbind(avgreceived.trade.BMX, avgreceived.trade.US)
+# avgreceived.trade.BMX <- c()
+# temp <- subset(tradeupReceipt.df, DateGroup >= '2015-03' & ServiceCenter == 'Salt Lake' & CustomerType == 'BMX')
+# for(i in 1:l) {
+#   temp2 <- subset(temp, DateGroup == dategroups[i])
+#   if(nrow(temp2) > 0) {
+#     avgreceived.trade.BMX <- rbind(avgreceived.trade.BMX, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - BMX Customers', avgDays = mean(temp2$DaysUntilReceipt, na.rm=TRUE)))
+#   } else {
+#     avgreceived.trade.BMX <- rbind(avgreceived.trade.BMX, data.frame(DateGroup = dategroups[i], Key = 'Salt Lake - BMX Customers', avgDays = NA))
+#   }
+# }
+# avgreceived.trade.BMX$OverallAvg <- with(avgreceived.trade.BMX, mean(avgDays, na.rm=TRUE))
+# avgreceived.trade.BMX <- cbind(avgreceived.trade.BMX[4:l,], sapply(4:l, function(x) mean(avgreceived.trade.BMX[(x-3):x,'avgDays'], na.rm=TRUE)))
+# colnames(avgreceived.trade.BMX)[5] <- 'RollingAvg'
+# avgreceived.trade.BMX$facetHeader <- paste0('Salt Lake - BMX Customers\nOverall Avg = ', format(subset(avgreceived.trade.BMX, DateGroup == currentMonth)[,'OverallAvg'], digits=3), ', Current Rolling Avg = ', format(subset(avgreceived.trade.BMX, DateGroup == currentMonth)[,'RollingAvg'], digits = 3))
+# avgreceived.trade <- rbind(avgreceived.trade.BMX, avgreceived.trade.US)
+avgreceived.trade <- avgreceived.trade.US
 p.TradeUpRMAReceipt <- ggplot(avgreceived.trade, aes(x=DateGroup, y=avgDays, fill='1')) + geom_bar(stat='identity') + facet_wrap(~facetHeader) + scale_fill_manual(name ='', values=c('forestgreen'), guide=FALSE) + theme(axis.text.x = element_text(angle=90, vjust=0.5)) + labs(title = 'Average Days for 2.0 Trade Up RMA to be Received by Service Center', x = 'Date\n(Year-Month)', y = 'Average Days') + geom_text(aes(label=format(avgDays, digits = 1)), size = 4, fontface = 'bold', vjust = -0.5) #+ scale_x_discrete(breaks=datebreaks.received)
 
 # All RMAs opened by type (part) 
@@ -1165,16 +1166,17 @@ g3 <- gtable_add_cols(g3, g4$widths[g4$layout[index, ]$l], pp$r)
 g3 <- gtable_add_grob(g3, yaxis, pp$t, pp$r + 1, pp$b, pp$r + 1, clip = "off", name = "axis-r")
 
 # Top 10 customers that have submitted complaints per pouches shipped to them
-customers.rate <- merge(custComplaints.df, custPouches.df, by='CustID')
+customers.rate <- merge(custComplaints.df, custPouches.df, by='CustID', all.x=TRUE)
 customers.rate$Rate <- with(customers.rate, Record.x / Record.y)
-top10US <- subset(customers.rate, Region == 'US')[order(subset(customers.rate, Region == 'US')[,'Rate'], decreasing=TRUE), ]
+top10US <- subset(customers.rate, Region == 'US' & PouchOrdering == 'yes')[order(subset(customers.rate, Region == 'US' & PouchOrdering == 'yes')[,'Rate'], decreasing=TRUE), ]
 top10US <- top10US[1:10, ]
 top10US$Customer <- factor(top10US$Customer, levels=rev(as.character(top10US[,'Customer'])))
 p.Top10USCustomerComplaint <- ggplot(top10US, aes(x=Customer, y=Rate, fill='1')) + geom_bar(stat='identity') + coord_flip() + theme(axis.text.y = element_text(size=14)) + scale_y_continuous(labels=percent)+ scale_fill_manual(name='', values='darkred', guide=FALSE) + labs(title='Top 10 US Customers with Complaints', x='Customer', y='Complaints per Pouches Shipped\nOver Last 365 Days')
-top10Int <- subset(customers.rate, Region == 'International')[order(subset(customers.rate, Region == 'International')[,'Rate'], decreasing=TRUE), ]
+top10Int <- subset(customers.rate, Region == 'International')[order(subset(customers.rate, Region == 'International')[,'Record.x'], decreasing=TRUE), ]
 top10Int <- top10Int[1:10, ]
+top10Int$Customer <- with(top10Int, ifelse(is.na(Customer), as.character(CustID), as.character(Customer)))
 top10Int$Customer <- factor(top10Int$Customer, levels=rev(as.character(top10Int[,'Customer'])))
-p.Top10IntlCustomerComplaint <- ggplot(top10Int, aes(x=Customer, y=Rate, fill='1')) + geom_bar(stat='identity') + coord_flip() + theme(axis.text.y = element_text(size=14)) + scale_y_continuous(labels=percent)+ scale_fill_manual(name='', values='darkred', guide=FALSE) + labs(title='Top 10 International Customers with Complaints', x='Customer', y='Complaints per Pouches Shipped\nOver Last 365 Days')
+p.Top10IntlCustomerComplaint <- ggplot(top10Int, aes(x=Customer, y=Record.x, fill='1')) + geom_bar(stat='identity') + coord_flip() + theme(axis.text.y = element_text(size=14)) + scale_fill_manual(name='', values='darkred', guide=FALSE) + labs(title='Top 10 International Customers with Complaints', x='Customer', y='Total Number of Complaints \nOver Last 365 Days')
 
 #Avg days to close complaints, % <= 30 day goal
 complaints.days <- subset(complaints.df, !is.na(DateClosed), select = c('YearOpen', 'MonthOpen', 'DaysOpen', 'Record'))
