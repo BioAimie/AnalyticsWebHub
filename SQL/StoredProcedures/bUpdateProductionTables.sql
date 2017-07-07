@@ -17,8 +17,8 @@ SELECT
 	P.[PartNumber] AS [PartNumber],
 	1 AS [Quantity]
 INTO #parts
-FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-INNER JOIN [ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
+FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
 WHERE P.[PartNumber] IN (SELECT [PartNumber] FROM [PMS1].[dbo].[bInstrumentVersion])
 
 SELECT 
@@ -27,8 +27,8 @@ SELECT
 	U.[PartNumber] AS [InnerPart],
 	U.[Quantity]
 INTO #edge
-FROM [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
-INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) ON L.[LotNumberId] = U.[LotNumberId]
+FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
+INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) ON L.[LotNumberId] = U.[LotNumberId]
 WHERE U.[Quantity]>0 AND U.[PartNumber] NOT IN (SELECT [PartNumber] FROM [PMS1].[dbo].[bInstrumentVersion])
 
 SELECT *
@@ -79,7 +79,7 @@ FROM (
 		P.[Quantity],
 		0 AS [HoursRun]
 	FROM #parts P
-	INNER JOIN [ProductionWeb].[dbo].[Lots] IL ON IL.[LotNumberId] = P.[LotNumberId]
+	INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] IL ON IL.[LotNumberId] = P.[LotNumberId]
 	UNION ALL
 	SELECT
 		I.[NormalSerial],
@@ -106,17 +106,22 @@ EXEC sp_rename 'dbo.bInstrumentParts_TEMP', 'bInstrumentParts';
 DROP TABLE #edge, #parts, #newParts
 
 -- Update [dbo].[bInstrumentProduced]
-SELECT
-	CAST(L.[DateOfManufacturing] AS DATE) AS [DateOfManufacturing],
-	UPPER(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber], ' ', ''), '.', ''), '_', ''), 'KTM', 'TM')) AS [SerialNo],
-	P.[PartNumber],
-	V.[Version],
-	V.[Refurb],
-	UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber], ' ', ''), '.', ''), '_', ''), 'KTM', 'TM'), 'R', ''), '2FA', 'FA')) AS [NormalSerial]
+SELECT 
+	*,
+	ROW_NUMBER() OVER(PARTITION BY [NormalSerial] ORDER BY [DateOfManufacturing]) AS [ProdNo]
 INTO [dbo].[bInstrumentProduced_TEMP]
-FROM [ProductionWeb].[dbo].[Lots] L
-INNER JOIN [ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
-INNER JOIN [PMS1].[dbo].[bInstrumentVersion] V ON V.[PartNumber] = P.[PartNumber]
+FROM (
+	SELECT
+		CAST(L.[DateOfManufacturing] AS DATE) AS [DateOfManufacturing],
+		UPPER(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber], ' ', ''), '.', ''), '_', ''), 'KTM', 'TM')) AS [SerialNo],
+		P.[PartNumber],
+		V.[Version],
+		V.[Refurb],
+		UPPER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(L.[LotNumber], ' ', ''), '.', ''), '_', ''), 'KTM', 'TM'), 'R', ''), '2FA', 'FA')) AS [NormalSerial]
+	FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L
+	INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
+	INNER JOIN [PMS1].[dbo].[bInstrumentVersion] V ON V.[PartNumber] = P.[PartNumber]
+) Q
 
 CREATE INDEX [idx_NormalSerial] ON [dbo].[bInstrumentProduced_TEMP]([NormalSerial])
 CREATE INDEX [idx_SerialNo] ON [dbo].[bInstrumentProduced_TEMP]([SerialNo])

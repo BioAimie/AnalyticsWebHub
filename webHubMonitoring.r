@@ -10,6 +10,9 @@ itemsNotUpdated <- character(0)
 
 #loop through folders
 folders <- list.dirs('../images')
+# exclude PouchManufacturingQuality 
+folders <- folders[-which(folders == "../images/Dashboard_PouchManufacturingQuality")]
+
 for (i in folders) {
   images <- list.files(i)
   
@@ -64,5 +67,46 @@ if(nrow(df)>0){
            msg = paste0(c('The following tables did not update: ', df$name), collapse='\n'),
            control = list(smtpServer = 'webmail.biofiredx.com'))
 }
+
+# send only Anna and email about Pouch Manufacturing Quality
+images <- list.files("../images/Dashboard_PouchManufacturingQuality")
+
+for (j in images){
+  if (grepl('.png$', j, ignore.case = TRUE)) {
+    #grab timestamp on image
+    timeUpdated <- file.mtime(paste("../images/Dashboard_PouchManufacturingQuality",'/',j, sep=''))
+    
+    #verify timestamp is within last hour, except IR dashboard, Instrument Calibration, and Trends
+    
+    if (grepl('Dashboard_InternalReliability', "../images/Dashboard_PouchManufacturingQuality", ignore.case = TRUE) || grepl('Dashboard_InstrumentCalibration', "../images/Dashboard_PouchManufacturingQuality", ignore.case = TRUE) || grepl('Dashboard_Trends', "../images/Dashboard_PouchManufacturingQuality", ignore.case = TRUE)) {
+      if (timeUpdated < (Sys.time()-86400)){
+        #add to list of items not updated  
+        itemsNotUpdated = c(itemsNotUpdated, paste("../images/Dashboard_PouchManufacturingQuality",'/',j, sep=''))
+      }
+      #all other dashboards
+    } else if (timeUpdated < (Sys.time()-3900)){
+      #add to list of items not updated  
+      itemsNotUpdated = c(itemsNotUpdated, paste("../images/Dashboard_PouchManufacturingQuality",'/',j, sep=''))
+    }
+  }
+}
+
+
+if(length(itemsNotUpdated) != 0) {
+  emailList <- character(0)
+  for(k in itemsNotUpdated){
+    emailList <- paste(emailList, k, sep="     ")
+  }
+  
+  from <- "Q_PM_tracker@biofiredx.com"
+  to <- c("anna.hoffee@biofiredx.com")
+  subject <- "WebHub Charts Did Not Update"
+  body <- paste("Hello, The following WebHub charts did not update on schedule: ", emailList)                     
+  mailControl=list(smtpServer="webmail.biofiredx.com")
+  
+  sendmail(from=from,to=to,subject=subject,msg=body,control=mailControl)
+}
+
+
   
 rm(list=ls())
