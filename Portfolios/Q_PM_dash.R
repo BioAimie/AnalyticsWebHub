@@ -1,5 +1,5 @@
 
-workDir <- '~/WebHub/AnalyticsWebHub/'
+workDir <- '~/WebHub/AnalyticsWebHub_github/'
 imgDir <- '~/WebHub/images/Dashboard_PouchManufacturingQuality/'
 pdfDir <- '~/WebHub/pdfs/'
 
@@ -11,7 +11,7 @@ library(zoo)
 library(ggplot2)
 library(devtools)
 library(dateManip)
-
+library(DomoR)
 # Load data and functions
 source('Portfolios/Q_PM_load.R')
 source('Rfunctions/analyzeOrderIMR.R')
@@ -19,57 +19,15 @@ source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 source('Rfunctions/xbarRangeCalculator.R')
 
+domo_token <- '9198c073cd2f74d947f4f0ddeca70d0ec8564fe596a1408b' 
+DomoR::init('biofiredx', domo_token)
+
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
 fontSize <- 20
 fontFace <- 'bold'
 theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
-
-# # IMR CHARTS ---------------------------------------------------------------------------------------------------------------------------------
-# # Choose a start date for data to be considered in the mean and standard deviation -
-# # ** FOR NOW, INCLUDE ALL DATA IN THE DATA BASE!!!
-# burst.startDate <- min(as.Date(burst.df$DateOpened, tz='MST'))
-# hydra.startDate <- min(as.Date(hydration.df$DateOpened, tz='MST'))
-# faivLine.startDate <- min(as.Date(faivLine.df$DateOpened, tz='MST'))
-# faivLineWater.startDate <- min(as.Date(faivLineWater.df$DateOpened, tz='MST'))
-# 
-# # --------- LAST 24 HOURS 
-# # IncludeInIMR == 1 includes all the data points that should be shown in the charts
-# points.burst <- length(burst.df[burst.df[,'IncludeInIMR'] == 1, 1])
-# points.hydra <- length(hydration.df[hydration.df[,'IncludeInIMR'] == 1, 1])
-# points.faivLine <- length(faivLine.df[faivLine.df[,'IncludeInIMR'] == 1, 1])
-# points.faivLineWater <- length(faivLineWater.df[faivLineWater.df[,'IncludeInIMR'] == 1, 1])
-# 
-# # Create I and MR (I-MR) data frames such that it is easy to make charts
-# burst.imr <- analyzeOrderIMR(burst.df, 'Result', 'DateOpened', points.burst, 3, 'GroupName', byEquipment = TRUE)
-# hydra.imr.wsw <- analyzeOrderIMR(hydration.df, 'WaterSideWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = TRUE)
-# hydra.imr.ssw <- analyzeOrderIMR(hydration.df, 'SampleSideWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = TRUE)
-# hydra.imr.tw <- analyzeOrderIMR(hydration.df, 'TotalWeight', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = TRUE)
-# hydra.imr.tht <- analyzeOrderIMR(hydration.df, 'TotalHydrationTime', 'DateOpened', points.hydra, 3, 'GroupName', byEquipment = TRUE)
-# faivLine.imr <- analyzeOrderIMR(faivLine.df, 'Result', 'DateOpened', points.faivLine, 3, 'GroupName', byEquipment = TRUE)
-# if(points.faivLineWater > 0) {
-#   faivLineWater.imr <- analyzeOrderIMR(faivLineWater.df, 'Result', 'DateOpened', points.faivLineWater, 3, 'GroupName', byEquipment = TRUE)  
-# }
-# # for cannula pull strength, the group wants IMR charts to show +5sd rather than 3, so do that instead
-# cannula.mean <- with(faivLine.df[faivLine.df$Result <= 100 & faivLine.df$Result >= 0, ], aggregate(Result~GroupName, FUN=mean))
-# cannula.sd <- with(faivLine.df[faivLine.df$Result <= 100 & faivLine.df$Result >= 0, ], aggregate(Result~GroupName, FUN=sd))
-# faivLine.imr <- merge(merge(faivLine.imr, cannula.mean, by.x='Equipment', by.y='GroupName'), cannula.sd, by.x='Equipment', by.y='GroupName')
-# colnames(faivLine.imr) <- c('Equipment','LotNumber','TestNumber','DateOpened','Observation','Result','Key','Average','LCL','UCL','HistMean','HistSD')
-# faivLine.imr$LCL <- with(faivLine.imr, HistMean - 5*HistSD)
-# faivLine.imr$UCL <- with(faivLine.imr, HistMean + 5*HistSD)
-# 
-# # make IMR charts by equipment
-# # ---- Pouch line
-# p.burst <- ggplot(burst.imr, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Burst Testing by Line\n (Last 24 Hours of Manufacturing)', y='Result (FYI limits include all historical data)')
-# p.hydra.wsw <- ggplot(hydra.imr.wsw, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Hydration Testing by Line - Water Side Weight\n (Last 24 Hours of Manufacturing)', y='Result (FYI limits include all historical data)')
-# p.hydra.ssw <- ggplot(hydra.imr.ssw, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Hydration Testing by Line - Sample Side Weight\n (Last 24 Hours of Manufacturing)', y='Result (FYI limits include all historical data)')
-# p.hydra.tw <- ggplot(hydra.imr.tw, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() +  facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Hydration Testing by Line - Total Weight\n (Last 24 Hours of Manufacturing)', y='Result (FYI limits include all historical data)')
-# p.hydra.tht <- ggplot(hydra.imr.tht, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() +  facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='Hydration Testing by Line - Total Hydration Time\n (Last 24 Hours of Manufacturing)', y='Result (FYI limits include all historical data)')
-# p.faivLine <- ggplot(faivLine.imr, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='FAIV Cannula Pull Strength Testing by Line\n (Last 24 Hours of Manufacturing)', y='Result')
-# if(points.faivLineWater > 0) {
-#   p.faivLineWater <- ggplot(faivLineWater.imr, aes(x=Observation, y=Result, group='1')) + geom_line() + geom_point() + facet_grid(Key~Equipment, scales='free') + geom_hline(aes(yintercept=LCL), color='darkgreen') + geom_hline(aes(yintercept=UCL), color='darkgreen') + geom_hline(aes(yintercept=Average), color='blue') + theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black')) + scale_x_continuous(labels = function(x) floor(x)) + labs(title='FAIV Water Weight Testing by Line\n (Last 24 Hours of Manufacturing)', y='Result')
-# }
 
 # ------- LAST 30 DAYS (does not differentiate by equipment)
 burst.df[,'Date'] <- as.Date(burst.df[,'DateOpened'], tz='MST')
@@ -268,7 +226,7 @@ for(line.name in ssw.lines$Line) {
   	geom_hline(aes(yintercept=Average), color='blue') + 
   	theme(plot.title=element_text(size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, size=14, hjust=1)) + 
   	scale_x_continuous(labels =labels, breaks=breaks) + 
-  	labs(title=paste('Pouch Hydration Testing on', line.name, ' - Sample Side Weight\n (Last 7 Days of Manufacturing)', sep=''), y='Result (FYI limits include all historical data)', x='Observation Time')
+  	labs(title=paste('Pouch Hydration Testing on ', line.name, ' - Sample Side Weight\n (Last 7 Days of Manufacturing)', sep=''), y='Result (FYI limits include all historical data)', x='Observation Time')
   
   imgName <- paste(substring(plot.name,3),'.png',sep='')
   png(file=paste(imgDir, imgName, sep=''), width=1200, height=800, units='px')
@@ -284,6 +242,7 @@ for( pouchLine in unique(faivLine.imr.lsd$Equipment)){
 	#print(seq(1, length(pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'])))
 	labels <-  pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'][seq(1, nrow(pouchline.subset)/2, increment.value)]
 	breaks <- seq(1, nrow(pouchline.subset)/2, increment.value)
+	print(pouchLine)
 	plot <- ggplot(pouchline.subset,aes(x=Observation, y=Result, group='1')) + geom_line() + 
 		geom_point() + 
 		facet_wrap(~Key, ncol=1, scales="free_y") + 
@@ -443,5 +402,29 @@ for(i in 1:length(plots)) {
   print(eval(parse(text = plots[i])))
 }
 dev.off()
+
+
+burst.imr.ltd$Equipment <- rep('BurstLTD', nrow(burst.imr.ltd))
+hydra.imr.wsw.ltd$Equipment <- rep('wswHydrationAllLines', nrow(hydra.imr.wsw.ltd))
+hydra.imr.ssw.ltd$Equipment <- rep('sswHydrationAllLines', nrow(hydra.imr.ssw.ltd))
+
+faivLineWater.imr.ltd$Equipment <- rep('FAIVLineWaterWeight', nrow(faivLineWater.imr.ltd))
+faivLine.imr.ltd$Equipment <- rep('FAIVLineCannula', nrow(faivLine.imr.ltd))
+
+burst.imr.lsd$LineKey <- NULL
+burst.imr.lsd$Equipment <- paste('burstLSD', burst.imr.lsd$Equipment, sep='')
+
+hydration.imr.lsd.wsw$Equipment <- paste('hydrationLSDWSW', hydration.imr.lsd.wsw$Equipment, sep='')
+hydration.imr.lsd.ssw$Equipment <- paste('hydrationLSDSSW', hydration.imr.lsd.ssw$Equipment, sep='')
+faivLine.imr.lsd <- faivLine.imr.lsd[, c('LotNumber', 'TestNumber', 'Equipment', 'DateOpened', 'Observation', 'Result', 'Key', 'Average', 'LCL', 'UCL')]
+faivLine.imr.lsd$Equipment <- paste('faivLineLSD', faivLine.imr.lsd$Equipment)
+
+faivLineWater.imr.lsd$Equipment <- paste('faivLineWaterLSD', faivLineWater.imr.lsd$Equipment)
+
+data.set <- rbind(hydra.imr.wsw.ltd, hydra.imr.ssw.ltd, faivLineWater.imr.ltd, faivLine.imr.ltd, burst.imr.lsd, hydration.imr.lsd.wsw, hydration.imr.lsd.ssw, faivLine.imr.lsd, faivLineWater.imr.lsd, burst.imr.ltd, stringsAsFactors=FALSE)
+
+replace_ds('61af94e0-803f-4b4b-a207-0572b3c4e7a4', data.set)
+
+
 
 rm(list = ls())
