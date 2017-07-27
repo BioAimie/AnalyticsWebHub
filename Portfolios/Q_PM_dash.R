@@ -11,13 +11,18 @@ library(zoo)
 library(ggplot2)
 library(devtools)
 library(dateManip)
-
+library(DomoR)
 # Load data and functions
 source('Portfolios/Q_PM_load.R')
 source('Rfunctions/analyzeOrderIMR.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
 source('Rfunctions/makeTimeStamp.R')
 source('Rfunctions/xbarRangeCalculator.R')
+
+
+domo_token <- '9198c073cd2f74d947f4f0ddeca70d0ec8564fe596a1408b' 
+DomoR::init('biofiredx', domo_token)
+
 
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
@@ -145,6 +150,10 @@ for(line.name in burst.lines$Line) {
   plot.data <- subset(burst.imr.lsd, Equipment == line.name)
   # make the lables 
   increment.value <- floor((nrow(plot.data)/2)/5)
+  if(increment.value < 1){
+    increment.value <- 1
+  }
+  
   # labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
   breaks <- seq(1, nrow(plot.data)/2, increment.value)
   labels <- plot.data[plot.data$Key=='Individual Value', 'DateOpened'][order(plot.data[plot.data$Key=='Individual Value', 'DateOpened'])][breaks]
@@ -177,6 +186,9 @@ for( line.name in wsw.lines$Line) {
   plot.names <- c(plot.names, plot.name)
   # make the lables 
   increment.value <- floor((nrow(plot.data)/2)/5)
+  if(increment.value < 1){
+    increment.value <- 1
+  }
   # labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
   breaks <- seq(1, nrow(plot.data)/2, increment.value)
   labels <- plot.data[plot.data$Key=='Individual Value', 'DateOpened'][order(plot.data[plot.data$Key=='Individual Value', 'DateOpened'])][breaks]
@@ -209,6 +221,10 @@ for(line.name in ssw.lines$Line) {
   plot.names <- c(plot.names, plot.name)
    # make the lables 
   increment.value <- floor((nrow(plot.data)/2)/5)
+  if(increment.value < 1){
+    increment.value <- 1
+  }
+  
   # labels <-  plot.data[plot.data$Key=='Individual Value', 'DateOpened'][seq(1, nrow(plot.data)/2, increment.value)]
   breaks <- seq(1, nrow(plot.data)/2, increment.value)
   labels <- plot.data[plot.data$Key=='Individual Value', 'DateOpened'][order(plot.data[plot.data$Key=='Individual Value', 'DateOpened'])][breaks]
@@ -234,7 +250,11 @@ for(line.name in ssw.lines$Line) {
 ## split up the graphs by pouch line 
 for( pouchLine in unique(faivLine.imr.lsd$Equipment)){
 	pouchline.subset <- subset(faivLine.imr.lsd, Equipment == pouchLine)
-	increment.value <- floor((nrow(pouchline.subset)/2)/5) 
+	increment.value <- floor((nrow(pouchline.subset)/2)/5)
+	if(increment.value < 1){
+	  increment.value <- 1
+	}
+	
 	# print(seq(1, length(pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'])))
 	# labels <-  pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'][seq(1, nrow(pouchline.subset)/2, increment.value)]
 	breaks <- seq(1, nrow(pouchline.subset)/2, increment.value)
@@ -256,6 +276,9 @@ for( pouchLine in unique(faivLine.imr.lsd$Equipment)){
 for( pouchLine in unique(faivLineWater.imr.lsd$Equipment)){
 	pouchline.subset <- subset(faivLineWater.imr.lsd, Equipment == pouchLine)
 	increment.value <- floor((nrow(pouchline.subset)/2)/5) 
+	if(increment.value < 1){
+	  increment.value <- 1
+	}
 	labels <-  pouchline.subset[pouchline.subset$Key=='Individual Value', 'DateOpened'][seq(1, nrow(pouchline.subset)/2, increment.value)]
 	#breaks <- pouchline.subset[pouchline.subset$Key=='Individual Value', 'Observation'][seq(1, length(pouchline.subset[pouchline.subset$Key=='Individual Value', 'Observation']), increment.value)]
 	breaks <- seq(1, nrow(pouchline.subset)/2, increment.value)
@@ -316,8 +339,35 @@ faivLineWater.ltd.agg$LineType <- rep('Auto', nrow(faivLineWater.ltd.agg))
 faivLineWater.ltd.agg$LineType[which(!grepl('Auto', faivLineWater.ltd.agg$Equipment))] <- 'Manual'
 p.hydra.wsw.fail.ltd <- ggplot(hydra.wsw.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.wsw.ltd[,'Date'])[order(unique(hydra.wsw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Water Side Weight < 0.8g)', x='Date', y='Count of Failed Tests')
 p.hydra.ssw.fail.ltd <- ggplot(hydra.ssw.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(hydra.ssw.ltd[,'Date'])[order(unique(hydra.ssw.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing Hydration Tests in Last 30 Days\n(Sample Side Weight < 0.2g)', x='Date', y='Count of Failed Tests')
-p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
-p.faivLineWater.fail.ltd <- ggplot(faivLineWater.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + facet_wrap(~LineType) + geom_bar(stat='identity') + scale_x_discrete(breaks = as.factor(unique(faivLineWater.ltd[,'Date'])[order(unique(faivLineWater.ltd[,'Date']))])) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Failing FAIV Water Weight Tests in Last 30 Days\n(Result < 1.4)', x='Date', y='Count of Failed Tests') + ylim(c(0, ifelse(max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
+
+annotation.x.value <-  .2 - (as.numeric(difftime(Sys.Date(), as.Date('2017-05-23'), units=c('days')), units='days') - 36)*.05
+if(annotation.x.value < 0){
+  p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
+    geom_bar(stat='identity') + 
+    scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + 
+    theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+    labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + 
+    ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) +1, 5+1)))
+  
+  
+}else{
+  annotate.text <- grobTree(textGrob('NCR-21878', x=annotation.x.value,  y=0.90,gp=gpar(col='black', fontsize=13, fontface='bold')))
+
+  p.faivLine.fail.ltd <- ggplot(faivLine.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
+    geom_bar(stat='identity') + 
+    scale_x_discrete(breaks = as.factor(unique(faivLine.ltd[,'Date'])[order(unique(faivLine.ltd[,'Date']))])) + 
+    annotation_custom(annotate.text) +
+    theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+    labs(title='Failing FAIV Cannula Pull Strength Tests in Last 30 Days\n(Result < 9lbs)', x='Date', y='Count of Failed Tests')  + 
+    ylim(c(0, ifelse(max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLine.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) +1, 5+1)))
+}
+p.faivLineWater.fail.ltd <- ggplot(faivLineWater.ltd.agg, aes(x=as.factor(Date), y=FailCount, fill=Equipment)) + 
+  facet_wrap(~LineType) + 
+  geom_bar(stat='identity') + 
+  scale_x_discrete(breaks = as.factor(unique(faivLineWater.ltd[,'Date'])[order(unique(faivLineWater.ltd[,'Date']))])) + 
+  theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+  labs(title='Failing FAIV Water Weight Tests in Last 30 Days\n(Result < 1.4)', x='Date', y='Count of Failed Tests') + 
+  ylim(c(0, ifelse(max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount) > 5, max(with(faivLineWater.ltd, aggregate(FailCount~Date, FUN=sum))$FailCount), 5)))
 
 # TREND CHARTS -- not a moving average... the team perfers a box and whisker plot by week ---------------------------------------------------------------------------
 burst.df[,'DateGroup'] <- with(burst.df, ifelse(Week < 10, paste(Year, Week, sep='-0'), paste(Year, Week, sep='-')))
@@ -368,5 +418,29 @@ for(i in 1:length(plots)) {
   print(eval(parse(text = plots[i])))
 }
 dev.off()
+
+
+
+burst.imr.ltd$Equipment <- rep('BurstLTD', nrow(burst.imr.ltd))
+hydra.imr.wsw.ltd$Equipment <- rep('wswHydrationAllLines', nrow(hydra.imr.wsw.ltd))
+hydra.imr.ssw.ltd$Equipment <- rep('sswHydrationAllLines', nrow(hydra.imr.ssw.ltd))
+
+faivLineWater.imr.ltd$Equipment <- rep('FAIVLineWaterWeight', nrow(faivLineWater.imr.ltd))
+faivLine.imr.ltd$Equipment <- rep('FAIVLineCannula', nrow(faivLine.imr.ltd))
+
+burst.imr.lsd$LineKey <- NULL
+burst.imr.lsd$Equipment <- paste('burstLSD', burst.imr.lsd$Equipment, sep='')
+
+hydration.imr.lsd.wsw$Equipment <- paste('hydrationLSDWSW', hydration.imr.lsd.wsw$Equipment, sep='')
+hydration.imr.lsd.ssw$Equipment <- paste('hydrationLSDSSW', hydration.imr.lsd.ssw$Equipment, sep='')
+faivLine.imr.lsd <- faivLine.imr.lsd[, c('LotNumber', 'TestNumber', 'Equipment', 'DateOpened', 'Observation', 'Result', 'Key', 'Average', 'LCL', 'UCL')]
+faivLine.imr.lsd$Equipment <- paste('faivLineLSD', faivLine.imr.lsd$Equipment)
+
+faivLineWater.imr.lsd$Equipment <- paste('faivLineWaterLSD', faivLineWater.imr.lsd$Equipment)
+
+data.set <- rbind(hydra.imr.wsw.ltd, hydra.imr.ssw.ltd, faivLineWater.imr.ltd, faivLine.imr.ltd, burst.imr.lsd, hydration.imr.lsd.wsw, hydration.imr.lsd.ssw, faivLine.imr.lsd, faivLineWater.imr.lsd, burst.imr.ltd, stringsAsFactors=FALSE)
+
+replace_ds('61af94e0-803f-4b4b-a207-0572b3c4e7a4', data.set)
+
 
 rm(list = ls())

@@ -10,8 +10,16 @@ library(scales)
 library(zoo)
 library(devtools)
 library(lubridate)
-install_github('BioAimie/dateManip')
-library(dateManip)
+#install_github('BioAimie/dateManip')
+#library(dateManip)
+source('~/WebHub/dateManipV1/addStatsToSparseHandledData.R')
+source('~/WebHub/dateManipV1/aggregateAndFillDateGroupGaps.R')
+source('~/WebHub/dateManipV1/createCalendarLikeMicrosoft.R')
+source('~/WebHub/dateManipV1/createEvenWeeks.R')
+source('~/WebHub/dateManipV1/findStartDate.R')
+source('~/WebHub/dateManipV1/mergeCalSparseFrames.R')
+source('~/WebHub/dateManipV1/transformToEpiWeeks.R')
+
 
 # load the data from SQL
 source('Portfolios/R_CI_load.R')
@@ -27,8 +35,8 @@ validateDate <- '2016-04'
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
 startYear <- year(Sys.Date()) - 3
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Week')
-startDate <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=53)
-plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=0)
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup'])))][seq(periods,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup']))), seqBreak)]
@@ -43,18 +51,18 @@ complaints.all <- data.frame(Year = complaints.df[,'Year'], Week = complaints.df
 complaints.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', complaints.all, c('Key'), startDate, 'Record', 'sum', 1)
 escalated.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(complaints.df, Key == 1), c('Key'), startDate, 'Record', 'sum', 0)
 escalated.rate <- mergeCalSparseFrames(escalated.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-escalated.lims <- addStatsToSparseHandledData(escalated.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
+escalated.lims <- addStatsToSparseHandledData(escalated.rate, c('Key'), lagPeriods, TRUE, 3, 'upper', 0)
 x.val <- which(as.character(unique(escalated.lims[,'DateGroup']))==validateDate)
-p.escalated <- ggplot(escalated.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_line(aes(y=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Rate of Escalated Complaints per All Complaints', subtitle = 'Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') 
+p.escalated <- ggplot(escalated.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + geom_line(aes(y=UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Rate of Escalated Complaints per All Complaints', subtitle = 'Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') 
 
 # Rate of Qty Affected in Erroeneous Result Complaints per All Complaints
 erroneous.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', erroneous.df, c('Version'), startDate, 'Record', 'sum', 0)
 erroneous.version.type <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', erroneous.df, c('Version','RecordedValue'), startDate, 'Record', 'sum', 0)
 erroneous.version.rate <- mergeCalSparseFrames(erroneous.version, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-erroneous.version.lims <- addStatsToSparseHandledData(erroneous.version.rate, c('Version'), lagPeriods, TRUE, 3, 'upper', 0.05, keepPeriods=53)
+erroneous.version.lims <- addStatsToSparseHandledData(erroneous.version.rate, c('Version'), lagPeriods, TRUE, 3, 'upper', 0.05)
 erroneous.version.type.rate <- mergeCalSparseFrames(erroneous.version.type, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-erroneous.version.type.lims <- addStatsToSparseHandledData(erroneous.version.type.rate, c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.05, keepPeriods=53)
-p.erroneous.version <- ggplot(erroneous.version.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + facet_wrap(~Version, scale='free_y') + geom_line(aes(y=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Quantity Affected in Erroneous Result Complaints per All Complaints\nLimit = 3 standard deviations or 5%', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') 
+erroneous.version.type.lims <- addStatsToSparseHandledData(erroneous.version.type.rate, c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.05)
+p.erroneous.version <- ggplot(erroneous.version.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('blue','red'), guide=FALSE) + facet_wrap(~Version, scale='free_y') + geom_line(aes(y=UL), color='red', lty=2) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1, vjust=0.5)) + labs(title='Quantity Affected in Erroneous Result Complaints per All Complaints\nLimit = 3 standard deviations or 5%', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') 
 p.erroneous.version.chemistry <- ggplot(subset(erroneous.version.type.lims,Version == 'Chemistry'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + facet_wrap(~RecordedValue, scale='free_y') + geom_line(aes(y=UL), color='blue', lty=2, data=subset(erroneous.version.type.lims,Version == 'Chemistry')) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Quantity Affected in Erroneous Result Chemistry Complaints per All Complaints\nFYI Limit = 3 standard deviations or 5%', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') 
 p.erroneous.version.instrument <- ggplot(subset(erroneous.version.type.lims,Version == 'Instrument'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values=c('black','black'), guide=FALSE) + facet_wrap(~RecordedValue, scale='free_y') + geom_line(aes(y=UL), color='blue', lty=2, data=subset(erroneous.version.type.lims,Version == 'Instrument')) + scale_y_continuous(labels=percent) + expand_limits(y=0) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + labs(title='Quantity Affected in Erroneous Result Instrument Complaints per All Complaints\nFYI Limit = 3 standard deviations or 5%', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') 
 if(nrow(subset(erroneous.version.type.lims,Version == 'Software')) > 0) {
@@ -74,7 +82,7 @@ bfdxProd.rate <- mergeCalSparseFrames(bfdxProd.fill, complaints.all, c('DateGrou
 bfdxProd.df[,'statParam'] <- 'bfdx'
 bfdxProd.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', bfdxProd.df, c('statParam'), startDate, 'Record', 'sum', 0)
 bfdxProd.all <- mergeCalSparseFrames(bfdxProd.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-bfdxProd.all <- addStatsToSparseHandledData(bfdxProd.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
+bfdxProd.all <- addStatsToSparseHandledData(bfdxProd.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0)
 bfdxProd.lims <- merge(bfdxProd.rate, bfdxProd.all[,c('DateGroup','UL')], by=c('DateGroup'))
 pal.prod <- createPaletteOfVariableLength(bfdxProd.lims, 'Version')
 p.product <- ggplot(bfdxProd.lims, aes(x=DateGroup, y=Rate, fill=Version)) + geom_bar(stat='identity') + geom_line(aes(y=UL), color='blue', lty=2, group=1) + scale_fill_manual(values=pal.prod) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='BFDx Product in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate')
@@ -86,7 +94,7 @@ ccSummary.rate <- mergeCalSparseFrames(ccSummary.fill, complaints.all, c('DateGr
 ccSummary.df[,'statParam'] <- 'bfdx'
 ccSummary.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', ccSummary.df, c('statParam'), startDate, 'Record', 'sum', 0)
 ccSummary.all <- mergeCalSparseFrames(ccSummary.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-ccSummary.all <- addStatsToSparseHandledData(ccSummary.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
+ccSummary.all <- addStatsToSparseHandledData(ccSummary.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0)
 ccSummary.lims <- merge(ccSummary.rate, ccSummary.all[,c('DateGroup','UL')], by=c('DateGroup'))
 pal.summary <- createPaletteOfVariableLength(ccSummary.lims, 'RecordedValue')
 p.summary <- ggplot(ccSummary.lims, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + geom_bar(stat='identity') + geom_line(aes(y=UL), color='blue', lty=2, group=1) + scale_fill_manual(values=pal.summary) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + guides(fill=guide_legend(ncol=3, bycol=TRUE)) + labs(title='Cause of Complaint in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate')
@@ -140,7 +148,7 @@ caAssay.fill <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', caAssay.df, c
 caAssay.rate <- mergeCalSparseFrames(caAssay.fill, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
 caAssay.allPanel <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', caAssay.df, c('Version'), startDate, 'Record', 'sum', 0)
 caAssay.all <- mergeCalSparseFrames(caAssay.allPanel, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-caAssay.all <- addStatsToSparseHandledData(caAssay.all, c('Version'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
+caAssay.all <- addStatsToSparseHandledData(caAssay.all, c('Version'), lagPeriods, TRUE, 3, 'upper', 0)
 caAssay.lims <- merge(caAssay.rate, caAssay.all[,c('DateGroup','Version','UL')], by=c('DateGroup','Version'))
 pal.bcid <- createPaletteOfVariableLength(subset(caAssay.lims, Version=='BCID'), 'Key')
 p.assay.bcid <- ggplot(subset(caAssay.lims, Version=='BCID'), aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_line(aes(y=UL), color='blue', lty=2, data=subset(caAssay.lims, Version=='BCID'), group=1) + scale_fill_manual(values=pal.bcid) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='BCID - Affected Assay in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + guides(fill=guide_legend(ncol=7, byrow=TRUE))
@@ -152,30 +160,34 @@ pal.rp <- createPaletteOfVariableLength(subset(caAssay.lims, Version=='RP'), 'Ke
 p.assay.rp <- ggplot(subset(caAssay.lims, Version=='RP'), aes(x=DateGroup, y=Rate, fill=Key)) + geom_bar(stat='identity') + geom_line(aes(y=UL), color='blue', lty=2, data=subset(caAssay.lims, Version=='RP'), group=1) + scale_fill_manual(values=pal.rp) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + labs(title='RP - Affected Assay in Escalated Complaints/All Complaints:\nFYI Limit = + 3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate') + guides(fill=guide_legend(ncol=7, byrow=TRUE))
 
 #top 10 affected assays per every 2 weeks for each panel
-weeks <- sort(as.character(unique(caAssay.fill$DateGroup)), decreasing = TRUE)[seq(2, 12, 2)]
+weeks <- sort(as.character(unique(caAssay.fill$DateGroup)), decreasing = TRUE)[seq(2, 6, 2)]
 caAssay.weeks <- data.frame(Week = '2 Weeks', with(subset(caAssay.fill, DateGroup >= weeks[1]), aggregate(Record~Version+Key, FUN=sum)))
 for(i in 2:length(weeks)) {
   temp <- data.frame(Week = paste(i*2, 'Weeks (net)'), with(subset(caAssay.fill, DateGroup >= weeks[i] & DateGroup < weeks[i-1]), aggregate(Record~Version+Key, FUN=sum)))
   caAssay.weeks <- rbind(caAssay.weeks, temp)
 }
-# find top 10 per panel for last 12 weeks
+# find top 10 per panel for last 6 weeks
 caAssay.weeksAgg <- with(caAssay.weeks, aggregate(Record~Version+Key, FUN=sum))
 topRP <- as.character(subset(caAssay.weeksAgg, Version == 'RP')[order(subset(caAssay.weeksAgg, Version == 'RP')[,'Record'], decreasing = TRUE),'Key'])[1:10]
 topBCID <- as.character(subset(caAssay.weeksAgg, Version == 'BCID')[order(subset(caAssay.weeksAgg, Version == 'BCID')[,'Record'], decreasing = TRUE),'Key'])[1:10]
 topGI <- as.character(subset(caAssay.weeksAgg, Version == 'GI')[order(subset(caAssay.weeksAgg, Version == 'GI')[,'Record'], decreasing = TRUE),'Key'])[1:10]
 topME <- as.character(subset(caAssay.weeksAgg, Version == 'ME')[order(subset(caAssay.weeksAgg, Version == 'ME')[,'Record'], decreasing = TRUE),'Key'])[1:10]
 caAssay.RP <- subset(caAssay.weeks, Version == 'RP' & Key %in% topRP)
+caAssay.RP <- rbind(caAssay.RP, data.frame(Week = 'Past 6 Weeks Total', Version = 'RP', with(caAssay.RP, aggregate(Record~Key, FUN=sum)))) 
 caAssay.RP$Key <- factor(caAssay.RP$Key, levels = topRP)
-p.TopAssays.RP <- ggplot(caAssay.RP, aes(x=Key, y=Record, fill=Week)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name = '', values = createPaletteOfVariableLength(caAssay.weeks, 'Week')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize)) + labs(title = 'Top 10 Affected Assays in Last 12 Weeks', subtitle = 'RP', x='Affected Assay', y='Count')
+p.TopAssays.RP <- ggplot(caAssay.RP, aes(x=Key, y=Record, fill=Week)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name = '', values = c('cornflowerblue','chocolate1','blueviolet','black')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize)) + labs(title = 'Top 10 Affected Assays in Last 6 Weeks', subtitle = 'RP', x='Affected Assay', y='Count')
 caAssay.BCID <- subset(caAssay.weeks, Version == 'BCID' & Key %in% topBCID)
+caAssay.BCID <- rbind(caAssay.BCID, data.frame(Week = 'Past 6 Weeks Total', Version = 'BCID', with(caAssay.BCID, aggregate(Record~Key, FUN=sum)))) 
 caAssay.BCID$Key <- factor(caAssay.BCID$Key, levels = topBCID)
-p.TopAssays.BCID <- ggplot(caAssay.BCID, aes(x=Key, y=Record, fill=Week)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name = '', values = createPaletteOfVariableLength(caAssay.weeks, 'Week')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize)) + labs(title = 'Top 10 Affected Assays in Last 12 Weeks', subtitle = 'BCID', x='Affected Assay', y='Count')
+p.TopAssays.BCID <- ggplot(caAssay.BCID, aes(x=Key, y=Record, fill=Week)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name = '', values = c('cornflowerblue','chocolate1','blueviolet','black')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize)) + labs(title = 'Top 10 Affected Assays in Last 6 Weeks', subtitle = 'BCID', x='Affected Assay', y='Count')
 caAssay.GI <- subset(caAssay.weeks, Version == 'GI' & Key %in% topGI)
+caAssay.GI <- rbind(caAssay.GI, data.frame(Week = 'Past 6 Weeks Total', Version = 'GI', with(caAssay.GI, aggregate(Record~Key, FUN=sum)))) 
 caAssay.GI$Key <- factor(caAssay.GI$Key, levels = topGI)
-p.TopAssays.GI <- ggplot(caAssay.GI, aes(x=Key, y=Record, fill=Week)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name = '', values = createPaletteOfVariableLength(caAssay.weeks, 'Week')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize)) + labs(title = 'Top 10 Affected Assays in Last 12 Weeks', subtitle = 'GI', x='Affected Assay', y='Count')
+p.TopAssays.GI <- ggplot(caAssay.GI, aes(x=Key, y=Record, fill=Week)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name = '', values = c('cornflowerblue','chocolate1','blueviolet','black')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize)) + labs(title = 'Top 10 Affected Assays in Last 6 Weeks', subtitle = 'GI', x='Affected Assay', y='Count')
 caAssay.ME <- subset(caAssay.weeks, Version == 'ME' & Key %in% topME)
+caAssay.ME <- rbind(caAssay.ME, data.frame(Week = 'Past 6 Weeks Total', Version = 'ME', with(caAssay.ME, aggregate(Record~Key, FUN=sum)))) 
 caAssay.ME$Key <- factor(caAssay.ME$Key, levels = topME)
-p.TopAssays.ME <- ggplot(caAssay.ME, aes(x=Key, y=Record, fill=Week)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name = '', values = createPaletteOfVariableLength(caAssay.weeks, 'Week')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize)) + labs(title = 'Top 10 Affected Assays in Last 12 Weeks', subtitle = 'ME', x='Affected Assay', y='Count')
+p.TopAssays.ME <- ggplot(caAssay.ME, aes(x=Key, y=Record, fill=Week)) + geom_bar(stat='identity', position='dodge') + scale_fill_manual(name = '', values = c('cornflowerblue','chocolate1','blueviolet','black')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=45, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize)) + labs(title = 'Top 10 Affected Assays in Last 6 Weeks', subtitle = 'ME', x='Affected Assay', y='Count')
 
 # Rate of Specimen Types per All Complaints
 specimens.df <- unique(observations.df[,c('bug_id','SerialNo','Year','Week','Version')])[,c('Year','Week','Version')]
@@ -186,7 +198,7 @@ specimens.rate <- mergeCalSparseFrames(specimens.fill, complaints.all, c('DateGr
 specimens.df[,'statParam'] <- 'bfdx'
 specimens.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', specimens.df, c('statParam'), startDate, 'Record', 'sum', 0)
 specimens.all <- mergeCalSparseFrames(specimens.all, complaints.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-specimens.all <- addStatsToSparseHandledData(specimens.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
+specimens.all <- addStatsToSparseHandledData(specimens.all, c('statParam'), lagPeriods, TRUE, 3, 'upper', 0)
 specimens.lims <- merge(specimens.rate, specimens.all[,c('DateGroup','UL')], by=c('DateGroup'))
 pal.specimens <- createPaletteOfVariableLength(specimens.lims, 'Version')
 p.specimens <- ggplot(specimens.lims, aes(x=DateGroup, y=Rate, fill=Version)) + geom_bar(stat='identity') + geom_line(aes(y=UL), color='blue', lty=2, group=1) + scale_fill_manual(values=pal.specimens) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + expand_limits(y=0) + theme(text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, hjust=1), axis.text=element_text(color='black',face=fontFace,size=fontSize), legend.position='bottom', legend.title=element_blank()) + guides(fill=guide_legend(ncol=4, byrow=TRUE)) + labs(title='Specimen Types in Escalated Complaints/All Complaints:\nFYI Limit = +3 standard deviations', x='Date\n(Year-Week)', y='Rolling 4-week Average Rate')
@@ -200,7 +212,7 @@ lagPeriods <- 0
 # make a calendar that matches the weeks from SQL DATEPART function and find a start date such that charts show one year
 startYear <- year(Sys.Date()) - 2
 calendar.df <- createCalendarLikeMicrosoft(startYear, 'Month')
-startDate <- findStartDate(calendar.df, 'Month', months, lagPeriods, keepPeriods=0)
+startDate <- findStartDate(calendar.df, 'Month', months, lagPeriods)
 # set theme for line charts ------------------------------------------------------------------------------------------------------------------
 seqBreak <- 1
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup'])))][seq(periods,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= startDate,'DateGroup']))), seqBreak)]

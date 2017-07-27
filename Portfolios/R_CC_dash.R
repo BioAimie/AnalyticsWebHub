@@ -12,9 +12,19 @@ library(gridExtra)
 library(grid)
 library(lubridate)
 library(devtools)
+library(plyr)
 
-install_github('BioAimie/dateManip')
-library(dateManip)
+#install_github('BioAimie/dateManip')
+#library(dateManip)
+
+source('~/WebHub/dateManipV1/addStatsToSparseHandledData.R')
+source('~/WebHub/dateManipV1/aggregateAndFillDateGroupGaps.R')
+source('~/WebHub/dateManipV1/createCalendarLikeMicrosoft.R')
+source('~/WebHub/dateManipV1/createEvenWeeks.R')
+source('~/WebHub/dateManipV1/findStartDate.R')
+source('~/WebHub/dateManipV1/mergeCalSparseFrames.R')
+source('~/WebHub/dateManipV1/transformToEpiWeeks.R')
+
 
 source('Portfolios/R_CC_load.R')
 source('Rfunctions/createPaletteOfVariableLength.R')
@@ -32,12 +42,12 @@ calendar.week.categories <- createCalendarLikeMicrosoft(year(Sys.Date())-3, 'Wee
 calendar.df.month <- createCalendarLikeMicrosoft(startYear, 'Month')
 calendar.df.quarter <- createCalendarLikeMicrosoft(startYear, 'Quarter')
 calendar.month <- createCalendarLikeMicrosoft(2013, 'Month')
-startDate <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=53)
-threeyr.plot <- findStartDate(calendar.df, 'Week', 156, 4, keepPeriods=0)
-threeyr <- findStartDate(calendar.df, 'Week', 156, 4, keepPeriods=53)
-plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods, keepPeriods=0)
-plot.startDate.month <- findStartDate(calendar.df.month, 'Month', 12, periods, keepPeriods=0)
-plot.startDate.quarter <- findStartDate(calendar.df.quarter, 'Quarter', 4, periods, keepPeriods=0)
+startDate <- findStartDate(calendar.df, 'Week', weeks, periods)
+threeyr.plot <- findStartDate(calendar.df, 'Week', 156, 4)
+threeyr <- findStartDate(calendar.df, 'Week', 156, 4)
+plot.startDate.week <- findStartDate(calendar.df, 'Week', weeks, periods)
+plot.startDate.month <- findStartDate(calendar.df.month, 'Month', 12, periods)
+plot.startDate.quarter <- findStartDate(calendar.df.quarter, 'Quarter', 4, periods)
 
 seqBreak <- 12
 dateBreaks <- as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup']))[order(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup'])))][seq(4,length(as.character(unique(calendar.df[calendar.df[,'DateGroup'] >= plot.startDate.week,'DateGroup']))), seqBreak)]
@@ -49,13 +59,13 @@ theme_set(theme_gray() + theme(plot.title = element_text(hjust = 0.5)))
 pouches.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c('Key'), startDate, 'Record', 'sum', 0)
 complaints.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', data.frame(Year = failures.df[,'Year'], Week = failures.df[,'Week'], Key = 'AllFailures', Record = failures.df[,'Record']), c('Key'), startDate, 'Record', 'sum', 0)
 complaints.all.rate <- mergeCalSparseFrames(complaints.all, pouches.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods) 
-complaints.all.lims <- addStatsToSparseHandledData(complaints.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0, keepPeriods=53)
+complaints.all.lims <- addStatsToSparseHandledData(complaints.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
 
 p.complaints.all <- ggplot(complaints.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_line(aes(y = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Complaints per Pouches Shipped', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average') #+ annotate("text",x=x_pos,y=y_pos,label=complaints.annotations, size=4)
 p.complaints.all.hist <- ggplot(complaints.all.lims, aes(x=Rate)) + geom_histogram(aes(y=(..count../sum(..count..)))) + scale_x_continuous(labels=percent) + coord_flip() + labs(x='Proportion', y='') + theme(plot.margin=unit(c(1.45,1,0.2,0.5), 'cm'), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(hjust=1, angle=90), axis.text=element_text(color='black', face=fontFace, size=fontSize))
 complaints.all.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', failures.df, c('Key'), startDate, 'Record', 'sum', 0)
-startDate.16 <- findStartDate(calendar.df, 'Week', 16, 0, keepPeriods=0)
-startDate.8 <- findStartDate(calendar.df, 'Week', 8, 0, keepPeriods=0)
+startDate.16 <- findStartDate(calendar.df, 'Week', 16, 0)
+startDate.8 <- findStartDate(calendar.df, 'Week', 8, 0)
 complaints.all.version.count <- complaints.all.version[complaints.all.version[,'DateGroup'] >= startDate.16, ]
 complaints.all.version.count[,'Period'] <- with(complaints.all.version.count, ifelse(DateGroup < startDate.8, '16 Weeks', '8 Weeks'))
 complaints.all.version.count <- merge(with(complaints.all.version.count, aggregate(Record~Key+Period, FUN=sum)), with(complaints.all.version.count, aggregate(Record~Key, FUN=sum)), by='Key')
@@ -68,7 +78,7 @@ p.complaints.all.pareto <- ggplot(complaints.all.version.count[with(complaints.a
 # ------------------------------------------------- CHEMISTRY COMPLAINTS ---------------------------------------------------------------------
 chemistry.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Chemistry'), c('Key'), startDate, 'Record', 'sum', 0)
 chemistry.all.rate <- mergeCalSparseFrames(chemistry.all, pouches.all, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
-chemistry.all.lims <- addStatsToSparseHandledData(chemistry.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0, keepPeriods=53)
+chemistry.all.lims <- addStatsToSparseHandledData(chemistry.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
 p.chemistry.all <-  ggplot(chemistry.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_line(aes(y = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Chemistry Complaints per Pouches Shipped', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average')
 p.chemistry.all.hist <- ggplot(chemistry.all.lims, aes(x=Rate)) + geom_histogram(aes(y=(..count../sum(..count..)))) + scale_x_continuous(labels=percent) + coord_flip() + labs(x='Proportion', y='') + theme(plot.margin=unit(c(1.45,1,0.2,0.5), 'cm'), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(hjust=1, angle=90), axis.text=element_text(color='black', face=fontFace, size=fontSize))
 chemistry.all.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Chemistry'), c('RecordedValue'), startDate, 'Record', 'sum', NA)
@@ -80,7 +90,7 @@ chemistry.all.version.count[,'Period'] <- factor(chemistry.all.version.count[,'P
 p.chemistry.all.pareto <- ggplot(chemistry.all.version.count[with(chemistry.all.version.count, order(Period)), ], aes(x=RecordedValue, y=Record.x, fill=Period)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1)) + labs(title='Customer Chemistry Complaints by Type Pareto', x='Complaint Type', y='Quantities Affected by Type') + scale_fill_manual(values=pal.pareto)
 chemistry.all.version[,'Risk'] <- with(chemistry.all.version, ifelse(RecordedValue %in% c('Patient Sample False Negative','Patient Sample False Positive','Validation False Positive','Validation Negative'), 'High','Low'))
 chemistry.all.version.rate <- mergeCalSparseFrames(chemistry.all.version, pouches.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-chemistry.all.version.lims <- addStatsToSparseHandledData(chemistry.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, sdFactor, 'upper', 0.001, keepPeriods=53)
+chemistry.all.version.lims <- addStatsToSparseHandledData(chemistry.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, sdFactor, 'upper', 0.001)
 p.chemistry.version.high <- ggplot(subset(chemistry.all.version.lims,Risk=='High'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_line(aes(y = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Chemistry Complaints By Type per Pouches Shipped (Risk ^)', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average')
 p.chemistry.version.low <- ggplot(subset(chemistry.all.version.lims,Risk=='Low'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Chemistry Complaints By Type per Pouches Shipped', x='Date', y='4 Week Rolling Average')
 chemistry.panel.version.count <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Chemistry'), c('Version','RecordedValue'), startDate.16, 'Record', 'sum', 0)
@@ -101,13 +111,13 @@ levels(chemistry.panel$RecordedValue)[levels(chemistry.panel$RecordedValue)=='Va
 pouches.panel <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c('Version'), startDate, 'Record', 'sum', 0)
 chemistry.panel[,'Version'] <- as.character(chemistry.panel[,'Version'])
 chemistry.panel.rate <- mergeCalSparseFrames(subset(chemistry.panel, Version %in% c('RP','GI','BCID','ME')), pouches.panel, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, periods)
-chemistry.panel.lims <- addStatsToSparseHandledData(chemistry.panel.rate, c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.001, keepPeriods=53)
+chemistry.panel.lims <- addStatsToSparseHandledData(chemistry.panel.rate, c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.001)
 p.chemistry.panel <- ggplot(chemistry.panel.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_grid(RecordedValue~Version, scale='free_y') + theme(strip.text.y=element_text(size=13.5), text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Chemistry Complaints By Panel per Pouch Panels Shipped', x='Date', y='4 Week Rolling Average')
 
 # ------------------------------------------------- POUCH COMPLAINTS ---------------------------------------------------------------------
 pouch.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Pouch'), c('Key'), startDate, 'Record', 'sum', 0)
 pouch.all.rate <- mergeCalSparseFrames(pouch.all, pouches.all, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
-pouch.all.lims <- addStatsToSparseHandledData(pouch.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0, keepPeriods=53)
+pouch.all.lims <- addStatsToSparseHandledData(pouch.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
 # x_positions <- c('2016-12')
 # pouch.annotations <- c('CI-14747')
 # y_positions <- pouch.all.lims[(pouch.all.lims[,'DateGroup']) %in% x_positions, 'Rate'] + 0.002
@@ -122,7 +132,7 @@ pouch.all.version.count[,'Period'] <- factor(pouch.all.version.count[,'Period'],
 p.pouch.all.pareto <- ggplot(pouch.all.version.count[with(pouch.all.version.count, order(Period)), ], aes(x=RecordedValue, y=Record.x, fill=Period)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1)) + labs(title='Customer Pouch Complaints by Type Pareto', x='Complaint Type', y='Quantities Affected by Type') + scale_fill_manual(values=pal.pareto)
 pouch.all.version[,'Risk'] <- with(pouch.all.version, ifelse(RecordedValue %in% c('Failure To Hydrate','Pouch Leak'), 'High','Low'))
 pouch.all.version.rate <- mergeCalSparseFrames(pouch.all.version, pouches.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-pouch.all.version.lims <- addStatsToSparseHandledData(pouch.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, sdFactor, 'upper', 0.001, keepPeriods=53)
+pouch.all.version.lims <- addStatsToSparseHandledData(pouch.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, sdFactor, 'upper', 0.001)
 p.pouch.version.high <- ggplot(subset(pouch.all.version.lims,Risk=='High'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_line(aes(y = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Pouch Complaints By Type per Pouches Shipped (Risk ^)', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average')
 p.pouch.version.low <- ggplot(subset(pouch.all.version.lims,Risk=='Low'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Pouch Complaints By Type per Pouches Shipped', x='Date', y='4 Week Rolling Average')
 pouch.location.version.count <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(complaints.df, Key=='Pouch'), c('Version','RecordedValue'), startDate.16, 'Record', 'sum', 0)
@@ -133,13 +143,13 @@ p.pouch.location.pareto <- ggplot(pouch.location.version.count, aes(x=RecordedVa
 pouch.location <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(complaints.df, Key=='Pouch'), c('Version','RecordedValue'), startDate, 'Record', 'sum', 0)
 pouch.shiploc <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c('RecordedValue'), startDate, 'Record', 'sum', 0)
 pouch.location.rate <- mergeCalSparseFrames(pouch.location, pouch.shiploc, c('DateGroup','Version'), c('DateGroup','RecordedValue'), 'Record', 'Record', 0, periods)
-pouch.location.lims <- addStatsToSparseHandledData(pouch.location.rate, c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.001, keepPeriods=53)
-p.pouch.location <- ggplot(pouch.location.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_grid(RecordedValue~Version, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Chemistry Complaints By Panel per Pouch Panels Shipped', x='Date', y='4 Week Rolling Average')
+pouch.location.lims <- addStatsToSparseHandledData(pouch.location.rate, c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.001)
+p.pouch.location <- ggplot(pouch.location.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_grid(RecordedValue~Version, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, vjust=0.5)) + labs(title='Customer Pouch Complaints By Location per Pouches Shipped', x='Date', y='4 Week Rolling Average')
 
 # ------------------------------------------------- INSTRUMENT COMPLAINTS ---------------------------------------------------------------------
 instrument.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('Key'), startDate, 'Record', 'sum', 0)
 instrument.all.rate <- mergeCalSparseFrames(instrument.all, pouches.all, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
-instrument.all.lims <- addStatsToSparseHandledData(instrument.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0, keepPeriods=53)
+instrument.all.lims <- addStatsToSparseHandledData(instrument.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
 p.instrument.all <- ggplot(instrument.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_line(aes(y = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Pouches Shipped', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average')
 p.instrument.all.hist <- ggplot(instrument.all.lims, aes(x=Rate)) + geom_histogram(aes(y=(..count../sum(..count..)))) + scale_x_continuous(labels=percent) + coord_flip() + labs(x='Proportion', y='') + theme(plot.margin=unit(c(1.45,1,0.2,0.5), 'cm'), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(hjust=1, angle=90), axis.text=element_text(color='black', face=fontFace, size=fontSize))
 pouches.all.3yr <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', pouches.df, c('Key'), threeyr, 'Record', 'sum', 0)
@@ -148,7 +158,7 @@ instrument.all.3yr.rate <- mergeCalSparseFrames(instrument.all.3yr, pouches.all.
 p.instrument.all.3yr <- ggplot(instrument.all.3yr.rate, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point() + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Pouches Shipped', subtitle = 'Over Three Years', x='Date', y='4 Week Rolling Average')
 instrument.all.version.3y <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), threeyr, 'Record', 'sum', 0)
 instrument.all.version.rate.3y <- mergeCalSparseFrames(instrument.all.version.3y, pouches.all.3yr, c('DateGroup'),c('DateGroup'), 'Record', 'Record', 0, periods)
-instrument.all.version.lims.3y <- addStatsToSparseHandledData(instrument.all.version.rate.3y, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.0005, keepPeriods=53)
+instrument.all.version.lims.3y <- addStatsToSparseHandledData(instrument.all.version.rate.3y, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.0005)
 pressure.error.rows.pouches <- instrument.all.version.lims.3y[which(instrument.all.version.lims.3y$RecordedValue == "Pressure Error"), ]
 p.pressure.errors.pouches <- ggplot(pressure.error.rows.pouches, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color="black") + geom_point() + scale_color_manual(values=c("black", "black"), guide=FALSE) + geom_line(aes(y=UL), color="blue", lty=2) +  scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pressure Errors per Pouches Shipped', x='Date', y='4 Week Rolling Average')
 instrument.all.version <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), startDate, 'Record', 'sum', 0)
@@ -160,7 +170,7 @@ instrument.all.version.count[,'Period'] <- factor(instrument.all.version.count[,
 p.instrument.all.pareto <- ggplot(instrument.all.version.count[with(instrument.all.version.count, order(Period)), ], aes(x=RecordedValue, y=Record.x, fill=Period)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1)) + labs(title='Customer Instrument Complaints by Type Pareto', x='Complaint Type', y='Quantities Affected by Type') + scale_fill_manual(values=pal.pareto)
 instrument.all.version.rate <- mergeCalSparseFrames(instrument.all.version, pouches.all, c('DateGroup'),c('DateGroup'), 'Record', 'Record', 0, periods)
 
-instrument.all.version.lims <- addStatsToSparseHandledData(instrument.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.0005, keepPeriods=53)
+instrument.all.version.lims <- addStatsToSparseHandledData(instrument.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.0005)
 p.instrument.version <- ggplot(instrument.all.version.lims, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instrument Complaints By Type per Pouches Shipped', x='Date', y='4 Week Rolling Average')
 instrument.build.version.count <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('Version','RecordedValue'), startDate.16, 'Record', 'sum', 0)
 instrument.build.version.count <- merge(with(instrument.build.version.count, aggregate(Record~Version+RecordedValue, FUN=sum)), with(instrument.build.version.count, aggregate(Record~RecordedValue, FUN=sum)), by='RecordedValue')
@@ -168,13 +178,30 @@ instrument.build.version.count[,'RecordedValue'] <- factor(instrument.build.vers
 pal.build <- createPaletteOfVariableLength(instrument.build.version.count, 'Version')
 p.instrument.build.pareto <- ggplot(instrument.build.version.count, aes(x=RecordedValue, y=Record.x, fill=Version)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1)) + labs(title='Customer Instrument Complaints by Version (16 weeks)', x='Complaint Type', y='Quantities Affected by Type') + scale_fill_manual(values=pal.build)
 instrument.build <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('Version','RecordedValue'), startDate, 'Record', 'sum', 0)
-installed.fill <- do.call(rbind, lapply(1:length(unique(installed.df[,'Version'])), function(x) cbind(merge(unique(calendar.df[,c('Year','DateGroup')]), installed.df[installed.df[,'Version'] == unique(installed.df[,'Version'])[x], c('DateGroup','Record')], by='DateGroup', all.x=TRUE), Version = unique(installed.df[,'Version'])[x])))
-installed.back <- do.call(rbind, lapply(1:length(unique(installed.fill[,'Version'])), function(y) data.frame(Version = unique(installed.fill[,'Version'])[y], DateGroup = installed.fill[installed.fill[,'Version'] == unique(installed.fill[,'Version'])[y], 'DateGroup'], DateGroupBackup = sapply(1:length(unique(installed.fill[,'DateGroup'])), function(x) ifelse(is.na(installed.fill[installed.fill[,'Version'] == unique(installed.fill[,'Version'])[y] & installed.fill[,'DateGroup'] == unique(installed.fill[,'DateGroup'])[x], 'Record']), max(installed.fill[installed.fill[,'Version'] == unique(installed.fill[,'Version'])[y] & !(is.na(installed.fill[,'Record'])) & installed.fill[,'DateGroup'] <= unique(installed.fill[,'DateGroup'])[x],'DateGroup']), unique(installed.fill[,'DateGroup'])[x])))))
-installed.back <- merge(installed.back, installed.fill, by.x=c('DateGroupBackup','Version'), by.y=c('DateGroup','Version'))
-install.base <- merge(installed.fill, installed.back, by=c('DateGroup','Version'), all.x=TRUE)
-install.base[is.na(install.base[,'Record.y']),'Record.y'] <- 0
-install.base <- install.base[,c('DateGroup','Version','Record.y')]
-colnames(install.base) <- c('DateGroup','Version','Record')
+dateGroups <- sort(as.character(unique(installed.df$DateGroup)))
+installed.df$DateGroup <- as.character(installed.df$DateGroup)
+FieldInstallBase <- c()
+for(i in 1:length(dateGroups)) {
+  temp <- subset(installed.df, DateGroup <= dateGroups[i])
+  temp <- temp[with(temp, order(SerialNo, Row)),]
+  serialsOut <- as.character(subset(with(temp, aggregate(DistQty~SerialNo, FUN=sum)), DistQty == 0)[,'SerialNo'])
+  FieldInstallBase <- rbind(FieldInstallBase, data.frame(DateGroup = dateGroups[i], subset(merge(subset(with(temp, aggregate(Row~SerialNo, FUN=max)), SerialNo %in% serialsOut), temp, by.x=c('Row', 'SerialNo'), by.y=c('Row', 'SerialNo')), select=c('Version', 'CustType')), Record=1))
+}
+#isolate customer instruments for field install base
+CustFieldInstallBase <- subset(FieldInstallBase, CustType == 'Domestic')
+CustFieldInstallBase <- with(CustFieldInstallBase, aggregate(Record~DateGroup+Version, FUN=sum))
+#create calendar with entry for each week and each unique instrument version
+InstallBaseCalendar <- data.frame(createCalendarLikeMicrosoft(2009, 'Week'), Record = 0)
+InstallBaseCalendar <- subset(with(InstallBaseCalendar, aggregate(Record~DateGroup, FUN=sum)), DateGroup >= '2009-52')
+InstallBaseCalendar <- merge(InstallBaseCalendar, data.frame(Version = as.character(unique(FieldInstallBase$Version))))
+#merge calendar with dataframe to get an entry for each week and each version
+CustFieldInstallBase$DateGroup <- as.character(CustFieldInstallBase$DateGroup)
+CustFieldInstallBase <- merge(CustFieldInstallBase, InstallBaseCalendar, by.x=c('DateGroup', 'Version', 'Record'), by.y=c('DateGroup', 'Version', 'Record'), all=TRUE)
+CustFieldInstallBase.fill <- with(CustFieldInstallBase, aggregate(Record~DateGroup+Version, FUN=sum))
+#for each version, fill in 0s with last previous non-0 number (need to change to NA first for this to work with zoo function)
+CustFieldInstallBase.fill$Record <- with(CustFieldInstallBase.fill, ifelse(Record == 0, NA, Record))
+install.base <- ddply(CustFieldInstallBase.fill, 'Version', na.locf, na.rm=FALSE)
+install.base$Record <- as.numeric(install.base$Record)
 install.base.count <- install.base
 install.base <- merge(install.base, with(install.base, aggregate(Record~DateGroup, FUN=sum)), by='DateGroup')
 install.base[,'Portion'] <- with(install.base, Record.x/Record.y)
@@ -184,18 +211,18 @@ install.base[,'Record'] <- with(install.base, Record*Portion)
 instrument.build.rate <- mergeCalSparseFrames(instrument.build, install.base, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, periods)
 keepCats <- as.character(data.frame(RecordedValue = unique(instrument.build.rate[,'RecordedValue']), MaxRate = sapply(1:length(unique(instrument.build.rate[,'RecordedValue'])), function(x) max(instrument.build.rate[instrument.build.rate[,'RecordedValue'] == unique(instrument.build.rate[,'RecordedValue'])[x], 'Rate'])))[with(data.frame(RecordedValue = unique(instrument.build.rate[,'RecordedValue']), MaxRate = sapply(1:length(unique(instrument.build.rate[,'RecordedValue'])), function(x) max(instrument.build.rate[instrument.build.rate[,'RecordedValue'] == unique(instrument.build.rate[,'RecordedValue'])[x], 'Rate']))), order(MaxRate, decreasing=TRUE)), 'RecordedValue'][1:6])
 
-instrument.build.lims <- addStatsToSparseHandledData(instrument.build.rate[as.character(instrument.build.rate[,'RecordedValue']) %in% keepCats, ], c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.0005, keepPeriods=53)
+instrument.build.lims <- addStatsToSparseHandledData(instrument.build.rate[as.character(instrument.build.rate[,'RecordedValue']) %in% keepCats, ], c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.0005)
 p.instrument.build <- ggplot(instrument.build.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_grid(RecordedValue~Version, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Top 6 Instrument Complaints By Version and Type per Pouches Shipped to Install Base', x='Date', y='4 Week Rolling Average')
 
 install.base.agg <- with(install.base.count, aggregate(Record~DateGroup, FUN=sum))
 instrument.all.installed.3yr.rate <- mergeCalSparseFrames(instrument.all.3yr, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
 p.instrument.all.installed.3yr <- ggplot(instrument.all.installed.3yr.rate, aes(x=DateGroup, y=Rate, group=Key)) + geom_line(color='black') + geom_point() + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Instrument Complaints per Instruments Installed', subtitle = 'Over Three Years', x='Date', y='4 Week Rolling Average') 
 instrument.all.version.installed.rate <- mergeCalSparseFrames(instrument.all.version, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
-instrument.all.version.installed.lims <- addStatsToSparseHandledData(instrument.all.version.installed.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
+instrument.all.version.installed.lims <- addStatsToSparseHandledData(instrument.all.version.installed.rate, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0)
 p.instrument.version.installed <- ggplot(instrument.all.version.installed.lims, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instrument Complaints By Type per Instruments Installed', x='Date', y='4 Week Rolling Average')
 instrument.all.version.installed.3y <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Instrument'), c('RecordedValue'), threeyr, 'Record', 'sum', 0)
 instrument.all.version.installed.rate.3y <- mergeCalSparseFrames(instrument.all.version.installed.3y, install.base.agg, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, 4)
-instrument.all.version.installed.lims.3y <- addStatsToSparseHandledData(instrument.all.version.installed.rate.3y, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0, keepPeriods=53)
+instrument.all.version.installed.lims.3y <- addStatsToSparseHandledData(instrument.all.version.installed.rate.3y, c('RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0)
 pressure.errors.installed.3y <- instrument.all.version.installed.lims.3y[which(instrument.all.version.installed.lims.3y$RecordedValue == "Pressure Error"), ]
 p.pressure.errors.installed <- ggplot(pressure.errors.installed.3y, aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks.3yr)  + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pressure Errors per Instruments Installed', x='Date', y='4 Week Rolling Average')
 
@@ -203,7 +230,7 @@ p.pressure.errors.installed <- ggplot(pressure.errors.installed.3y, aes(x=DateGr
 # ------------------------------------------------- SOFTWARE COMPLAINTS ---------------------------------------------------------------------
 software.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Software'), c('Key'), startDate, 'Record', 'sum', 0)
 software.all.rate <- mergeCalSparseFrames(software.all, pouches.all, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
-software.all.lims <- addStatsToSparseHandledData(software.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0, keepPeriods=53)
+software.all.lims <- addStatsToSparseHandledData(software.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
 x_pos.soft <- c('2016-35')
 #soft.annotations <- c('CI-15319')
 soft.annotations <- c('')
@@ -219,7 +246,7 @@ software.all.version.count[,'Period'] <- factor(software.all.version.count[,'Per
 p.software.all.pareto <- ggplot(software.all.version.count[with(software.all.version.count, order(Period)), ], aes(x=RecordedValue, y=Record.x, fill=Period)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1)) + labs(title='Customer Software Complaints by Type Pareto', x='Complaint Type', y='Quantities Affected by Type') + scale_fill_manual(values=pal.pareto)
 software.all.version[,'Risk'] <- with(software.all.version, ifelse(RecordedValue %in% c('FA Link LIS'), 'High','Low'))
 software.all.version.rate <- mergeCalSparseFrames(software.all.version, pouches.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-software.all.version.lims <- addStatsToSparseHandledData(software.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, sdFactor, 'upper', 0.001, keepPeriods=53)
+software.all.version.lims <- addStatsToSparseHandledData(software.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, sdFactor, 'upper', 0.001)
 p.software.version.high <- ggplot(subset(software.all.version.lims,Risk=='High'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_line(aes(y = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Software Complaints By Type per Pouches Shipped (Risk ^)', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average')
 p.software.version.low <- ggplot(subset(software.all.version.lims,Risk=='Low'), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Software Complaints By Type per Pouches Shipped', x='Date', y='4 Week Rolling Average')
 software.build.version.count <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Software'), c('Version','RecordedValue'), startDate.16, 'Record', 'sum', 0)
@@ -230,14 +257,14 @@ p.software.build.pareto <- ggplot(software.build.version.count, aes(x=RecordedVa
 software.build <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Software'), c('Version','RecordedValue'), startDate, 'Record', 'sum', 0)
 software.build.rate <- mergeCalSparseFrames(subset(software.build, Version %in% c('FA1.5','FA2.0','Torch')), install.base, c('DateGroup','Version'), c('DateGroup','Version'), 'Record', 'Record', 0, periods)
 keepCats <- as.character(data.frame(RecordedValue = unique(software.build.rate[,'RecordedValue']), MaxRate = sapply(1:length(unique(software.build.rate[,'RecordedValue'])), function(x) max(software.build.rate[software.build.rate[,'RecordedValue'] == unique(software.build.rate[,'RecordedValue'])[x], 'Rate'])))[with(data.frame(RecordedValue = unique(software.build.rate[,'RecordedValue']), MaxRate = sapply(1:length(unique(software.build.rate[,'RecordedValue'])), function(x) max(software.build.rate[software.build.rate[,'RecordedValue'] == unique(software.build.rate[,'RecordedValue'])[x], 'Rate']))), order(MaxRate, decreasing=TRUE)), 'RecordedValue'][1:6])
-software.build.lims <- addStatsToSparseHandledData(software.build.rate[as.character(software.build.rate[,'RecordedValue']) %in% keepCats, ], c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.001, keepPeriods=53)
+software.build.lims <- addStatsToSparseHandledData(software.build.rate[as.character(software.build.rate[,'RecordedValue']) %in% keepCats, ], c('Version','RecordedValue'), lagPeriods, TRUE, 3, 'upper', 0.001)
 p.software.build <- ggplot(software.build.lims, aes(x=DateGroup, y=Rate, group=Version, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_grid(RecordedValue~Version, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Top 6 Software Complaints By Version and Type per Pouches Shipped to Install Base', x='Date', y='4 Week Rolling Average')
 
 
 # ------------------------------------------------- ACCESSORY/KITTING COMPLAINTS ---------------------------------------------------------------------
 acckit.all <- aggregateAndFillDateGroupGaps(calendar.df, 'Week', subset(failures.df, Key=='Accessory/Kitting'), c('Key'), startDate, 'Record', 'sum', 0)
 acckit.all.rate <- mergeCalSparseFrames(acckit.all, pouches.all, c('DateGroup'), c('DateGroup'), 'Record','Record', 0, periods)
-acckit.all.lims <- addStatsToSparseHandledData(acckit.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0, keepPeriods=53)
+acckit.all.lims <- addStatsToSparseHandledData(acckit.all.rate, c('Key'), lagPeriods, TRUE, sdFactor, 'upper', 0)
 p.acckit.all <- ggplot(acckit.all.lims, aes(x=DateGroup, y=Rate, group=Key, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('blue','red'), guide=FALSE) + geom_line(aes(y = UL), color='red', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Customer Accessory/Kitting Complaints per Pouches Shipped', subtitle = 'Limit = +3 standard deviations', x='Date', y='4 Week Rolling Average')
 p.acckit.all.hist <- ggplot(acckit.all.lims, aes(x=Rate)) + geom_histogram(aes(y=(..count../sum(..count..)))) + scale_x_continuous(labels=percent) + coord_flip() + labs(x='Proportion', y='') + theme(plot.margin=unit(c(1.45,1,0.2,0.5), 'cm'), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(hjust=1, angle=90), axis.text=element_text(color='black', face=fontFace, size=fontSize))
 calendar.week.categories <- createCalendarLikeMicrosoft(year(Sys.Date())-3, 'Week')
@@ -250,7 +277,7 @@ acckit.all.version.count[,'RecordedValue'] <- factor(acckit.all.version.count[,'
 acckit.all.version.count[,'Period'] <- factor(acckit.all.version.count[,'Period'], levels = c('8 Weeks', '16 Weeks'), ordered = TRUE)
 p.acckit.all.pareto <- ggplot(acckit.all.version.count[with(acckit.all.version.count, order(Period)), ], aes(x=RecordedValue, y=Record.x, fill=Period)) + geom_bar(stat='identity') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=45, hjust=1)) + labs(title='Customer Accessory/Kitting Complaints by Type Pareto', x='Complaint Type', y='Quantities Affected by Type') + scale_fill_manual(values=pal.pareto)
 acckit.all.version.rate <- mergeCalSparseFrames(acckit.all.version, pouches.all, c('DateGroup'), c('DateGroup'), 'Record', 'Record', 0, periods)
-acckit.all.version.lims <- addStatsToSparseHandledData(acckit.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, sdFactor, 'upper', 0.001, keepPeriods=53)
+acckit.all.version.lims <- addStatsToSparseHandledData(acckit.all.version.rate, c('RecordedValue'), lagPeriods, TRUE, sdFactor, 'upper', 0.001)
 p.acckit.version <- ggplot(subset(acckit.all.version.lims, RecordedValue %in% correct.facets), aes(x=DateGroup, y=Rate, group=RecordedValue, color=Color)) + geom_line(color='black') + geom_point() + scale_color_manual(values = c('black','black'), guide=FALSE) + geom_line(aes(y = UL), color='blue', lty=2) + scale_y_continuous(labels=percent) + scale_x_discrete(breaks=dateBreaks) + facet_wrap(~RecordedValue, scale='free_y') + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Accessory/Kitting Complaints By Type per Pouches Shipped', x='Date', y='4 Week Rolling Average')
 
 # BioThreat ------------------------------------------------------------------
@@ -261,8 +288,10 @@ p.BioThreat.pareto <- ggplot(biothreat.df, aes(x=RecordedValue, y=Record, fill=Y
 # denominator charts
 pouches.panel.trunc <- aggregateAndFillDateGroupGaps(calendar.week.categories, 'Week', pouches.df, c('Version'), plot.startDate.week, 'Record', 'sum', 0)
 p.denom.pouches <- ggplot(pouches.panel.trunc[with(pouches.panel, order(Version, decreasing = TRUE)), ], aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.panel, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Pouches Shipped', x='Date', y='Pouches Shipped')
-p.denom.installed <- ggplot(subset(install.base.count, DateGroup >= plot.startDate.week), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(install.base.count, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90)) + labs(title='Instruments in Install Base', x='Date', y='Install Base Size')
-pouches.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', pouches.df, c('Version'), findStartDate(calendar.month, 'Month', 12, keepPeriods=0), 'Record', 'sum', 0)
+currentDateGroup <- as.character(tail(calendar.df, 1)['DateGroup'])
+currentInstallBase <- paste0('Current Customer Install Base: FA 1.5 = ', install.base.count[install.base.count[,'DateGroup'] == currentDateGroup & install.base.count[,'Version'] == 'FA1.5', 'Record'], ', FA 2.0 = ', install.base.count[install.base.count[,'DateGroup'] == currentDateGroup & install.base.count[,'Version'] == 'FA2.0', 'Record'], ', Torch = ', install.base.count[install.base.count[,'DateGroup'] == currentDateGroup & install.base.count[,'Version'] == 'Torch', 'Record'])
+p.denom.installed <- ggplot(subset(install.base.count, DateGroup >= plot.startDate.week), aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(install.base.count, 'Version')) + scale_x_discrete(breaks=dateBreaks) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90), plot.subtitle=element_text(hjust=0.5)) + labs(title='Instruments in Customer Install Base', subtitle = currentInstallBase, x='Date', y='Install Base Size')
+pouches.month <- aggregateAndFillDateGroupGaps(calendar.month, 'Month', pouches.df, c('Version'), findStartDate(calendar.month, 'Month', 12), 'Record', 'sum', 0)
 p.pouchesShipped.month <- ggplot(pouches.month, aes(x=DateGroup, y=Record, fill=Version)) + geom_bar(stat='identity') + scale_fill_manual(values = createPaletteOfVariableLength(pouches.month, 'Version')) + theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(color='black',size=fontSize,face=fontFace), axis.text.x=element_text(angle=90, vjust=0.5)) + labs(title='Pouches Shipped', y='Pouches Shipped', x='Ship Date\n(Year-Month)') + scale_y_continuous(labels=comma, breaks=pretty_breaks())
 
 # Count of complaints chart

@@ -1,5 +1,21 @@
 SET NOCOUNT ON
 
+SELECT 
+	IIF([CustID] LIKE '%-[0-9]', SUBSTRING([CustID],1,PATINDEX('%-%',[CustID])-1), 
+		IIF([CustID] LIKE '%/', SUBSTRING([CustID],1,PATINDEX('%/',[CustID])-1), 
+		IIF([CustID] LIKE '%(%)%', SUBSTRING([CustID],1,PATINDEX('%(%)%',[CustID])-1), 
+		IIF([CustID] LIKE '99-%', SUBSTRING([CustID], 4, LEN([CustID])), [CustID])))) AS [CustID]
+INTO #PouchOrderingCust
+FROM
+(
+	SELECT 
+		UPPER(RTRIM(LTRIM([CustID]))) AS [CustID],
+		[QtyShipped] AS [Record]
+	FROM [PMS1].[dbo].[vPouchShipmentsWithAnnotations_IOID]
+	WHERE [CustID] IS NOT NULL AND CAST([ShipDate] AS DATE) >= GETDATE() - 90
+) A
+WHERE [Record] >= 210
+
 SELECT
 	[TicketId],
 	[TicketString],
@@ -27,7 +43,8 @@ SELECT
 	[CustID],
 	IIF([CustID] LIKE 'BMX-NC%', 'US',
 		IIF([CustID] LIKE 'BMX%', 'International',
-		IIF([CustID] LIKE 'DIST%', 'International', 'US'))) AS [Region], 
+		IIF([CustID] LIKE 'DIST%', 'International', 'US'))) AS [Region],
+	IIF([CustID] IN (SELECT [CustID] FROM #PouchOrderingCust), 'yes', 'no') AS [PouchOrdering], 
 	[Record]
 FROM
 (
@@ -41,4 +58,4 @@ FROM
 WHERE [CustID] NOT IN ('BIODEF','NGDS','IDATEC') AND [CustID] NOT LIKE ''
 ORDER BY [CustID] 
 
-DROP TABLE #Customers, #CleanCust
+DROP TABLE #PouchOrderingCust, #Customers, #CleanCust

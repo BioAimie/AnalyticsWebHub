@@ -33,7 +33,7 @@ FROM (
 		SELECT N.*,
 			'20' + SUBSTRING(RIGHT(N.[LotNumber], 9), 5, 2) + '-' + SUBSTRING(RIGHT(N.[LotNumber], 9), 1, 2) + '-' + SUBSTRING(RIGHT(N.[LotNumber], 9), 3, 2) AS [ManufactureDate],
 			(SELECT MAX(L.[DesiredLotSize]) 
-			FROM [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+			FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
 			WHERE L.[LotNumber] = N.[LotNumber]) AS [DesiredLotSize]
 		FROM #NCRs N
 	) Q1

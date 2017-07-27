@@ -41,7 +41,7 @@ CustHx.Names[,'Customer Name'][as.character(CustHx.Names[,'Customer Name']) == '
 CustHx.Names[,'Customer Name'][is.na(CustHx.Names[,'Customer Name'])] <- as.character(CustHx.Names[,'Customer Id'])[is.na(CustHx.Names[,'Customer Name'])]
 
 #rearrange customer name to line up correctly alphabetically
-CustHx.Names[as.character(CustHx.Names[,'Customer Id']) == 'HUNTEC', 'Customer Name'] <- 'Huntington Technology Finance, Inc. (University of Michigan)'
+CustHx.Names[as.character(CustHx.Names[,'Customer Id']) == 'HUNTEC' & !is.na(CustHx.Names[,'Customer Id']), 'Customer Name'] <- 'Huntington Technology Finance, Inc. (University of Michigan)'
 
 CustHx.Names <- subset(CustHx.Names, select = c('Customer Id', 'Customer Name', 'Date Created', 'Related Complaint', 'RMA', 'Status', 'Serial Number', 'Complaint Failure Mode', 'RMA Type', 'Disposition', 'Early Failure Type', 'Root Cause Part Number', 'Runs Since Last Failure'))
 

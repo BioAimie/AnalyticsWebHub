@@ -6,23 +6,6 @@ library(dateManip)
 library(ggplot2)
 library(scales)
 
-# Open the connection to PMS1
-# PMScxn <- odbcConnect("PMS1_LOC")
-# 
-# queryText <- readLines("SQL/SummaryAnomalyTable.sql")
-# query <- paste(queryText,collapse="\n")
-# summary.df <- sqlQuery(PMScxn,query)
-# 
-# queryText <- readLines("SQL/AllQCRuns.sql")
-# query <- paste(queryText,collapse="\n")
-# allruns.df <- sqlQuery(PMScxn,query)
-# 
-# queryText <- readLines("SQL/AllRunObservations.sql")
-# query <- paste(queryText,collapse="\n")
-# runobs.df <- sqlQuery(PMScxn,query)
-# 
-# odbcClose(PMScxn)
-
 PMScxn <- odbcConnect("PMS_PROD")
 
 queryText <- readLines("SQL/SummaryAnomalyTable.sql")
@@ -43,7 +26,7 @@ instversion.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)
 
-expouchserials <- read.csv('exclude.csv')
+expouchserials <- read.csv('C:/Users/pms_user/Documents/WebHub/PouchSPCExclude.csv')
 
 source('createPaletteOfVariableLength.R')
 
@@ -51,6 +34,10 @@ calendar.month <- createCalendarLikeMicrosoft(2011, 'Month')
 
 allruns.df <- merge(allruns.df, instversion.df, all.x=TRUE, by.x='InstrumentSerialNumber', by.y='SerialNo')
 allruns.df$Version[allruns.df$InstrumentSerialNumber %in% c('AFA07','FA2000','FA2001','FA2002','FA2003','FA2004')] <- 'FA 1.5'
+
+#exclude all "X-not curated due to instrument error/other" runs
+allruns.df <-subset(allruns.df, is.na(RunObservation) | RunObservation != 'X-Not curated due to instrument error/other') 
+runobs.df <- subset(runobs.df, RunObservation != 'X-Not curated due to instrument error/other')
 
 colVector <- c("#6445A5","#DC7F6D","#A9EA3E","#B2EABB","#E3CB7B","#9F506F","#E9BECB","#E43C8C","#9CE99A","#ABC7E8","#E693AB","#E2E1EA",
                "#93B274","#D234ED","#B254DF","#E8D5C4","#5AA8DF","#60AE4B","#E174B4","#E845B7","#E3EAB9","#658CDF","#E36782","#6077E6","#68EA7A","#B693B9",

@@ -1,5 +1,6 @@
 #Load in data for Pouch SPC app
 setwd('~/WebHub/AnalyticsWebHub/Apps/R_PSPC/PSPCApp')
+
 # Open the connection to PMS1
 PMScxn <- odbcConnect("PMS_PROD")
 
@@ -17,8 +18,11 @@ runobs.df <- sqlQuery(PMScxn,query)
 
 odbcClose(PMScxn)
 
-expouchserials <- read.csv('exclude.csv')
+expouchserials <- read.csv('C:/Users/pms_user/Documents/WebHub/PouchSPCExclude.csv')
 
 allruns.df <- merge(allruns.df, instversion.df, all.x=TRUE, by.x='InstrumentSerialNumber', by.y='SerialNo')
 allruns.df$Version[allruns.df$InstrumentSerialNumber %in% c('AFA07','FA2000','FA2001','FA2002','FA2003','FA2004')] <- 'FA 1.5'
 
+#exclude all "X-not curated due to instrument error/other" runs
+allruns.df <-subset(allruns.df, is.na(RunObservation) | RunObservation != 'X-Not curated due to instrument error/other') 
+runobs.df <- subset(runobs.df, RunObservation != 'X-Not curated due to instrument error/other')

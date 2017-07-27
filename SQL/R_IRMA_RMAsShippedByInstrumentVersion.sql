@@ -20,7 +20,8 @@ SELECT
 FROM #qcDate Q
 INNER JOIN [PMS1].[dbo].[RMAPartInformation] P ON P.[TicketId] = Q.[TicketId]
 WHERE ([PartNumber] LIKE 'FLM%-ASY-0001%' OR [PartNumber] LIKE 'HTFA-ASY-0003%' OR [PartNumber] LIKE 'HTFA-SUB-0103%') 
-GROUP BY [QcDate], YEAR([QcDate]), MONTH([QcDate]), DATEPART(ww, [QcDate]), [PartNumber]
-ORDER BY [QcDate]
+	AND Q.[QcDate] >= GETDATE() - 800
+GROUP BY Q.[QcDate], YEAR([QcDate]), MONTH([QcDate]), DATEPART(ww, [QcDate]), [PartNumber]
+ORDER BY Q.[QcDate], [PartNumber]
 
 DROP TABLE #qcDate

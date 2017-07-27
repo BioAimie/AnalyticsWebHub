@@ -11,8 +11,8 @@ SELECT
 	ROW_NUMBER() OVER(PARTITION BY W.[TrendTestId] ORDER BY W.[WaterWeightTestResultId]) AS [TestNumber],
 	G.[GroupName],
 	CAST(REPLACE(W.[WaterWeight],',','') AS FLOAT) AS [Result]
-FROM [ProductionWeb].[dbo].[InProcessTest] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[WaterWeightTestResults] W WITH(NOLOCK)
-	ON P.[TrendTestId] = W.[TrendTestId] INNER JOIN [ProductionWeb].[dbo].[EquipmentGroups] G WITH(NOLOCK)
+FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[InProcessTest] P WITH(NOLOCK) INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[WaterWeightTestResults] W WITH(NOLOCK)
+	ON P.[TrendTestId] = W.[TrendTestId] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[EquipmentGroups] G WITH(NOLOCK)
 			ON P.[EquipmentGroupId] = G.[EquipmentGroupId]
 WHERE ISNUMERIC(W.[WaterWeight]) = 1 
 AND DateClosed IS NOT NULL

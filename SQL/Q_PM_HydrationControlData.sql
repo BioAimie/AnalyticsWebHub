@@ -15,8 +15,8 @@ SELECT
 	T.[SampleSideWeight] - [PreWeight] AS [TotalWeight],
 	T.[HydrationTime],
 	T.[SampleHydrationTime]
-FROM [ProductionWeb].[dbo].[InProcessTest] P WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[HydrationTestResults] T WITH(NOLOCK)
-	ON P.[TrendTestId] = T.[TrendTestId] INNER JOIN [ProductionWeb].[dbo].[EquipmentGroups] E WITH(NOLOCK)
+FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[InProcessTest] P WITH(NOLOCK) INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[HydrationTestResults] T WITH(NOLOCK)
+	ON P.[TrendTestId] = T.[TrendTestId] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[EquipmentGroups] E WITH(NOLOCK)
 		ON P.[EquipmentGroupId] = E.[EquipmentGroupId]
 WHERE T.[HydrationTime] > 0
 ORDER BY [DateOpened], [TestNumber]

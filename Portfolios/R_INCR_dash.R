@@ -191,14 +191,14 @@ y2 <- max(earlyfailures.lims[,'Rate'])
 # x_positions_2 <- c('2015-30','2015-41','2016-11','2016-22','2016-42')
 # y_positions_2 <- c(0.25, 0.18, 0.20, 0.15, 0.05)
 p.earlyfailures <- ggplot(earlyfailures.lims) + geom_rect(aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2), color='cyan', fill='white', alpha=0.2) + 
-	geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + 
-	geom_point(aes(x=DateGroup, y=Rate)) + 
-	geom_line(aes(x=DateGroup, y=UL, group=1), color='blue', lty='dashed') + 
-	labs(title='Failures at <100hrs per Instruments Built (not released):\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + 
-	scale_y_continuous(label=percent) + 
-	theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
-	scale_x_discrete(breaks=dateBreaks.alt) + 
-	annotate("text",x=x_pos_labels,y=y_pos,label=fail.annotations, size=5.25)
+  geom_line(aes(x=DateGroup, y=Rate, group=Key), color='black') + 
+  geom_point(aes(x=DateGroup, y=Rate)) + 
+  geom_line(aes(x=DateGroup, y=UL, group=1), color='blue', lty='dashed') + 
+  labs(title='Failures at <100hrs per Instruments Built (not released):\nFYI Limit = +3 standard deviations', x='Date of Manufacture\n(Year-Week)', y='4-week Rolling Average') + 
+  scale_y_continuous(label=percent) + 
+  theme(text=element_text(size=fontSize, face=fontFace), axis.text=element_text(size=fontSize, face=fontFace, color='black'), axis.text.x=element_text(angle=90, hjust=1)) + 
+  scale_x_discrete(breaks=dateBreaks.alt) + 
+  annotate("text",x=x_pos_labels,y=y_pos,label=fail.annotations, size=5.25)
 
 
 earlyfailures.batchsize <- merge(earlyfailures.df[earlyfailures.df$Key=='InternallyFlaggedFailure',c('SerialNo','Record')], serialbatches.df[,c('SerialNo','Year','Week','Version','Shipments')], by=c('SerialNo'))
@@ -252,4 +252,3 @@ for(i in 1:length(plots)) {
 dev.off()
 
 rm(list = ls())
-

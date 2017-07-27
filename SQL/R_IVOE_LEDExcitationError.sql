@@ -185,15 +185,15 @@ AS (
 		[LotNumberID] AS [TopLotID],
 		[LotNumber] AS [BottomLot],
 		[PartNumber] AS [BottomPart]
-	FROM [ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
+	FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] WITH(NOLOCK)
 	WHERE [Quantity]>0
 	UNION ALL
 	SELECT
 		U.[LotNumberId] AS [TopLotID],
 		D.[BottomLot] AS [BottomLot],
 		D.[BottomPart] AS [BottomPart]
-	FROM [BirthLot] D INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
+	FROM [BirthLot] D INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+		ON D.[TopLotID] = L.[LotNumberId] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
 			ON L.[LotNumber] = U.[LotNumber]
 	WHERE U.[Quantity]>0
 )
@@ -204,10 +204,10 @@ SELECT DISTINCT
 	IIF(CHARINDEX(':', U.[LotNumber], 1) <> 0 , SUBSTRING(U.[LotNumber], 1, CHARINDEX(':', U.[LotNumber], 1)-1), U.[LotNumber]) AS [LotNumber]
 INTO #birthLots
 FROM [BirthLot] B
-	INNER JOIN [ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK) ON B.[TopLotID] = TL.[LotNumberId] 
-	INNER JOIN [ProductionWeb].[dbo].[Parts] TP WITH(NOLOCK) ON TP.[PartNumberId] = TL.[PartNumberId]
-	INNER JOIN [ProductionWeb].[dbo].[Lots] BL WITH(NOLOCK) ON B.[BottomLot] = BL.[LotNumber] 	
-	INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK) ON U.[LotNumberId] = BL.[LotNumberId]
+	INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] TL WITH(NOLOCK) ON B.[TopLotID] = TL.[LotNumberId] 
+	INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] TP WITH(NOLOCK) ON TP.[PartNumberId] = TL.[PartNumberId]
+	INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] BL WITH(NOLOCK) ON B.[BottomLot] = BL.[LotNumber] 	
+	INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK) ON U.[LotNumberId] = BL.[LotNumberId]
 WHERE [BottomPart] = 'FLM1-SUB-0006' 
 	AND TP.[PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-SUB-0103') 
 	AND U.[PartNumber] = 'MOTR-DCM-0006'
@@ -241,9 +241,9 @@ FROM
 	SELECT
 		L.[LotNumber] AS [SubLotNumber],
 		UL.[LotNumber]
-	FROM [ProductionWeb].[dbo].[Parts] P INNER JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
-		ON P.[PartNumberId] = L.[PartNumberId] INNER JOIN [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
-			ON L.[LotNumberId] = U.[LotNumberId] LEFT JOIN [ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
+	FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] P INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK) 
+		ON P.[PartNumberId] = L.[PartNumberId] INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK)
+			ON L.[LotNumberId] = U.[LotNumberId] LEFT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
 				ON U.[LotNumber] = UL.[LotNumber]
 	WHERE U.[PartNumber] LIKE 'MOTR-DCM-0006' AND U.[Quantity] > 0 
 		AND UL.[LotNumber] IS NOT NULL
@@ -254,9 +254,9 @@ UNION
 	SELECT 
 		L.[LotNumber] AS [SubLotNumber],
 		SUBSTRING(U.[LotNumber], 1, CHARINDEX(':', U.[LotNumber],1) - 1) AS [LotNumber]
-	FROM [ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK) INNER JOIN [ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
-		ON UL.[LotNumber] = SUBSTRING(U.[LotNumber], 1, CHARINDEX(':', U.[LotNumber],1) - 1) LEFT JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
-			ON U.[LotNumberId] = L.[LotNumberId] LEFT JOIN [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
+	FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[UtilizedParts] U WITH(NOLOCK) INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] UL WITH(NOLOCK)
+		ON UL.[LotNumber] = SUBSTRING(U.[LotNumber], 1, CHARINDEX(':', U.[LotNumber],1) - 1) LEFT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+			ON U.[LotNumberId] = L.[LotNumberId] LEFT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] P WITH(NOLOCK)
 				ON L.[PartNumberId] = P.[PartNumberId]
 	WHERE U.[PartNumber] LIKE 'MOTR-DCM-0006' AND CHARINDEX(':', U.[LotNumber], 1) <> 0 AND U.[Quantity] > 0
 	GROUP BY 

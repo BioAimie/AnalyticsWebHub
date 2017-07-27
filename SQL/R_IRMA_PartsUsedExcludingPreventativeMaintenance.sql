@@ -7,20 +7,24 @@ INTO #codeParts
 FROM [RO_TRACKERS].[Trackers].[dbo].[ServiceCodes] C WITH(NOLOCK) 
 INNER JOIN [RO_TRACKERS].[Trackers].[dbo].[ServiceCodeParts] P WITH(NOLOCK) ON C.[ServiceCodeId] = P.[ServiceCodeId]
 WHERE C.[ServiceCode] IN (20, 13, 19, 807, 809, 659)
+
 INSERT INTO #codeParts
 VALUES (111, 'FLM1-MOD-0008'), (111, 'FLM1-MOL-0023'), (112, 'FLM1-GAS-0015'), (113, 'FLM1-MOL-0023')
 
 SELECT 
 	I.[TicketId], 
 	I.[SerialNo], 
-	I.[CreatedDate],
+	I.[Version],
+	R.[ServiceCompleted],
 	I.[PartNumber],
 	U.[PartUsed],
 	I.[HoursRun],
+	I.[VisitNo],
 	CAST(U.[Quantity] AS INT) AS [Record]  
 INTO #partsReplaced
 FROM [PMS1].[dbo].[bInstrumentFailure] I
 INNER JOIN [PMS1].[dbo].[RMAPartsUsed] U ON U.[TicketId] = I.[TicketId]
+INNER JOIN [PMS1].[dbo].[RMA] R ON R.[TicketId] = I.[TicketId]
 WHERE U.[PartUsed] NOT LIKE 'N%A' AND ISNUMERIC(U.[Quantity]) = 1
 	AND NOT EXISTS (
 		SELECT 1 
@@ -34,12 +38,13 @@ WHERE U.[PartUsed] NOT LIKE 'N%A' AND ISNUMERIC(U.[Quantity]) = 1
 		'PCBA-SUB-0856', 'FLM1-GAS-0018', 'PCBA-SUB-0839', 'PCBA-SUB-0838',	'FLM1-SUB-0074', 'FLM1-SUB-0078'
 	)
 	AND ISNUMERIC(U.[Quantity]) = 1
+	AND R.[ServiceCompleted] IS NOT NULL
 
 SELECT 
-	ROW_NUMBER() OVER(PARTITION BY [SerialNo] ORDER BY [TicketId]) AS [VisitNo],
+	[VisitNo],
 	[SerialNo],
-	YEAR([CreatedDate]) AS [Year],
-	DATEPART(ww, [CreatedDate]) AS [Week],
+	YEAR([ServiceCompleted]) AS [Year],
+	DATEPART(ww, [ServiceCompleted]) AS [Week],
 	[PartNumber] AS [PartNo],
 	CASE 
 		WHEN [PartUsed] IN ('FLM1-GAS-0009', 'FLM1-GAS-0018') THEN 'Plunger Gasket'
@@ -59,15 +64,10 @@ SELECT
 		WHEN [PartUsed] LIKE 'PCBA-SUB-0838' THEN '2.0 Camera Board'
 		ELSE 'Other'
 	END AS [Key],
-	CASE
-		WHEN LEFT([PartNumber],4) = 'FLM1' THEN 'FA1.5'
-		WHEN LEFT([PartNumber],4) = 'FLM2' THEN 'FA2.0'
-		WHEN LEFT([PartNumber],4) = 'HTFA' THEN 'Torch'
-		ELSE 'Other'
-	END AS [Version],
+	[Version],
 	[HoursRun],
 	[Record]
 FROM #partsReplaced
-ORDER BY [SerialNo], [VisitNo]
+ORDER BY [Version], [Year], [Week], [SerialNo]
 
 DROP TABLE #codeParts, #partsReplaced

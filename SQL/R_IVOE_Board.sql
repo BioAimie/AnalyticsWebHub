@@ -121,8 +121,8 @@ SELECT
 	L.[DesiredLotSize],
 	P.[PartNumber],
 	P2.[PartDesc]
-FROM [ProductionWeb].[dbo].[Lots] L
-INNER JOIN [ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
+FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L
+INNER JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] P ON P.[PartNumberId] = L.[PartNumberId]
 INNER JOIN #parts P2 ON P2.[PartNumber] = P.[PartNumber]
 ORDER BY [BoardReceiptDate]
 -- Board lot size

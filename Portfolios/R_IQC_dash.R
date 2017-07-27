@@ -1,4 +1,3 @@
-# set working directory
 workDir <- '~/WebHub/AnalyticsWebHub/'
 imgDir <- '~/WebHub/images/Dashboard_InstrumentQC/'
 pdfDir <- '~/WebHub/pdfs/'
@@ -187,7 +186,7 @@ p.baseline <- ggplot(subset(baseline.fluor,Key!='PouchQC'), aes(x=DateGroup, y=R
 p.signal <- ggplot(subset(max.fluor,Key!='PouchQC'), aes(x=DateGroup, y=Record)) + geom_point(color='lightskyblue') + geom_line(aes(x=DateGroup, y=Rate, group=Version), data=subset(max.lims,Key!='PouchQC')) + geom_point(aes(x=DateGroup, y=Rate, color=Color), data=subset(max.lims,Key!='PouchQC')) + facet_grid(Key~Version) + scale_color_manual(values=c('blue','blue','black'), guide=FALSE) + geom_line(aes(y=UL), data=subset(max.lims,Key!='PouchQC'), color='black', lty=2, group=1) + geom_line(aes(y=LL), data=subset(max.lims,Key!='PouchQC'), color='black', lty=2, group=1) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date',y='4 Week Rolling Average',title='Average Maximum Fluorescence (Yeast Wells) - Melt')
 p.spread <- ggplot(subset(spread.fluor,Key!='PouchQC'), aes(x=DateGroup, y=Record)) + geom_point(color='lightskyblue') + geom_line(aes(x=DateGroup, y=Rate, group=Version), data=subset(spread.lims,Key!='PouchQC')) + geom_point(aes(x=DateGroup, y=Rate, color=Color), data=subset(spread.lims,Key!='PouchQC')) + facet_grid(Key~Version, scales='free_y') + scale_color_manual(values=c('blue','blue','black'), guide=FALSE) + geom_line(aes(y=UL), data=subset(spread.lims,Key!='PouchQC'), color='black', lty=2, group=1) + geom_line(aes(y=LL), data=subset(spread.lims,Key!='PouchQC'), color='black', lty=2, group=1) + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace)) + labs(x='Date',y='4 Week Rolling Average',title='Standard Deviation of Baseline Fluorescence in all Array Wells')
 
- # -------------------------- ADDED: INSTRUMENT ERROR RATES BY TYPE -----------------------------
+# -------------------------- ADDED: INSTRUMENT ERROR RATES BY TYPE -----------------------------
 
 errors.num <- errors.df[errors.df[,'RunError'] == 1, ]
 errors.denom<- errors.df; errors.denom[,'RunError'] <- 1
@@ -208,18 +207,18 @@ errors.rate[!(is.na(errors.rate$OverallRate)), 'Rate'] <- NA
 errors.rate[!(is.na(errors.rate$OverallRate)), 'Annotation'] <- paste(round(100*errors.rate[!(is.na(errors.rate$OverallRate)), 'OverallRate'],0), '%', sep='')
 
 p.errormessages <- ggplot(errors.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue)) + 
-	geom_bar(stat='identity') + 
-	geom_line(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate, group = 1)) + 
-	geom_point(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate)) + 
-	facet_grid(Key~Version, scales='free_y') + 
-	scale_x_discrete(breaks=dateBreaks) + 
-	theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + 
-	scale_y_continuous(label=percent, limits = c(0,0.1)) + 
-	labs(x='Date', y='Errors/Number of Runs', title='Instrument Error Rate in Final QC by Type') + 
-	scale_fill_manual(values = myPal, name='') + 
-	guides(fill=guide_legend(nrow=3, byrow=TRUE)) +
-	geom_text(aes(x=DateGroup, y = 0.1, label=Annotation), data=errors.rate, size=2, angle=90) 
-  # ggplot(errors.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue, label=Annotation)) + geom_bar(stat='identity', aes(label=Annotation), data=errors.rate) + geom_line(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate, group = 1)) + geom_point(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate)) + geom_text() + facet_grid(Key~Version, scales='free_y') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + scale_y_continuous(label=percent, limits = c(0,0.1)) + labs(x='Date', y='Errors/Number of Runs', title='Instrument Error Rate in Final QC by Type') + scale_fill_manual(values = myPal, name='') + guides(fill=guide_legend(nrow=3, byrow=TRUE)) # + geom_text(aes(x=DateGroup, y=0.1, label=Annotation), data=errors.rate)
+  geom_bar(stat='identity') + 
+  geom_line(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate, group = 1)) + 
+  geom_point(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate)) + 
+  facet_grid(Key~Version, scales='free_y') + 
+  scale_x_discrete(breaks=dateBreaks) + 
+  theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + 
+  scale_y_continuous(label=percent, limits = c(0,0.1)) + 
+  labs(x='Date', y='Errors/Number of Runs', title='Instrument Error Rate in Final QC by Type') + 
+  scale_fill_manual(values = myPal, name='') + 
+  guides(fill=guide_legend(nrow=3, byrow=TRUE)) +
+  geom_text(aes(x=DateGroup, y = 0.1, label=Annotation), data=errors.rate, size=2, angle=90) 
+# ggplot(errors.rate, aes(x=DateGroup, y=Rate, fill=RecordedValue, label=Annotation)) + geom_bar(stat='identity', aes(label=Annotation), data=errors.rate) + geom_line(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate, group = 1)) + geom_point(data=errors.all.rate, inherit.aes=FALSE, aes(x=DateGroup, y=OverallRate)) + geom_text() + facet_grid(Key~Version, scales='free_y') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + scale_y_continuous(label=percent, limits = c(0,0.1)) + labs(x='Date', y='Errors/Number of Runs', title='Instrument Error Rate in Final QC by Type') + scale_fill_manual(values = myPal, name='') + guides(fill=guide_legend(nrow=3, byrow=TRUE)) # + geom_text(aes(x=DateGroup, y=0.1, label=Annotation), data=errors.rate)
 p.errormessages.count <- ggplot(errors.num, aes(x=DateGroup, y=RunError, fill=RecordedValue)) + geom_bar(stat='identity') + facet_grid(Key~Version, scales='free_y') + scale_x_discrete(breaks=dateBreaks) + theme(plot.title=element_text(hjust=0.5, size=fontSize, face=fontFace), text=element_text(size=fontSize, face=fontFace), axis.text.x=element_text(angle=90, face=fontFace), axis.text=element_text(size=fontSize, color='black', face=fontFace), legend.position='bottom') + labs(x='Date', y='Errors', title='Instrument Error Count in Final QC by Type') + scale_fill_manual(values = myPal, name='') + guides(fill=guide_legend(nrow=3, byrow=TRUE))
 
 # add a first-pass yield chart

@@ -21,13 +21,13 @@ FROM
 		[DateOfManufacturing],
 		[TimeOfChange],
 		[Value] 
-	FROM [ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) RIGHT JOIN [ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
+	FROM [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Parts] P WITH(NOLOCK) RIGHT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[Lots] L WITH(NOLOCK)
 		ON P.[PartNumberId] = L.[PartNumberId]
-		LEFT JOIN [ProductionWeb].[dbo].[QcStatusHistories] Q WITH(NOLOCK) 
+		LEFT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[QcStatusHistories] Q WITH(NOLOCK) 
 			ON L.[LotNumberId] = Q.[LotNumberId]
-			LEFT JOIN [ProductionWeb].[dbo].[StatusHistories] S WITH(NOLOCK)
+			LEFT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[StatusHistories] S WITH(NOLOCK)
 				ON Q.[StatusHistoryId] = S.[StatusHistoryId]
-				LEFT JOIN [ProductionWeb].[dbo].[QcStates] QS WITH(NOLOCK)
+				LEFT JOIN [RO_PRODUCTIONWEB].[ProductionWeb].[dbo].[QcStates] QS WITH(NOLOCK)
 					ON Q.[QcStateId] = QS.[QcStateId]
 	WHERE [PartNumber] IN ('FLM1-ASY-0001','FLM2-ASY-0001','HTFA-ASY-0001','HTFA-ASY-0003')
 ) A

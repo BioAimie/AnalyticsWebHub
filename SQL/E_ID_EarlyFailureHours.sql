@@ -12,7 +12,7 @@ SELECT
 	I.[RMATitle],
 	CASE 
 		WHEN C.[ProblemArea] = 'Instrument Plunger' THEN 'Plunger Block'
-		WHEN C.[ProblemArea] IS NULL THEN 'No failure complaint'
+		WHEN C.[ProblemArea] IS NULL THEN 'Unknown'
 		ELSE REPLACE(C.[ProblemArea], 'Instrument ', '')
 	END AS [ProblemArea]
 FROM [PMS1].[dbo].[bInstrumentFailure] I

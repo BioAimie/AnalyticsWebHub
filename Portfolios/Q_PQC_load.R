@@ -1,16 +1,6 @@
 # open database connection 
 PMScxn = odbcConnect("PMS_PROD")
 
-# run the query to get the delta weight
-query.charVec = readLines("SQL/Q_PQC_rehydrationWeight.sql")
-query = paste(query.charVec,collapse="\n")
-rehydration.df = sqlQuery(PMScxn,query)
-
-# run the query to get the failure data from PouchQC DB
-query.charVec = readLines("SQL/Q_PQC_leakAndHydrationFailuresPouchQC.sql")
-query = paste(query.charVec,collapse="\n")
-pqcRuns.df = sqlQuery(PMScxn,query)
-
 # run the queries to get control failures in pouch qc 
 query.charVec = readLines("SQL/Q_PQC_FilmArray1ControlFailures.sql")
 query = paste(query.charVec,collapse="\n")
@@ -43,3 +33,19 @@ ptRuns.df = sqlQuery(PTcxn,query)
 
 # close remote connection
 close(PTcxn)
+
+# open database connection 
+PQcxn = odbcConnect("PouchQC")
+
+# run the query to get the delta weight
+query.charVec = readLines("SQL/Q_PQC_rehydrationWeight.sql")
+query = paste(query.charVec,collapse="\n")
+rehydration.df = sqlQuery(PQcxn,query)
+
+# run the query to get the failure data from PouchQC DB
+query.charVec = readLines("SQL/Q_PQC_leakAndHydrationFailuresPouchQC.sql")
+query = paste(query.charVec,collapse="\n")
+pqcRuns.df = sqlQuery(PQcxn,query)
+
+# close remote connection
+close(PQcxn)
